@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import mainBg from "../assets/mainBg.png";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -284,7 +285,7 @@ export default function Welcome() {
 
   return (
     <div className="scroll-root">
-      <section className="panel" id="p-hero">
+      <section className="panel" id="p-hero" style={{ backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <Starfield />
         <div className="glow" />
         <div className="grid-ov" />
