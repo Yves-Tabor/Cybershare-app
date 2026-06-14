@@ -509,49 +509,6 @@ export default function Welcome() {
                 today={DASHBOARD_DATA.today}
               />
             </div>
-
-            <div className="dc anim-scale d400">
-              <span className="dc-lbl">Risk Score Goal</span>
-              <div className="goal-num">{DASHBOARD_DATA.goalScore.current}</div>
-              <div className="goal-lbl">Current score (lower = safer)</div>
-              <div className="goal-track">
-                <div className="goal-fill" style={{ width: `${fillPct}%` }} />
-              </div>
-              <div className="goal-ctrls">
-                <button
-                  className="gctrl"
-                  onClick={() => setGoalTarget((t) => Math.max(10, t - 5))}
-                >
-                  −
-                </button>
-                Target: {goalTarget}
-                <button
-                  className="gctrl"
-                  onClick={() => setGoalTarget((t) => Math.min(90, t + 5))}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <div className="dc anim-scale d500">
-              <span className="dc-lbl">Scan Agents</span>
-              <div className="team-list">
-                {DASHBOARD_DATA.agents.map((a) => (
-                  <div className="tm" key={a.email}>
-                    <div className="av" style={{ background: a.color }}>
-                      {a.initials}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div className="tm-n">{a.name}</div>
-                      <div className="tm-e">{a.email}</div>
-                    </div>
-                    <span className="tm-r">{a.role}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="chat-bub">💬 {DASHBOARD_DATA.liveScan}</div>
-            </div>
           </div>
         </div>
       </section>
