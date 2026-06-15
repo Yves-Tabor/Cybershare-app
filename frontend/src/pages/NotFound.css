@@ -1,0 +1,207 @@
+@keyframes cs-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes cs-scan {
+  0%, 100% { opacity: 0.4; transform: scaleX(0.6); }
+  50% { opacity: 1; transform: scaleX(1); }
+}
+
+.notfound-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #111111;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 52px 52px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.notfound-glow {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 60% 50% at 50% 110%, rgba(34,197,94,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 0%, rgba(34,197,94,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.notfound-cells {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.notfound-nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 48px;
+}
+
+.notfound-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4ade80;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.notfound-body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 40px 80px;
+  text-align: center;
+  gap: 24px;
+}
+
+.notfound-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(74,222,128,0.10);
+  border: 1px solid rgba(74,222,128,0.25);
+  color: #4ade80;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.notfound-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: cs-blink 2s ease-in-out infinite;
+}
+
+.notfound-error-code {
+  font-size: clamp(96px, 18vw, 160px);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.notfound-scan-bar {
+  width: clamp(180px, 40%, 280px);
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #4ade80, transparent);
+  border-radius: 999px;
+  margin: -8px auto 0;
+  animation: cs-scan 3s ease-in-out infinite;
+}
+
+.notfound-title {
+  font-size: clamp(18px, 3vw, 26px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.notfound-description {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.75;
+  max-width: 420px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  white-space: pre-line;
+}
+
+.notfound-code {
+  color: #4ade80;
+  font-family: monospace;
+  background: rgba(74,222,128,0.10);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.notfound-btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.notfound-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background 0.2s, transform 0.15s;
+  background: #4ade80;
+  color: #0a1a10;
+}
+
+.notfound-btn:hover {
+  background: #6ee79a;
+  transform: translateY(-1px);
+}
+
+.notfound-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  cursor: pointer;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background 0.2s, transform 0.15s;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.75);
+}
+
+.notfound-btn-secondary:hover {
+  background: rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+.notfound-corner-meta {
+  position: absolute;
+  bottom: 32px;
+  right: 48px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.15);
+  font-family: monospace;
+  letter-spacing: 0.06em;
+  line-height: 1.9;
+  text-align: right;
+  pointer-events: none;
+  z-index: 2;
+}

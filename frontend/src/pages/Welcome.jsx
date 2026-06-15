@@ -617,12 +617,13 @@ export default function Welcome() {
         </div>
       </section>
 
-      <section className="panel" id="p-how-it-works">
+      <section className="panel min-h-[100vh]" id="p-how-it-works">
         <div className="threats-wrap">
           <div className="sec-head">
-            <h2 className="anim-up">.</h2>
-            <p className="anim-up d200 text-transparent">a
-            </p>
+            <div className='bg-black rounded-lg p-4'>
+              <h2 className="anim-up">How it works</h2>
+              <p className="anim-up d200 text-transparent">Get the scan just in 5 steps</p>
+            </div>
           </div>
 
           <div className="dash-grid" style={{ gridTemplateColumns: "repeat(5, 1fr)", gridTemplateRows: "1fr" }}>
