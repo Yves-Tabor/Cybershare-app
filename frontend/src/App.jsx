@@ -1,10 +1,10 @@
-import React from "react";
-import Welcome from "./pages/Welcome";
+import { RouterProvider } from "react-router-dom";
+import router from "./routes/routes";
 
 function App() {
   return (
     <>
-      <Welcome />
+      <RouterProvider router={router} />
     </>
   );
 }
