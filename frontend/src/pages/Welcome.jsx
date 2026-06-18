@@ -76,48 +76,6 @@ const TECH_STACK = [
   { label: "Redis" },
 ];
 
-const VULN_BARS = [
-  { day: "SQLi",    value: 8, color: ["#ef4444","#f97316"], icon: "<>" },
-  { day: "XSS",     value: 6, color: ["#f97316","#f59e0b"], icon: "<>" },
-  { day: "CSRF",    value: 4, color: ["#f59e0b","#eab308"], icon: "⚙" },
-  { day: "Headers", value: 5, color: ["#3b82f6","#60a5fa"], icon: "☰" },
-  { day: "SSL",     value: 3, color: ["#8b5cf6","#a78bfa"], icon: "🔒" },
-  { day: "Ports",   value: 2, color: ["#14b8a6","#2dd4bf"], icon: "⇅" },
-  { day: "Auth",    value: 2, color: ["#6b7280","#9ca3af"], icon: "👤" },
-];
-
-const DASHBOARD_DATA = {
-  riskScore: {
-    value: "Ready",
-    change: "System operational",
-    positive: true,
-  },
-  criticalAlerts: { value: "8", label: "Vulnerability types detected" },
-  weeklyBars: [
-    { day: "SQLi", height: 85, active: true },
-    { day: "XSS", height: 70 },
-    { day: "CSRF", height: 45 },
-    { day: "Headers", height: 60 },
-    { day: "SSL", height: 55 },
-    { day: "Ports", height: 40 },
-    { day: "Auth", height: 35 },
-  ],
-  sparkline: [20, 35, 25, 40, 30, 45, 50, 35],
-  goalScore: { current: 8, target: 10, fill: 80 },
-  agents: [
-    {
-      initials: "CS",
-      name: "Cybershare Team",
-      email: "team@cybershare.io",
-      role: "Security Platform",
-      color: "#f59e0b",
-    },
-  ],
-  liveScan: "Enter your website URL to begin scanning",
-  calendarMonth: "June 2025",
-  scanDays: [3, 6, 12, 16, 25],
-  today: 10,
-};
 
 const FEATURES = [
   {
@@ -146,7 +104,7 @@ const FEATURES = [
     title: "Remediation\nGuidance",
     body: "Step-by-step remediation instructions with code examples and best practices to help developers understand and fix security issues.",
     icons: ["IMG", "IMG", "IMG", "IMG", "IMG"],
-    badge: "Fast Fixes",
+ badge: "Fast Fixes",
   },
 ];
 
@@ -184,6 +142,35 @@ const HOW_IT_WORKS = [
     title: "Developer receives remediation guidance",
     description: "Get step-by-step instructions with code examples to fix identified issues.",
   },
+];
+
+const COMMUNITY_STATS = [
+  { value: "12K+", label: "Security Researchers" },
+  { value: "3.4K", label: "Vulnerabilities Shared" },
+  { value: "890+", label: "Remediation Guides" },
+  { value: "99%",  label: "Uptime Reliability" },
+];
+
+const THREAT_FEED = [
+  { severity: "critical", tag: "CVE-2025-1337", title: "Zero-day in Apache HTTP Server allows RCE via crafted headers", time: "2h ago", votes: 142 },
+  { severity: "high",     tag: "SQLi",          title: "New polymorphic SQL injection bypassing WAF signatures",       time: "5h ago", votes: 89  },
+  { severity: "medium",   tag: "XSS",           title: "Stored XSS in popular CMS plugin affects 200K+ sites",        time: "9h ago", votes: 61  },
+  { severity: "high",     tag: "Supply Chain",  title: "Malicious npm package mimicking lodash discovered",            time: "1d ago", votes: 204 },
+];
+
+const RESOURCES = [
+  { icon: "📖", type: "Guide",    title: "OWASP Top 10 — 2025 Edition",             desc: "Complete walkthrough with code examples" },
+  { icon: "🎥", type: "Video",    title: "Bypassing CSRF Tokens in Modern SPAs",     desc: "45-min deep-dive by @sec_researcher"     },
+  { icon: "🛠",  type: "Tool",    title: "Nuclei Template Pack — Auth Testing",      desc: "240 community-built detection templates"  },
+  { icon: "📝", type: "Write-up", title: "How I Found a $20K Bug in a Fortune 500", desc: "Full bug bounty disclosure timeline"      },
+];
+
+const LEADERBOARD = [
+  { rank: 1, handle: "0xRaven",     points: 9820, badge: "Elite Hunter", color: "#f59e0b" },
+  { rank: 2, handle: "nullptr_",    points: 7410, badge: "Exploit Dev",  color: "#a78bfa" },
+  { rank: 3, handle: "sec_phantom", points: 6230, badge: "CVE Author",   color: "#34d399" },
+  { rank: 4, handle: "h4ckl1ght",   points: 4980, badge: "OWASP Expert", color: "#60a5fa" },
+  { rank: 5, handle: "buffer_over", points: 3750, badge: "Contributor",  color: "#f87171" },
 ];
 
 function Starfield() {
@@ -251,128 +238,6 @@ function Marquee({ items, dark = false, speed = 28 }) {
   );
 }
 
-function MiniCalendar({ month, scanDays, today }) {
-  const days = ["S", "M", "T", "W", "T", "F", "S"];
-  const startDay = 0;
-  const totalDays = 28;
-  const cells = [];
-  for (let i = 0; i < startDay; i++) cells.push({ empty: true });
-  for (let d = 1; d <= totalDays; d++) {
-    cells.push({ day: d, scan: scanDays.includes(d), today: d === today });
-  }
-  return (
-    <div className="mini-cal">
-      {days.map((d, i) => (
-        <div key={i} className="mc hd">
-          {d}
-        </div>
-      ))}
-      {cells.map((c, i) =>
-        c.empty ? (
-          <div key={i} className="mc"></div>
-        ) : (
-          <div
-            key={i}
-            className={`mc${c.today ? " today" : c.scan ? " scan" : ""}`}
-          >
-            {c.day}
-          </div>
-        ),
-      )}
-    </div>
-  );
-}
-
-function CriticalAlertsCard() {
-  const maxVal = Math.max(...VULN_BARS.map(b => b.value));
-  const yTicks = [0, 2, 4, 6, 8, 10];
-
-  return (
-    <div className="dc dc-critical anim-scale d200">
-      <div className="ca-header">
-        <div className="ca-title-row">
-          <span className="ca-shield">🛡</span>
-          <span className="ca-title">CRITICAL ALERTS</span>
-          <span className="ca-info">ⓘ</span>
-        </div>
-        <div className="ca-date-pill">
-          <span className="ca-cal-icon">📅</span>
-          <span>Last 30 days</span>
-          <span className="ca-chevron">▾</span>
-        </div>
-      </div>
-
-      <div className="ca-score-row">
-        <span className="ca-big-num">8</span>
-        <span className="ca-change-badge">
-          <span className="ca-arrow">↑</span> 33%
-        </span>
-      </div>
-      <div className="ca-score-label">Vulnerability types detected</div>
-      <div className="ca-score-sub">vs previous 30 days (6)</div>
-
-      <div className="ca-chart-header">
-        <span className="ca-chart-title">
-          <span className="ca-chart-icon">📊</span> BY VULNERABILITY TYPE
-        </span>
-        <div className="ca-chart-actions">
-          <button className="ca-chart-btn ca-chart-btn--active">📊</button>
-          <button className="ca-chart-btn">〰</button>
-        </div>
-      </div>
-
-      <div className="ca-chart">
-        <div className="ca-y-axis">
-          {[...yTicks].reverse().map(t => (
-            <span key={t} className="ca-y-tick">{t}</span>
-          ))}
-        </div>
-        <div className="ca-bars-area">
-          <div className="ca-grid-lines">
-            {yTicks.map(t => (
-              <div key={t} className="ca-grid-line" />
-            ))}
-          </div>
-          <div className="ca-bars">
-            {VULN_BARS.map((b, i) => {
-              const heightPct = (b.value / 10) * 100;
-              return (
-                <div className="ca-bar-col" key={i}>
-                  <span className="ca-bar-val">{b.value}</span>
-                  <div className="ca-bar-wrap">
-                    <div
-                      className="ca-bar-fill"
-                      style={{
-                        height: `${heightPct}%`,
-                        background: `linear-gradient(to bottom, ${b.color[0]}, ${b.color[1]})`,
-                      }}
-                    />
-                  </div>
-                  <span className="ca-bar-icon">{b.icon}</span>
-                  <span className="ca-bar-lbl">{b.day}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="ca-footer">
-        <div className="ca-footer-left">
-          <span className="ca-footer-icon">🛡</span>
-          <div>
-            <div className="ca-footer-text">SQL Injection is the most common critical risk</div>
-            <div className="ca-footer-sub">Affects 8% of your scanned assets</div>
-          </div>
-        </div>
-        <button className="ca-footer-btn">
-          View Details <span>›</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function Welcome() {
   const [activeTab, setActiveTab] = useState("login");
 
@@ -435,7 +300,7 @@ export default function Welcome() {
         </div>
       </section>
 
-      <section className="panel" id="p-info">
+      <section className="panel" id="p-info" style={{ background: 'transparent' }}>
         <div className="info-bar">
           <span className="info-bar-logo anim-right">{SITE_CONFIG.name}</span>
           <span className="info-bar-tag anim-fade d200">
@@ -454,6 +319,7 @@ export default function Welcome() {
         </div>
 
         <div className="info-grid">
+          {/* LEFT */}
           <div className="i-col">
             <div className="lc anim-up d100">
               <div className="stats-row">
@@ -485,6 +351,7 @@ export default function Welcome() {
             </div>
           </div>
 
+          {/* RIGHT */}
           <div className="i-col">
             <div className="lc anim-left d200">
               <div className="logos-row">
@@ -514,71 +381,6 @@ export default function Welcome() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel" id="p-threats">
-        <div className="threats-wrap">
-          <div className="sec-head">
-            <h2 className="anim-up">Your All-in-One Security Dashboard</h2>
-            <p className="anim-up d200">
-              Real-time threat intelligence, CVE tracking, and risk scoring —
-              all in one place.
-            </p>
-          </div>
-
-          <div style={{ overflow: "hidden" }}>
-            <Marquee items={TECH_STACK} dark={true} speed={20} />
-          </div>
-
-          <div className="dash-grid">
-            <div className="dc anim-scale d100">
-              <span className="dc-lbl">Risk Assessment</span>
-              <span className="dc-val" style={{ color: "var(--green)" }}>
-                {DASHBOARD_DATA.riskScore.value}
-              </span>
-              <span className="dc-sub" style={{ color: "var(--green)" }}>
-                ↑ {DASHBOARD_DATA.riskScore.change}
-              </span>
-              <div className="spark">
-                {DASHBOARD_DATA.sparkline.map((h, i) => (
-                  <div
-                    key={i}
-                    className={`sb ${h >= 70 ? "a" : ""}`}
-                    style={{ height: `${h}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <CriticalAlertsCard />
-
-            <div className="dc dc-wide anim-scale d300">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 6,
-                }}
-              >
-                <span className="dc-lbl">
-                  Scan Calendar — {DASHBOARD_DATA.calendarMonth}
-                </span>
-                <div className="badge-row">
-                  <span className="bdg crit">⚠ Critical</span>
-                  <span className="bdg high">● High</span>
-                  <span className="bdg ok">✓ Resolved</span>
-                </div>
-              </div>
-              <MiniCalendar
-                month={DASHBOARD_DATA.calendarMonth}
-                scanDays={DASHBOARD_DATA.scanDays}
-                today={DASHBOARD_DATA.today}
-              />
             </div>
           </div>
         </div>
@@ -654,7 +456,7 @@ export default function Welcome() {
             </div>
           </div>
 
-          <div className="dash-grid how-it-works-grid">
+          <div className="dash-grid" style={{ gridTemplateColumns: "repeat(5, 1fr)", gridTemplateRows: "1fr" }}>
             {HOW_IT_WORKS.map((step, i) => (
               <div className="dc anim-scale" style={{ animationDelay: `${(i + 1) * 100}ms` }} key={i}>
                 <div className="dc-lbl" style={{ fontSize: "32px", fontWeight: 900, color: "var(--amber)" }}>{step.step}</div>
