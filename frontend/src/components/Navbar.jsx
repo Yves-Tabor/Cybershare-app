@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -8,6 +9,7 @@ const SITE_CONFIG = {
 const NAV_ITEMS = [
   {
     label: "Dashboard",
+    path: "/main",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9.5 12 3l9 6.5" />
@@ -17,6 +19,7 @@ const NAV_ITEMS = [
   },
   {
     label: "Scanner",
+    path: "/main/scanner",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="7" />
@@ -28,6 +31,7 @@ const NAV_ITEMS = [
   },
   {
     label: "Resources",
+    path: "/main/resources",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -37,6 +41,7 @@ const NAV_ITEMS = [
   },
   {
     label: "Community",
+    path: "/main/community",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -48,6 +53,7 @@ const NAV_ITEMS = [
   },
   {
     label: "Events",
+    path: "/main/events",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -59,6 +65,7 @@ const NAV_ITEMS = [
   },
   {
     label: "Saved Items",
+    path: "/main/saved",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M19 21 12 16.5 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
@@ -67,6 +74,7 @@ const NAV_ITEMS = [
   },
   {
     label: "Settings",
+    path: "/main/settings",
     icon: (
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -167,8 +175,8 @@ export default function Navbar() {
           <HamburgerIcon open={open} />
         </button>
 
-        <a
-          href="#"
+        <Link
+          to="/main"
           className="flex items-center gap-2"
           style={{ fontFamily: "'Chelsea Market', cursive" }}
         >
@@ -181,7 +189,7 @@ export default function Navbar() {
           <span className="text-[15px] tracking-tight text-white">
             {SITE_CONFIG.name}
           </span>
-        </a>
+        </Link>
 
         <button
           aria-label="Account"
@@ -209,15 +217,15 @@ export default function Navbar() {
         className="absolute inset-0 flex flex-col items-center gap-3 sm:gap-3 px-3 sm:px-4 pt-[79px] pb-6 z-10"
       >
         {NAV_ITEMS.map((item) => (
-          <a
+          <Link
             key={item.label}
-            href="#"
+            to={item.path}
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 w-full px-3 py-2.5 text-[#cfd2d8] hover:text-white transition-colors text-[13px] sm:text-[14px] font-medium whitespace-nowrap"
           >
             <span className="text-[#cfd2d8] flex-shrink-0">{item.icon}</span>
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
         </div>
