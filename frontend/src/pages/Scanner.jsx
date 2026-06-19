@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import mainBg from "../assets/mainBg.png";
 
 // ─── BG image placeholder ─────────────────────────────────────────────────────
 // Replace SCANNER_BG_IMAGE with your actual image URL or import.
@@ -53,10 +54,10 @@ function IconLoader({ size = 14 }) {
 function DisclosureModal({ onClose }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85" style={{ padding: '24px' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[500px] bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-7">
+      <div className="w-full max-w-[500px] bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl" style={{ padding: '28px' }}>
         <div className="flex items-center gap-2.5 mb-5">
           <IconShield size={15} className="text-[#7F77DD]" />
           <span className="text-[10.5px] font-mono font-bold tracking-[0.18em] uppercase text-[#7F77DD]">
@@ -66,7 +67,7 @@ function DisclosureModal({ onClose }) {
         <p className="text-[13px] text-[#888] leading-relaxed mb-7">{DISCLOSURE_TEXT}</p>
         <button
           onClick={onClose}
-          className="w-full py-2.5 bg-[#141414] border border-[#2a2a2a] rounded-lg text-[12px] font-mono tracking-widest uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white transition-colors"
+          className="w-full bg-[#141414] border border-[#2a2a2a] rounded-lg text-[12px] font-mono tracking-widest uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white transition-colors" style={{ paddingTop: '10px', paddingBottom: '10px' }}
         >
           Understood
         </button>
@@ -126,28 +127,16 @@ export default function Scanner() {
 
   return (
     <div
-      className="relative min-h-screen bg-[#050505] text-[#e0e0e0] flex flex-col"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
+      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      style={{ 
+        fontFamily: "'DM Sans', sans-serif",
+        backgroundImage: `url(${mainBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
     >
-      {/* ── Background image placeholder ── */}
-      {SCANNER_BG_IMAGE ? (
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none"
-          style={{ backgroundImage: `url(${SCANNER_BG_IMAGE})` }}
-          aria-hidden="true"
-        />
-      ) : (
-        // Placeholder slot — replace with your image component or img tag
-        <div
-          className="absolute inset-0 pointer-events-none"
-          aria-hidden="true"
-          style={{
-            // Subtle noise pattern as stand-in
-            backgroundImage: `radial-gradient(ellipse at 50% 0%, #0d0d1a 0%, transparent 70%)`,
-          }}
-        />
-      )}
-
+      <div className="bg-[#080808]/75 min-h-screen">
       {/* ── Scanline overlay ── */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -158,7 +147,7 @@ export default function Scanner() {
       />
 
       {/* ── Content ── */}
-      <div className="relative z-10 flex flex-col min-h-screen px-6 py-10 max-w-[720px] mx-auto w-full">
+      <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[900px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '48px', paddingBottom: '80px' }}>
 
         {/* Header */}
         <header className="flex items-center justify-between mb-14">
@@ -179,14 +168,14 @@ export default function Scanner() {
           <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-[#080808]/80 backdrop-blur-sm">
 
             {/* Card top strip */}
-            <div className="border-b border-[#141414] px-7 py-4 flex items-center gap-3">
+            <div className="border-b border-[#141414] flex items-center gap-3" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '16px', paddingBottom: '16px' }}>
               <IconScan size={14} className="text-[#555]" />
               <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
                 Target Configuration
               </span>
             </div>
 
-            <div className="px-7 py-8 space-y-7">
+            <div className="space-y-7" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '32px', paddingBottom: '32px' }}>
 
               {/* URL input group */}
               <div>
@@ -206,16 +195,17 @@ export default function Scanner() {
                     onKeyDown={(e) => e.key === "Enter" && canScan && startScan()}
                     placeholder="https://example.com"
                     disabled={scanning}
-                    className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-[#e0e0e0] px-5 py-4 outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 ${
+                    className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-[#e0e0e0] outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 ${
                       urlError
                         ? "border-[#E24B4A]/60 focus:border-[#E24B4A]"
                         : "border-[#1e1e1e] focus:border-[#2e2e2e]"
                     }`}
+                    style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}
                   />
                   {url && !scanning && (
                     <button
                       onClick={() => { setUrl(""); setUrlError(""); inputRef.current?.focus(); }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer p-1"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}
                       aria-label="Clear URL"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -231,11 +221,12 @@ export default function Scanner() {
 
               {/* Authorization checkbox */}
               <div
-                className={`border rounded-xl px-5 py-4 transition-colors cursor-pointer ${
+                className={`border rounded-xl transition-colors cursor-pointer ${
                   accepted
                     ? "border-[#7F77DD]/30 bg-[#7F77DD]/5"
                     : "border-dashed border-[#222] hover:border-[#2e2e2e]"
                 }`}
+                style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}
                 onClick={() => !scanning && setAccepted((v) => !v)}
               >
                 <div className="flex items-start gap-4">
@@ -257,7 +248,7 @@ export default function Scanner() {
                     I acknowledge I have authorization to conduct a security scan including header analysis, fingerprinting, and disclosure checks.{" "}
                     <button
                       onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}
-                      className="text-[#7F77DD] underline underline-offset-2 bg-transparent border-none cursor-pointer font-mono text-[12px] p-0 hover:text-[#9f99e8] transition-colors"
+                      className="text-[#7F77DD] underline underline-offset-2 bg-transparent border-none cursor-pointer font-mono text-[12px] hover:text-[#9f99e8] transition-colors" style={{ padding: '0' }}
                     >
                       Read more
                     </button>
@@ -269,13 +260,14 @@ export default function Scanner() {
               <button
                 onClick={startScan}
                 disabled={!canScan}
-                className={`w-full py-4 rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 ${
+                className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 ${
                   scanning
                     ? "bg-transparent border-[#1e1e1e] text-[#444] cursor-not-allowed"
                     : canScan
                     ? "bg-[#0f0f0f] border-[#7F77DD]/50 text-[#7F77DD] hover:bg-[#7F77DD]/8 hover:border-[#7F77DD] cursor-pointer active:scale-[0.99]"
                     : "bg-transparent border-[#181818] text-[#333] cursor-not-allowed"
                 }`}
+                style={{ paddingTop: '16px', paddingBottom: '16px' }}
               >
                 {scanning ? (
                   <>
@@ -299,7 +291,7 @@ export default function Scanner() {
 
               {/* Progress steps — only visible once scan starts */}
               {stepIndex >= 0 && (
-                <div className="border border-[#141414] rounded-xl px-5 py-4 space-y-2.5">
+                <div className="border border-[#141414] rounded-xl space-y-2.5" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
                   <p className="text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#333] mb-3.5">
                     Scan Progress
                   </p>
@@ -342,6 +334,7 @@ export default function Scanner() {
           </span>
         </footer>
 
+      </div>
       </div>
 
       {modalOpen && <DisclosureModal onClose={() => setModalOpen(false)} />}

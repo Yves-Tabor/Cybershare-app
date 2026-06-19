@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import mainBg from "../assets/mainBg.png";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ function Avatar({ initials, color, size = 8 }) {
 
 function Toast({ message, visible }) {
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg px-5 py-2.5 text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`} style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px' }}>
       {message}
     </div>
   );
@@ -238,11 +239,11 @@ function CreateGroupModal({ onClose, onCreate }) {
   const selectedCat = CATEGORIES.find((c) => c.label === category);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ padding: '16px' }}>
       <div className="w-full max-w-[540px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#141414]">
+        <div className="flex items-center justify-between border-b border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -252,14 +253,14 @@ function CreateGroupModal({ onClose, onCreate }) {
             </div>
             <span className="text-[13px] font-semibold text-white">Create a group</span>
           </div>
-          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1">
+          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
 
-        <div className="px-6 py-6 space-y-5 max-h-[75vh] overflow-y-auto">
+        <div className="space-y-5 max-h-[75vh] overflow-y-auto" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
 
           {/* Group name */}
           <div>
@@ -271,7 +272,7 @@ function CreateGroupModal({ onClose, onCreate }) {
               onChange={(e) => { setName(e.target.value); setFormError(""); }}
               placeholder="e.g. Exploit Dev Circle"
               maxLength={60}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
           </div>
 
@@ -283,7 +284,7 @@ function CreateGroupModal({ onClose, onCreate }) {
               onChange={(e) => { setDescription(e.target.value); setFormError(""); }}
               placeholder="What is this group about?"
               rows={3}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]"
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
           </div>
 
@@ -295,12 +296,15 @@ function CreateGroupModal({ onClose, onCreate }) {
                 <button
                   key={cat.label}
                   onClick={() => setCategory(cat.label)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
+                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
                     category === cat.label
                       ? "border-current font-semibold"
                       : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
                   }`}
-                  style={category === cat.label ? { color: cat.color, background: cat.bg, borderColor: cat.color + "55" } : {}}
+                  style={{
+                    paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px',
+                    ...(category === cat.label ? { color: cat.color, background: cat.bg, borderColor: cat.color + "55" } : {})
+                  }}
                 >
                   {cat.label}
                 </button>
@@ -320,11 +324,11 @@ function CreateGroupModal({ onClose, onCreate }) {
                 onChange={(e) => { setInviteEmail(e.target.value); setInviteError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && addInvite()}
                 placeholder="colleague@example.com"
-                className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+                className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
               />
               <button
                 onClick={addInvite}
-                className="px-4 py-3 bg-[#141414] border border-[#222] rounded-xl text-[12px] font-mono text-[#888] hover:text-white hover:border-[#333] transition-all cursor-pointer flex-shrink-0"
+                className="bg-[#141414] border border-[#222] rounded-xl text-[12px] font-mono text-[#888] hover:text-white hover:border-[#333] transition-all cursor-pointer flex-shrink-0" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
               >
                 Add
               </button>
@@ -334,12 +338,12 @@ function CreateGroupModal({ onClose, onCreate }) {
             {invites.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {invites.map((email) => (
-                  <span key={email} className="flex items-center gap-1.5 bg-[#111] border border-[#1e1e1e] rounded-lg px-2.5 py-1 text-[11px] font-mono text-[#888]">
+                  <span key={email} className="flex items-center gap-1.5 bg-[#111] border border-[#1e1e1e] rounded-lg text-[11px] font-mono text-[#888]" style={{ paddingLeft: '10px', paddingRight: '10px', paddingTop: '4px', paddingBottom: '4px' }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                     </svg>
                     {email}
-                    <button onClick={() => setInvites((p) => p.filter((e) => e !== email))} className="text-[#333] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer p-0 ml-0.5">
+                    <button onClick={() => setInvites((p) => p.filter((e) => e !== email))} className="text-[#333] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer ml-0.5" style={{ padding: '0' }}>
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
@@ -351,7 +355,7 @@ function CreateGroupModal({ onClose, onCreate }) {
           </div>
 
           {/* Preview */}
-          <div className="border border-[#141414] rounded-xl p-4 bg-[#080808]">
+          <div className="border border-[#141414] rounded-xl bg-[#080808]" style={{ padding: '16px' }}>
             <p className="text-[9.5px] font-mono text-[#333] tracking-[0.15em] uppercase mb-3">Preview</p>
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, border: `1px solid ${selectedCat.color}22` }}>
@@ -360,7 +364,7 @@ function CreateGroupModal({ onClose, onCreate }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-[13px] font-semibold text-white truncate">{name || "Group name"}</p>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color }}>{category}</span>
+                  <span className="text-[10px] font-mono rounded-md flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>{category}</span>
                 </div>
                 <p className="text-[12px] text-[#444] leading-relaxed line-clamp-2">{description || "Your description will appear here."}</p>
               </div>
@@ -371,11 +375,11 @@ function CreateGroupModal({ onClose, onCreate }) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2.5 px-6 py-4 border-t border-[#141414]">
-          <button onClick={onClose} className="px-4 py-2 bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer">
+        <div className="flex justify-end gap-2.5 border-t border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <button onClick={onClose} className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             Cancel
           </button>
-          <button onClick={handleCreate} className="flex items-center gap-1.5 px-4 py-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none">
+          <button onClick={handleCreate} className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
@@ -409,20 +413,20 @@ function InviteModal({ group, onClose, onInvite }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ padding: '16px' }}>
       <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#141414]">
+        <div className="flex items-center justify-between border-b border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
           <div>
             <p className="text-[13px] font-semibold text-white">Invite to {group.name}</p>
             <p className="text-[10.5px] text-[#444] font-mono mt-0.5">Invitations sent by email</p>
           </div>
-          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1">
+          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="space-y-4" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '20px', paddingBottom: '20px' }}>
           <div className="flex gap-2">
             <input
               ref={inputRef}
@@ -431,9 +435,9 @@ function InviteModal({ group, onClose, onInvite }) {
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && send()}
               placeholder="Enter email address"
-              className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
-            <button onClick={send} className="px-4 py-3 bg-white text-[#080808] rounded-xl text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0">
+            <button onClick={send} className="bg-white text-[#080808] rounded-xl text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}>
               Send
             </button>
           </div>
@@ -452,8 +456,8 @@ function InviteModal({ group, onClose, onInvite }) {
             </div>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-[#141414] flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-[#141414] border border-[#222] rounded-lg text-[12px] text-[#888] hover:text-white transition-colors cursor-pointer">
+        <div className="border-t border-[#141414] flex justify-end" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <button onClick={onClose} className="bg-[#141414] border border-[#222] rounded-lg text-[12px] text-[#888] hover:text-white transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             Done
           </button>
         </div>
@@ -466,7 +470,7 @@ function InviteModal({ group, onClose, onInvite }) {
 
 function GroupCard({ group, onJoin, onOpen }) {
   return (
-    <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl px-5 py-5 hover:border-[#242424] transition-colors">
+    <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '20px', paddingBottom: '20px' }}>
       <div className="flex items-start gap-4">
         {/* Group icon */}
         <div
@@ -478,10 +482,10 @@ function GroupCard({ group, onJoin, onOpen }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <button onClick={() => onOpen(group)} className="text-[14px] font-semibold text-white hover:text-[#ccc] transition-colors bg-transparent border-none cursor-pointer p-0 text-left">
+            <button onClick={() => onOpen(group)} className="text-[14px] font-semibold text-white hover:text-[#ccc] transition-colors bg-transparent border-none cursor-pointer text-left" style={{ padding: '0' }}>
               {group.name}
             </button>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md" style={{ background: group.categoryBg, color: group.categoryColor }}>
+            <span className="text-[10px] font-mono rounded-md" style={{ background: group.categoryBg, color: group.categoryColor, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>
               {group.category}
             </span>
           </div>
@@ -502,17 +506,19 @@ function GroupCard({ group, onJoin, onOpen }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpen(group)}
-                className="text-[11px] font-mono text-[#555] hover:text-[#999] transition-colors bg-transparent border-none cursor-pointer px-0"
+                className="text-[11px] font-mono text-[#555] hover:text-[#999] transition-colors bg-transparent border-none cursor-pointer"
+                style={{ paddingLeft: '0', paddingRight: '0' }}
               >
                 View
               </button>
               <button
                 onClick={() => onJoin(group.id)}
-                className={`text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
                   group.joined
                     ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
                     : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
                 }`}
+                style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px' }}
               >
                 {group.joined ? "Leave" : "Join"}
               </button>
@@ -538,7 +544,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
   }
 
   return (
-    <div className="border border-[#171717] rounded-xl px-5 py-4 bg-[#080808] hover:border-[#212121] transition-colors">
+    <div className="border border-[#171717] rounded-xl bg-[#080808] hover:border-[#212121] transition-colors" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
       {/* Author */}
       <div className="flex items-center gap-2.5 mb-3">
         <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0" style={{ background: post.color }}>
@@ -906,8 +912,18 @@ export default function Community() {
   const joinedCount = groups.filter((g) => g.joined).length;
 
   return (
-    <div className="bg-[#050505] min-h-screen text-[#e0e0e0]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <div className="max-w-[720px] mx-auto px-6 pt-10 pb-16">
+    <div
+      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      style={{ 
+        fontFamily: "'DM Sans', sans-serif",
+        backgroundImage: `url(${mainBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="bg-[#080808]/75 min-h-screen">
+        <div className="w-full max-w-[900px] mx-auto px-8 lg:px-12 pt-12 pb-20">
 
         {view === "directory" && (
           <>
@@ -1016,6 +1032,7 @@ export default function Community() {
             isOwner={isOwner}
           />
         )}
+      </div>
       </div>
 
       {showCreate && (

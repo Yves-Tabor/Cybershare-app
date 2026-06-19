@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import mainBg from "../assets/mainBg.png";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -109,7 +110,7 @@ function UploadForm({ onPublish }) {
   return (
     <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-[#080808]">
       {/* Form header */}
-      <div className="border-b border-[#141414] px-7 py-3.5 flex items-center justify-between">
+      <div className="border-b border-[#141414] flex items-center justify-between" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '14px', paddingBottom: '14px' }}>
         <span className="text-[9.5px] font-mono font-bold tracking-[0.22em] uppercase text-[#555]">
           Platform Resource Interface
         </span>
@@ -119,7 +120,7 @@ function UploadForm({ onPublish }) {
         </span>
       </div>
 
-      <div className="px-7 py-7 space-y-6">
+      <div className="space-y-6" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '28px', paddingBottom: '28px' }}>
 
         {/* Title */}
         <div>
@@ -131,7 +132,7 @@ function UploadForm({ onPublish }) {
             value={title}
             onChange={(e) => { setTitle(e.target.value); setError(""); }}
             placeholder="enter resource title..."
-            className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] font-mono text-[#ccc] px-4 py-3.5 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+            className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px' }}
           />
         </div>
 
@@ -161,11 +162,12 @@ function UploadForm({ onPublish }) {
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onClick={() => fileInputRef.current?.click()}
-            className={`border rounded-xl px-5 py-8 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+            className={`border rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
               dragging
                 ? "border-[#7F77DD]/50 bg-[#7F77DD]/5"
                 : "border-dashed border-[#1e1e1e] hover:border-[#2e2e2e] bg-[#0a0a0a]"
             }`}
+            style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '32px', paddingBottom: '32px' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={dragging ? "#7F77DD" : "#333"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="16 16 12 12 8 16" />
@@ -189,7 +191,7 @@ function UploadForm({ onPublish }) {
           {files.length > 0 && (
             <div className="mt-3 space-y-2">
               {files.map((f) => (
-                <div key={f.name} className="flex items-center gap-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg px-3.5 py-2.5">
+                <div key={f.name} className="flex items-center gap-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg" style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '10px', paddingBottom: '10px' }}>
                   <div className="w-7 h-7 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center flex-shrink-0">
                     <span className="text-[8px] font-mono font-bold text-[#555]">FILE</span>
                   </div>
@@ -199,7 +201,7 @@ function UploadForm({ onPublish }) {
                   </div>
                   <button
                     onClick={() => removeFile(f.name)}
-                    className="text-[#333] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer flex-shrink-0 p-1"
+                    className="text-[#333] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer flex-shrink-0" style={{ padding: '4px' }}
                     aria-label="Remove file"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -219,7 +221,7 @@ function UploadForm({ onPublish }) {
         {/* Publish button */}
         <button
           onClick={handlePublish}
-          className="w-full py-3.5 bg-[#0e0e0e] border border-[#2a2a2a] rounded-xl text-[12px] font-mono font-bold tracking-[0.18em] uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white hover:bg-[#111] transition-all active:scale-[0.99]"
+          className="w-full bg-[#0e0e0e] border border-[#2a2a2a] rounded-xl text-[12px] font-mono font-bold tracking-[0.18em] uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white hover:bg-[#111] transition-all active:scale-[0.99]" style={{ paddingTop: '14px', paddingBottom: '14px' }}
         >
           Publish Resource
         </button>
@@ -234,7 +236,7 @@ function ResourceCard({ resource }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
 
   return (
-    <div className="border border-[#1c1c1c] rounded-2xl bg-[#080808] px-6 py-5 hover:border-[#242424] transition-colors">
+    <div className="border border-[#1c1c1c] rounded-2xl bg-[#080808] hover:border-[#242424] transition-colors" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '20px', paddingBottom: '20px' }}>
 
       {/* Author row */}
       <div className="flex items-center gap-3 mb-4">
@@ -262,8 +264,7 @@ function ResourceCard({ resource }) {
           {resource.files.map((file) => (
             <div
               key={file.name}
-              className="border border-[#1a1a1a] rounded-xl px-4 py-3.5 bg-[#0a0a0a]"
-            >
+              className="border border-[#1a1a1a] rounded-xl bg-[#0a0a0a]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px' }}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222] flex items-center justify-center flex-shrink-0">
                   <span className="text-[8px] font-mono font-bold text-[#555]">File</span>
@@ -273,8 +274,8 @@ function ResourceCard({ resource }) {
                   <p className="text-[11px] font-mono text-[#444] mt-0.5">{file.size} · {file.type}</p>
                 </div>
               </div>
-              <div className="flex justify-end mt-3 pt-3 border-t border-[#141414]">
-                <button className="px-4 py-1.5 bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none">
+              <div className="flex justify-end mt-3 border-t border-[#141414]" style={{ paddingTop: '12px' }}>
+                <button className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '6px', paddingBottom: '6px' }}>
                   download
                 </button>
               </div>
@@ -284,22 +285,23 @@ function ResourceCard({ resource }) {
       )}
 
       {/* Footer — tags + comment */}
-      <div className="flex items-center justify-between pt-4 border-t border-[#111]">
+      <div className="flex items-center justify-between border-t border-[#111]" style={{ paddingTop: '16px' }}>
         <div className="flex items-center gap-2 flex-wrap">
           {resource.tags.map((tag) => (
             <span
               key={tag}
-              className={`text-[11px] font-mono px-3 py-1 rounded-full border cursor-pointer transition-colors ${
+              className={`text-[11px] font-mono rounded-full border cursor-pointer transition-colors ${
                 tag === "#Resource"
                   ? "border-[#1D9E75]/50 text-[#1D9E75] bg-[#1D9E75]/5 hover:bg-[#1D9E75]/10"
                   : "border-[#333] text-[#666] bg-transparent hover:border-[#444] hover:text-[#888]"
               }`}
+              style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '4px', paddingBottom: '4px' }}
             >
               {tag}
             </span>
           ))}
         </div>
-        <button className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg px-3 py-1.5 cursor-pointer">
+        <button className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg cursor-pointer" style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
@@ -362,10 +364,17 @@ export default function Resources() {
 
   return (
     <div
-      className="bg-[#050505] min-h-screen text-[#e0e0e0]"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
+      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      style={{ 
+        fontFamily: "'DM Sans', sans-serif",
+        backgroundImage: `url(${mainBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
     >
-      <div className="max-w-[720px] mx-auto px-6 pt-10 pb-16">
+      <div className="bg-[#080808]/75 min-h-screen">
+        <div className="w-full max-w-[900px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '48px', paddingBottom: '80px' }}>
 
         {/* Page header */}
         <div className="flex items-center justify-between mb-6">
@@ -377,11 +386,12 @@ export default function Resources() {
           </div>
           <button
             onClick={() => { setView(view === "upload" ? "feed" : "upload"); setQuery(""); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-mono tracking-wide border transition-all cursor-pointer ${
+            className={`flex items-center gap-2 rounded-lg text-[12px] font-mono tracking-wide border transition-all cursor-pointer ${
               view === "upload"
                 ? "bg-[#111] border-[#2a2a2a] text-[#888] hover:text-white"
                 : "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
             }`}
+            style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
           >
             {view === "upload" ? (
               <>
@@ -405,7 +415,7 @@ export default function Resources() {
         {view === "feed" && (
           <div className="relative mb-6">
             <svg
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"
+              className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" style={{ left: '16px' }}
               width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             >
@@ -417,12 +427,12 @@ export default function Resources() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="search by title, author, tag, or filename..."
-              className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] pl-10 pr-10 py-3 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+              className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '40px', paddingRight: '40px', paddingTop: '12px', paddingBottom: '12px' }}
             />
             {query && (
               <button
                 onClick={() => { setQuery(""); searchRef.current?.focus(); }}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer p-1"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}
                 aria-label="Clear search"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,6 +483,7 @@ export default function Resources() {
             </div>
           )
         )}
+      </div>
       </div>
 
       {/* Toast */}
