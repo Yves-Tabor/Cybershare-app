@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import mainBg from "../assets/mainBg.png";
 import "./NotFound.css";
 
 const THEME = {
@@ -93,7 +94,7 @@ function GridCells() {
 
 export default function NotFound() {
   return (
-    <div className="notfound-page">
+    <div className="notfound-page" style={{ backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="notfound-glow" />
 
       <GridCells />

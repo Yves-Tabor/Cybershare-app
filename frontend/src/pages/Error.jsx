@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import mainBg from "../assets/mainBg.png";
 import "./Error.css";
 
 const THEME = {
@@ -165,7 +166,7 @@ export default function ErrorPage({ error, reset }) {
   };
 
   return (
-    <div className="error-page">
+    <div className="error-page" style={{ backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="error-glow" />
       <GridCells />
 
