@@ -43,65 +43,35 @@ const SAMPLE_AUTHORS = [
 
 
 const SAMPLE_BODIES = [
-
   "New CVE dropped affecting OpenSSL 3.x — patch immediately if you're running it in prod. PoC is already circulating on underground forums.",
-
   "Interesting lateral movement technique observed in the wild: attackers are abusing WMI subscriptions to maintain persistence without touching disk.",
-
   "Just pushed v2.3 of my network recon tool — now supports passive fingerprinting and outputs to JSON/CSV. Feedback welcome.",
-
   "Anyone else seeing a spike in Cobalt Strike beacon traffic this week? Our sensors lit up Tuesday night across multiple clients.",
-
   "Deep dive on the recent supply chain attack — the threat actor embedded a backdoor in a widely-used npm package with 2M weekly downloads.",
-
   "Reminder: if you're still using SHA-1 anywhere, stop. It's 2026. Here's a migration guide I put together for legacy codebases.",
-
   "Built a YARA rule set for the new ransomware family targeting healthcare. Sharing it here — community testing appreciated.",
-
   "Writeup on my CTF win this weekend: exploited a use-after-free in a custom memory allocator. Full chain including privesc.",
-
   "Spotted a phishing campaign impersonating major cloud providers. The kit is surprisingly polished — includes real-time OTP relay.",
-
   "Quick tip: set up canary tokens in your S3 buckets. Caught an unauthorized access attempt last night that our SIEM missed.",
-
   "Research paper on LLM-assisted malware obfuscation is out — raises some serious questions about AI-generated evasion techniques.",
-
   "New DNS tunneling variant bypasses most corporate proxies. Technical breakdown with packet captures in the comments.",
-
   "Heads up: a popular VPN provider was silently logging traffic despite their no-log policy — confirmed by independent audit.",
-
   "Anyone built integrations between their SOAR and Shodan? Looking to automate asset exposure checks into incident response playbooks.",
-
   "Kernel exploit for the scheduler bug from last month now has a stable PoC. Privilege escalation on unpatched Linux 6.x kernels.",
-
   "Released a free threat intel feed aggregator that normalises IOCs from 15 sources into a single STIX 2.1 bundle.",
-
   "Monthly red team debrief: we got domain admin in 4 hours via a printer driver vulnerability most blue teams don't monitor.",
-
   "PSA: the Tor browser had a deanonymisation bug for 3 months before it was patched. Update if you haven't already.",
-
   "Wrote a short guide on hardening SSH configs — covers ciphers, host key algorithms and jump host setups. Happy to share.",
-
   "Memory forensics challenge: can you find the injected shellcode in this dump? Posting the answer next Friday.",
-
   "Log4Shell is still being actively exploited in 2026 — unbelievable but our honeypots confirm it. Patch your legacy Java apps.",
-
   "New malware family uses DNS-over-HTTPS for C2 — makes traditional network detection nearly useless. Details in thread.",
-
   "Our blue team blocked a BEC attempt that would have cost $340k — the attacker compromised an email account via an unpatched Outlook bug.",
-
   "Fuzzing methodology series part 3: coverage-guided fuzzing with libFuzzer on a closed-source binary using emulation.",
-
   "If you're not testing for SSRF in your bug bounty scope you're leaving money on the table. Here's my checklist.",
-
   "APT group attributed to nation-state actor now using legitimate cloud storage for payload staging — harder to block without user impact.",
-
   "Tool release: passive subdomain discovery via certificate transparency logs — no active scanning, stays under the radar.",
-
   "Malware analysis stream recap: reverse engineered a banking trojan live, covering string decryption, config extraction and C2 comms.",
-
   "CVE triage tip: not all criticals are equal — focus on exploitability, asset exposure and blast radius, not just CVSS score.",
-
   "Blue team win: detected a living-off-the-land attack using only Windows Event Log correlation. No EDR needed. Sharing the sigma rules.",
 
 ];
@@ -802,15 +772,15 @@ export default function Home() {
 
     >
 
-      <div className="bg-[#080808]/75 min-h-screen">
+      <div className="bg-[#080808]/5 min-h-screen">
 
-        <div className="w-full max-w-[900px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '48px', paddingBottom: '80px' }}>
+        <div className="w-full max-w-[1200px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '25px', paddingBottom: '80px' }}>
 
 
 
         {/* Top bar */}
 
-        <div className="flex items-center justify-between mb-7">
+        <div className="flex items-center justify-between mb-3">
 
           <h1 className="text-[20px] font-semibold text-white tracking-tight">Home</h1>
 

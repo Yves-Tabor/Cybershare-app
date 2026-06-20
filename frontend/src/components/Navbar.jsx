@@ -126,10 +126,255 @@ const UserIcon = () => (
   </svg>
 );
 
+// ─── Mock data ────────────────────────────────────────────────────────────────
+
+const MOCK_USER = {
+  username: "WALVESTH72",
+  handle: "@walvesth72",
+  role: "Security Researcher",
+  joined: "March 2025",
+  initials: "WA",
+};
+
+const MOCK_NOTIFICATIONS = [
+  {
+    id: 1,
+    type: "comment",
+    message: "nullbyte commented on your Burp Suite post",
+    time: "2m ago",
+    unread: true,
+  },
+  {
+    id: 2,
+    type: "bookmark",
+    message: "sec_raven bookmarked your Volatility3 resource",
+    time: "14m ago",
+    unread: true,
+  },
+  {
+    id: 3,
+    type: "system",
+    message: "Your resource 'git bash exe' was approved",
+    time: "1h ago",
+    unread: false,
+  },
+];
+
+function NotifIcon({ type }) {
+  if (type === "comment") return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+  if (type === "bookmark") return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+// ─── User Panel ───────────────────────────────────────────────────────────────
+
+function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
+  const unreadCount = notifications.filter((n) => n.unread).length;
+
+  return (
+    <div
+      ref={panelRef}
+      style={{
+        position: "fixed",
+        top: 46,
+        right: 8,
+        width: 300,
+        backgroundColor: "#ffffff",
+        border: "1px solid #e5e5e5",
+        borderRadius: 16,
+        overflow: "hidden",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
+        zIndex: 9999,
+      }}
+    >
+      {/* User header */}
+      <div style={{ padding: "18px 20px", borderBottom: "1px solid #f0f0f0", background: "#fafafa" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{
+            width: "40px", height: "40px", borderRadius: "50%",
+            background: "#7F77DD", border: "2px solid #ffffff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#ffffff",
+            flexShrink: 0,
+          }}>
+            {MOCK_USER.initials}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{
+              fontSize: "9px", fontFamily: "monospace", fontWeight: "bold",
+              letterSpacing: "0.15em", textTransform: "uppercase",
+              background: "#7F77DD", color: "#ffffff",
+              borderRadius: "999px", padding: "3px 8px", flexShrink: 0,
+            }}>
+              {MOCK_USER.role}
+            </span>
+            <p style={{ margin: "2px 0 0", fontSize: "11px", fontFamily: "monospace", color: "#666" }}>
+              {MOCK_USER.handle}
+            </p>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px" }}>
+          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1D9E75", flexShrink: 0 }} />
+          <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#666" }}>
+            Active · Joined {MOCK_USER.joined}
+          </span>
+        </div>
+      </div>
+
+      {/* Notifications header */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "10px 20px", borderBottom: "1px solid #f0f0f0",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{
+            fontSize: "9.5px", fontFamily: "monospace", fontWeight: "bold",
+            letterSpacing: "0.18em", textTransform: "uppercase", color: "#666",
+          }}>
+            Notifications
+          </span>
+          {unreadCount > 0 && (
+            <span style={{
+              fontSize: "9px", fontFamily: "monospace", fontWeight: "bold",
+              background: "#7F77DD", color: "#ffffff",
+              borderRadius: "999px",
+              padding: "1px 7px",
+            }}>
+              {unreadCount} new
+            </span>
+          )}
+        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={onMarkAllRead}
+            style={{
+              fontSize: "10px", fontFamily: "monospace", color: "#666",
+              background: "transparent", border: "none", cursor: "pointer",
+            }}
+            onMouseEnter={e => e.target.style.color = "#111"}
+            onMouseLeave={e => e.target.style.color = "#666"}
+          >
+            mark all read
+          </button>
+        )}
+      </div>
+
+      {/* Notification list */}
+      <div>
+        {notifications.length === 0 ? (
+          <div style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            justifyContent: "center", gap: "8px", padding: "28px 20px",
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#999", margin: 0 }}>
+              0 notifications
+            </p>
+          </div>
+        ) : (
+          notifications.map((notif, i) => (
+            <div
+              key={notif.id}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: "12px",
+                padding: "12px 20px",
+                background: notif.unread ? "#f5f3ff" : "transparent",
+                borderBottom: i !== notifications.length - 1 ? "1px solid #f0f0f0" : "none",
+              }}
+            >
+              <div style={{
+                width: "28px", height: "28px", borderRadius: "8px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, marginTop: "2px",
+                background: notif.unread ? "#7F77DD" : "#f0f0f0",
+                border: notif.unread ? "none" : "1px solid #e5e5e5",
+                color: notif.unread ? "#ffffff" : "#999",
+              }}>
+                <NotifIcon type={notif.type} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  margin: 0, fontSize: "12px", lineHeight: 1.4,
+                  color: notif.unread ? "#111" : "#666",
+                }}>
+                  {notif.message}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: "10px", fontFamily: "monospace", color: "#999" }}>
+                  {notif.time}
+                </p>
+              </div>
+              {notif.unread && (
+                <span style={{
+                  width: "6px", height: "6px", borderRadius: "50%",
+                  background: "#7F77DD", flexShrink: 0, marginTop: "6px",
+                }} />
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        borderTop: "1px solid #f0f0f0",
+        display: "flex", alignItems: "center",
+        padding: "12px 20px", gap: "0",
+        background: "#fafafa",
+      }}>
+        <Link
+          to="/main/settings"
+          onClick={onClose}
+          style={{
+            flex: 1, textAlign: "center", fontSize: "11px",
+            fontFamily: "monospace", color: "#666", textDecoration: "none",
+          }}
+          onMouseEnter={e => e.target.style.color = "#111"}
+          onMouseLeave={e => e.target.style.color = "#666"}
+        >
+          settings
+        </Link>
+        <div style={{ width: "1px", background: "#e5e5e5", alignSelf: "stretch" }} />
+        <button
+          style={{
+            flex: 1, fontSize: "11px", fontFamily: "monospace",
+            color: "#E24B4A", background: "transparent",
+            border: "none", cursor: "pointer",
+          }}
+          onMouseEnter={e => e.target.style.color = "#c0392b"}
+          onMouseLeave={e => e.target.style.color = "#E24B4A"}
+        >
+          sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const panelRef = useRef(null);
   const toggleRef = useRef(null);
+  const userPanelRef = useRef(null);
+  const userToggleRef = useRef(null);
 
   // Close when clicking outside — excluding the toggle button and the panel itself
   useEffect(() => {
@@ -148,22 +393,53 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
+  // Close user panel when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (
+        userOpen &&
+        userPanelRef.current &&
+        !userPanelRef.current.contains(e.target) &&
+        userToggleRef.current &&
+        !userToggleRef.current.contains(e.target)
+      ) {
+        setUserOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [userOpen]);
+
   // Close on Escape key
   useEffect(() => {
     function handleKeyDown(e) {
-      if (e.key === "Escape" && open) setOpen(false);
+      if (e.key === "Escape") {
+        if (open) setOpen(false);
+        if (userOpen) setUserOpen(false);
+      }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
+  }, [open, userOpen]);
 
   function toggle() {
     setOpen((prev) => !prev);
   }
 
+  function toggleUser() {
+    setUserOpen((prev) => !prev);
+    if (open) setOpen(false);
+  }
+
+  function markAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  }
+
   return (
     <>
-      <header className="sticky top-0 z-[60] flex items-center justify-between px-4 sm:px-5 py-3.5 bg-[#080808]">
+      <header className="sticky top-0 z-[60] flex items-center justify-between bg-[#080808]"
+      style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', paddingBottom: '5px' }}
+      >
         <button
           ref={toggleRef}
           onClick={toggle}
@@ -192,12 +468,51 @@ export default function Navbar() {
         </Link>
 
         <button
+          ref={userToggleRef}
+          onClick={toggleUser}
           aria-label="Account"
+          aria-expanded={userOpen}
           className="flex items-center justify-center w-9 h-9 rounded-full text-[#e0e0e0]/80 hover:text-white hover:bg-white/[0.06] transition-colors"
+          style={{ position: "relative" }}
         >
           <UserIcon />
+          {notifications.filter((n) => n.unread).length > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: 2,
+                right: 2,
+                minWidth: 15,
+                height: 15,
+                borderRadius: 999,
+                background: "#7F77DD",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 9,
+                fontFamily: "monospace",
+                fontWeight: "bold",
+                lineHeight: 1,
+                padding: "0 3px",
+                border: "1.5px solid #080808",
+              }}
+            >
+              {notifications.filter((n) => n.unread).length > 9 ? "9+" : notifications.filter((n) => n.unread).length}
+            </span>
+          )}
         </button>
       </header>
+
+      {/* User panel */}
+      {userOpen && (
+        <UserPanel
+          notifications={notifications}
+          onMarkAllRead={markAllRead}
+          onClose={() => setUserOpen(false)}
+          panelRef={userPanelRef}
+        />
+      )}
 
       {/* Overlay */}
       <div
@@ -221,7 +536,8 @@ export default function Navbar() {
             key={item.label}
             to={item.path}
             onClick={() => setOpen(false)}
-            className="flex items-center gap-3 w-full px-3 py-2.5 text-[#cfd2d8] hover:text-white transition-colors text-[13px] sm:text-[14px] font-medium whitespace-nowrap"
+            className="flex items-center gap-3 w-full text-[#cfd2d8] hover:text-white transition-colors text-[13px] sm:text-[14px] font-medium whitespace-nowrap"
+            style={{ paddingTop: '8px', paddingBottom: '8px' }}
           >
             <span className="text-[#cfd2d8] flex-shrink-0">{item.icon}</span>
             {item.label}

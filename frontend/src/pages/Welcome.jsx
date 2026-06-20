@@ -17,7 +17,7 @@ const HERO_CONTENT = {
   headline: ["Identify security", "weaknesses", "before attackers do."],
   accentWord: "weaknesses",
   subtext:
-    "Automated website vulnerability scanning designed to help developers identify common security weaknesses and improve their security posture through clear remediation guidance.",
+    "Automated website vulnerability scanning and cybersecurity community designed to help developers identify common security weaknesses and improve their security posture through clear remediation guidance.",
   ctaLabel: "Start Scanning",
 };
 
@@ -268,10 +268,12 @@ export default function Welcome() {
               </li>
             ))}
           </ul>
-          <button className="nav-btn">
+          <a href="#p-auth">
+            <button className="nav-btn">
             <div className="nav-btn-dot" />
             {SITE_CONFIG.ctaText}
-          </button>
+            </button>
+          </a>
         </nav>
 
         <div className="hero-body">
@@ -308,95 +310,9 @@ export default function Welcome() {
         </div>
       </section>
 
-      <section className="panel" id="p-info" style={{ background: 'transparent' }}>
-        <div className="info-bar">
-          <span className="info-bar-logo anim-right">{SITE_CONFIG.name}</span>
-          <span className="info-bar-tag anim-fade d200">
-            Trusted by security teams worldwide
-          </span>
-          <span
-            style={{ fontSize: 13, color: "var(--light-sub)" }}
-            className="anim-left d300"
-          >
-            Scan. Detect. Resolve.
-          </span>
-        </div>
-
-        <div className="marquee-section">
-          <Marquee items={TECH_STACK} dark={false} speed={32} />
-        </div>
-
-        <div className="info-grid">
-          {/* LEFT */}
-          <div className="i-col">
-            <div className="lc anim-up d100">
-              <div className="stats-row">
-                {ABOUT_STATS.slice(0, 2).map((s, i) => (
-                  <div className="stat-mini" key={i}>
-                    <div className="stat-num">{s.value}</div>
-                    <div className="stat-lbl">{s.label}</div>
-                    <div className="stat-src">{s.source}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="lc anim-up d200" style={{ flex: 1 }}>
-              <div className="stats-row" style={{ marginBottom: 12 }}>
-                {ABOUT_STATS.slice(2, 4).map((s, i) => (
-                  <div className="stat-mini" key={i}>
-                    <div
-                      className="stat-num"
-                      style={{ fontSize: "clamp(28px,3vw,44px)" }}
-                    >
-                      {s.value}
-                    </div>
-                    <div className="stat-lbl">{s.label}</div>
-                    <div className="stat-src">{s.source}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="desc-p">{ABOUT_DESC}</p>
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div className="i-col">
-            <div className="lc anim-left d200">
-              <div className="logos-row">
-                {TRUSTED_BY.map((b) => (
-                  <div className="logo-chip" key={b.name}>
-                    <div className="logo-dot" style={{ background: b.color }} />
-                    {b.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="lc anim-left d300" style={{ flex: 1 }}>
-              <div className="testi-tag">{TESTIMONIAL.tag}</div>
-              <p className="testi-q">{TESTIMONIAL.quote}</p>
-              <div className="testi-by">
-                {TESTIMONIAL.author} <span>{TESTIMONIAL.role}</span>
-              </div>
-            </div>
-
-            <div className="lc anim-left d400">
-              <div className="tech-row">
-                <span className="tech-lbl">Stack support</span>
-                {TECH_STACK.slice(0, 8).map((t) => (
-                  <div className="t-pill" key={t.label} title={t.label}>
-                    {t.icon}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel" id="p-features">
-        <div className="feat-wrap">
-          <div className="sec-head">
+      <section className="panel bg-black/70" id="p-features">
+        <div className="feat-wrap flex items-center">
+          <div className="sec-head bg-black md:w-[50%]">
             <h2 className="anim-up">Features &amp; Benefits</h2>
             <p className="anim-up d200">
               Everything you need to stay ahead of attackers — built for teams
@@ -404,7 +320,7 @@ export default function Welcome() {
             </p>
           </div>
 
-          <div className="feat-grid">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 dash-grid">
             <div className="fc anim-up d100">
               <div className="icon-row">
                 {FEATURES[0].icons.map((ic, i) => (
@@ -417,7 +333,7 @@ export default function Welcome() {
               <p>{FEATURES[0].body}</p>
             </div>
 
-            <div className="fc anim-up d200" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div className="fc md:fc-owasp anim-up d200" style={{ position: 'relative', overflow: 'hidden' }}>
               <h3>{FEATURES[1].title}</h3>
               <p>{FEATURES[1].body}</p>
               <div className="big-stat" style={{ marginTop: "auto", position: 'relative', zIndex: 1 }}>
@@ -427,8 +343,13 @@ export default function Welcome() {
               <div className="world-map-bg" style={{ backgroundImage: `url(${worldMap})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'absolute', bottom: 0, right: 0, width: '150px', height: '100px', borderRadius: '12px', opacity: 0.3, zIndex: 0 }}></div>
             </div>
 
-            <div className="fc anim-left d300">
-              <img src={welcomeOwasp} alt="OWASP Top 10 Coverage" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+            <div className="fc md:fc-owasp anim-up d300" style={{ position: 'relative', overflow: 'hidden' }}>
+              <h3>{FEATURES[2].title}</h3>
+              <p>{FEATURES[2].body}</p>
+              <div className="big-stat" style={{ marginTop: "auto", position: 'relative', zIndex: 1 }}>
+                {FEATURES[2]?.stat?.value}
+                <small>{FEATURES[2]?.stat.label}</small>
+              </div>
             </div>
 
             <div className="fc anim-right d400">
@@ -449,16 +370,16 @@ export default function Welcome() {
         </div>
       </section>
 
-      <section className="panel min-h-[100vh]" id="p-how-it-works">
-        <div className="threats-wrap">
-          <div className="sec-head">
+      <section className="panel min-h-[100vh] bg-black/40" id="p-how-it-works">
+        <div className="threats-wrap flex items-center">
+          <div className="sec-head w-full md:w-[50%]">
             <div className='bg-black rounded-lg p-4'>
               <h2 className="anim-up">How it works</h2>
               <p className="anim-up d200 text-transparent">Get the scan just in 5 steps</p>
             </div>
           </div>
 
-          <div className="dash-grid" style={{ gridTemplateColumns: "repeat(5, 1fr)", gridTemplateRows: "1fr" }}>
+          <div className="flex grid-cols-1 gap-4 dash-grid">
             {HOW_IT_WORKS.map((step, i) => (
               <div className="dc anim-scale" style={{ animationDelay: `${(i + 1) * 100}ms` }} key={i}>
                 <div className="dc-lbl" style={{ fontSize: "32px", fontWeight: 900, color: "var(--amber)" }}>{step.step}</div>

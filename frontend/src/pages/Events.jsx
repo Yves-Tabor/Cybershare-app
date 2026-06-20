@@ -134,7 +134,10 @@ function avatarColor(str) {
 
 function Toast({ message, visible }) {
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`} style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px' }}>
+    <div
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+      style={{ padding: "10px 20px" }}
+    >
       {message}
     </div>
   );
@@ -179,10 +182,18 @@ function CreateEventModal({ onClose, onCreate }) {
   const previewDay = date ? new Date(date + "T00:00:00").getDate() : "–";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ padding: '16px' }}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{ padding: "16px" }}
+    >
       <div className="w-full max-w-[540px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
 
-        <div className="flex items-center justify-between border-b border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+        {/* Modal header */}
+        <div
+          className="flex items-center justify-between border-b border-[#141414]"
+          style={{ padding: "16px 24px" }}
+        >
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -191,15 +202,22 @@ function CreateEventModal({ onClose, onCreate }) {
             </div>
             <span className="text-[13px] font-semibold text-white">Post an event</span>
           </div>
-          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
+          <button
+            onClick={onClose}
+            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            style={{ padding: "4px" }}
+          >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
 
-        <div className="space-y-5 max-h-[75vh] overflow-y-auto" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
-
+        {/* Modal body */}
+        <div
+          className="space-y-5 max-h-[75vh] overflow-y-auto"
+          style={{ padding: "24px" }}
+        >
           <div>
             <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">Event Title</label>
             <input
@@ -209,7 +227,8 @@ function CreateEventModal({ onClose, onCreate }) {
               onChange={(e) => { setTitle(e.target.value); setFormError(""); }}
               placeholder="e.g. Sigma Rule Writing Workshop"
               maxLength={80}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              style={{ padding: "12px 16px" }}
             />
           </div>
 
@@ -220,7 +239,8 @@ function CreateEventModal({ onClose, onCreate }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What should people expect?"
               rows={3}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]"
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]"
+              style={{ padding: "12px 16px" }}
             />
           </div>
 
@@ -231,10 +251,16 @@ function CreateEventModal({ onClose, onCreate }) {
                 <button
                   key={cat.label}
                   onClick={() => setCategory(cat.label)}
-                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${ style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px' }}
-                    category === cat.label ? "border-current font-semibold" : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
+                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
+                    category === cat.label
+                      ? "border-current font-semibold"
+                      : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
                   }`}
-                  style={category === cat.label ? { color: cat.color, background: cat.bg, borderColor: cat.color + "55" } : {}}
+                  style={
+                    category === cat.label
+                      ? { color: cat.color, background: cat.bg, borderColor: cat.color + "55", padding: "6px 12px" }
+                      : { padding: "6px 12px" }
+                  }
                 >
                   {cat.label}
                 </button>
@@ -249,9 +275,12 @@ function CreateEventModal({ onClose, onCreate }) {
                 <button
                   key={opt.l}
                   onClick={() => { setIsOnline(opt.k); setFormError(""); }}
-                  className={`flex-1 rounded-lg text-[11.5px] font-mono border transition-all cursor-pointer ${ style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}
-                    isOnline === opt.k ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/10" : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a]"
+                  className={`flex-1 rounded-lg text-[11.5px] font-mono border transition-all cursor-pointer ${
+                    isOnline === opt.k
+                      ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/10"
+                      : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a]"
                   }`}
+                  style={{ padding: "8px 12px" }}
                 >
                   {opt.l}
                 </button>
@@ -268,7 +297,8 @@ function CreateEventModal({ onClose, onCreate }) {
               value={location}
               onChange={(e) => { setLocation(e.target.value); setFormError(""); }}
               placeholder={isOnline ? "Discord, Zoom, Twitch…" : "Street address or venue name"}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              style={{ padding: "12px 16px" }}
             />
           </div>
 
@@ -280,7 +310,8 @@ function CreateEventModal({ onClose, onCreate }) {
                 value={date}
                 min={todayISO()}
                 onChange={(e) => { setDate(e.target.value); setFormError(""); }}
-                className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors"
+                className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+                style={{ padding: "12px 16px" }}
               />
             </div>
             <div className="flex-1">
@@ -289,22 +320,35 @@ function CreateEventModal({ onClose, onCreate }) {
                 type="time"
                 value={time}
                 onChange={(e) => { setTime(e.target.value); setFormError(""); }}
-                className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors"
+                className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+                style={{ padding: "12px 16px" }}
               />
             </div>
           </div>
 
-          <div className="border border-[#141414] rounded-xl bg-[#080808]" style={{ padding: '16px' }}>
+          {/* Preview */}
+          <div
+            className="border border-[#141414] rounded-xl bg-[#080808]"
+            style={{ padding: "16px" }}
+          >
             <p className="text-[9.5px] font-mono text-[#333] tracking-[0.15em] uppercase mb-3">Preview</p>
             <div className="flex items-start gap-3">
-              <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border" style={{ background: selectedCat.bg, borderColor: selectedCat.color + "22" }}>
+              <div
+                className="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border"
+                style={{ background: selectedCat.bg, borderColor: selectedCat.color + "22" }}
+              >
                 <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: selectedCat.color }}>{previewMonth}</span>
                 <span className="text-[14px] font-bold text-white leading-none mt-0.5">{previewDay}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-[13px] font-semibold text-white truncate">{title || "Event title"}</p>
-                  <span className="text-[10px] font-mono rounded-md flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>{category}</span>
+                  <span
+                    className="text-[10px] font-mono rounded-md flex-shrink-0"
+                    style={{ background: selectedCat.bg, color: selectedCat.color, padding: "2px 8px" }}
+                  >
+                    {category}
+                  </span>
                 </div>
                 <p className="text-[12px] text-[#444] leading-relaxed line-clamp-2">{description || "Your description will appear here."}</p>
               </div>
@@ -314,11 +358,23 @@ function CreateEventModal({ onClose, onCreate }) {
           {formError && <p className="text-[11px] text-[#E24B4A] font-mono">{formError}</p>}
         </div>
 
-        <div className="flex justify-end gap-2.5 border-t border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
-          <button onClick={onClose} className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+        {/* Modal footer */}
+        <div
+          className="flex justify-end gap-2.5 border-t border-[#141414]"
+          style={{ padding: "16px 24px" }}
+        >
+          <button
+            onClick={onClose}
+            className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+            style={{ padding: "8px 16px" }}
+          >
             Cancel
           </button>
-          <button onClick={handleCreate} className="flex items-center gap-1.5 px-4 py-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none">
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            style={{ padding: "8px 16px" }}
+          >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
@@ -334,7 +390,10 @@ function CreateEventModal({ onClose, onCreate }) {
 
 function EventCard({ event, onToggleCalendar }) {
   return (
-    <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl px-5 py-5 hover:border-[#242424] transition-colors">
+    <div
+      className="bg-[#080808] border border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
+      style={{ padding: "20px" }}
+    >
       <div className="flex items-start gap-4">
         <div
           className="flex flex-col items-center justify-center w-14 h-14 rounded-xl flex-shrink-0 border"
@@ -347,7 +406,12 @@ function EventCard({ event, onToggleCalendar }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="text-[14px] font-semibold text-white">{event.title}</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md" style={{ background: event.categoryBg, color: event.categoryColor }}>{event.category}</span>
+            <span
+              className="text-[10px] font-mono rounded-md"
+              style={{ background: event.categoryBg, color: event.categoryColor, padding: "2px 8px" }}
+            >
+              {event.category}
+            </span>
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-[#555] font-mono mb-2.5 flex-wrap">
@@ -377,11 +441,12 @@ function EventCard({ event, onToggleCalendar }) {
             </div>
             <button
               onClick={() => onToggleCalendar(event.id)}
-              className={`flex items-center gap-1.5 text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
+              className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
                 event.addedToCalendar
                   ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
                   : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
               }`}
+              style={{ padding: "6px 12px" }}
             >
               {event.addedToCalendar ? (
                 <>
@@ -406,7 +471,10 @@ function EventCard({ event, onToggleCalendar }) {
 
 function MiniEventRow({ event, onToggleCalendar }) {
   return (
-    <div className="flex items-center gap-3 px-3.5 py-3 bg-[#0a0a0a] border border-[#161616] rounded-xl">
+    <div
+      className="flex items-center gap-3 bg-[#0a0a0a] border border-[#161616] rounded-xl"
+      style={{ padding: "12px 14px" }}
+    >
       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: event.categoryColor }} />
       <div className="flex-1 min-w-0">
         <p className="text-[12.5px] font-semibold text-white truncate">{event.title}</p>
@@ -476,20 +544,35 @@ function CalendarView({ events, onToggleCalendar }) {
 
   return (
     <div>
-      <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl px-5 py-5 mb-5">
+      <div
+        className="bg-[#080808] border border-[#1c1c1c] rounded-2xl mb-5"
+        style={{ padding: "20px" }}
+      >
         <div className="flex items-center justify-between mb-5">
-          <button onClick={prevMonth} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1.5 hover:bg-[#141414] rounded-lg">
+          <button
+            onClick={prevMonth}
+            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer hover:bg-[#141414] rounded-lg"
+            style={{ padding: "6px" }}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <div className="flex items-center gap-3">
             <h2 className="text-[14px] font-semibold text-white tracking-tight">{monthLabel(cursor.year, cursor.month)}</h2>
             {!isCurrentMonth && (
-              <button onClick={goToday} className="text-[10px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2 p-0">
+              <button
+                onClick={goToday}
+                className="text-[10px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                style={{ padding: 0 }}
+              >
                 Today
               </button>
             )}
           </div>
-          <button onClick={nextMonth} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1.5 hover:bg-[#141414] rounded-lg">
+          <button
+            onClick={nextMonth}
+            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer hover:bg-[#141414] rounded-lg"
+            style={{ padding: "6px" }}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
@@ -540,7 +623,10 @@ function CalendarView({ events, onToggleCalendar }) {
         Showing events you've added · switch to Events to add more
       </p>
 
-      <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl px-5 py-5">
+      <div
+        className="bg-[#080808] border border-[#1c1c1c] rounded-2xl"
+        style={{ padding: "20px" }}
+      >
         <div className="flex items-center gap-3 mb-4">
           <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
             {selectedDay ? formatLong(selectedDay) : "Select a day"}
@@ -629,135 +715,155 @@ export default function Events() {
   return (
     <div
       className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
-      style={{ 
+      style={{
         fontFamily: "'DM Sans', sans-serif",
         backgroundImage: `url(${mainBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
       }}
     >
       <div className="bg-[#080808]/75 min-h-screen">
-        <div className="w-full max-w-[900px] mx-auto px-8 lg:px-12 pt-12 pb-20">
+        <div
+          className="w-full max-w-[900px] mx-auto"
+          style={{ padding: "48px 32px 80px" }}
+        >
 
-        {/* Page header */}
-        <div className="flex items-start justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-[18px] font-semibold text-white tracking-tight">Events</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-[11px] text-[#444] font-mono">{events.length} posted</p>
-              {addedCount > 0 && (
-                <>
-                  <span className="text-[#222]">·</span>
-                  <p className="text-[11px] text-[#444] font-mono">{addedCount} in your calendar</p>
-                </>
-              )}
-            </div>
-          </div>
-          {view === "events" && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Post event
-            </button>
-          )}
-        </div>
-
-        {/* Events / Calendar toggle */}
-        <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl p-1 gap-1 mb-6">
-          <button
-            onClick={() => setView("events")}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
-              view === "events" ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
-            }`}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-            </svg>
-            Events
-          </button>
-          <button
-            onClick={() => setView("calendar")}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
-              view === "calendar" ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
-            }`}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            Calendar
-          </button>
-        </div>
-
-        {view === "events" && (
-          <>
-            {/* Search + filter */}
-            <div className="flex gap-2.5 mb-6">
-              <div className="relative flex-1">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by title or day…"
-                  className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] pl-9 pr-4 py-2.5 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
-                />
-              </div>
-              <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl overflow-hidden">
-                {[{ k: "all", l: "All" }, { k: "added", l: "Added" }].map((f) => (
-                  <button
-                    key={f.k}
-                    onClick={() => setFilter(f.k)}
-                    className={`px-4 py-2.5 text-[11.5px] font-mono transition-colors cursor-pointer border-none ${
-                      filter === f.k ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
-                    }`}
-                  >
-                    {f.l}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 mb-4">
-              <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
-                {query || filter !== "all" ? `${filteredEvents.length} result${filteredEvents.length !== 1 ? "s" : ""}` : "All events"}
-              </p>
-              <div className="flex-1 h-px bg-[#141414]" />
-            </div>
-
-            {filteredEvents.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {filteredEvents.map((e) => (
-                  <EventCard key={e.id} event={e} onToggleCalendar={handleToggleCalendar} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <p className="text-[12px] font-mono text-[#2a2a2a]">No events found.</p>
-                {filter === "added" && (
-                  <button onClick={() => setFilter("all")} className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
-                    Browse all events
-                  </button>
+          {/* Page header */}
+          <div className="flex items-start justify-between mb-6 gap-4">
+            <div>
+              <h1 className="text-[18px] font-semibold text-white tracking-tight">Events</h1>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-[11px] text-[#444] font-mono">{events.length} posted</p>
+                {addedCount > 0 && (
+                  <>
+                    <span className="text-[#222]">·</span>
+                    <p className="text-[11px] text-[#444] font-mono">{addedCount} in your calendar</p>
+                  </>
                 )}
               </div>
+            </div>
+            {view === "events" && (
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center gap-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
+                style={{ padding: "8px 16px" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Post event
+              </button>
             )}
-          </>
-        )}
+          </div>
 
-        {view === "calendar" && (
-          <CalendarView events={events} onToggleCalendar={handleToggleCalendar} />
-        )}
-      </div>
+          {/* Events / Calendar toggle */}
+          <div
+            className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 mb-6"
+            style={{ padding: "4px" }}
+          >
+            <button
+              onClick={() => setView("events")}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
+                view === "events" ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
+              }`}
+              style={{ padding: "10px 16px" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+              Events
+            </button>
+            <button
+              onClick={() => setView("calendar")}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
+                view === "calendar" ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
+              }`}
+              style={{ padding: "10px 16px" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Calendar
+            </button>
+          </div>
+
+          {view === "events" && (
+            <>
+              {/* Search + filter */}
+              <div className="flex gap-2.5 mb-6">
+                <div className="relative flex-1">
+                  <svg
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"
+                    width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search by title or day…"
+                    className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+                    style={{ padding: "10px 16px 10px 36px" }}
+                  />
+                </div>
+                <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl overflow-hidden">
+                  {[{ k: "all", l: "All" }, { k: "added", l: "Added" }].map((f) => (
+                    <button
+                      key={f.k}
+                      onClick={() => setFilter(f.k)}
+                      className={`text-[11.5px] font-mono transition-colors cursor-pointer border-none ${
+                        filter === f.k ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
+                      }`}
+                      style={{ padding: "10px 16px" }}
+                    >
+                      {f.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+                  {query || filter !== "all" ? `${filteredEvents.length} result${filteredEvents.length !== 1 ? "s" : ""}` : "All events"}
+                </p>
+                <div className="flex-1 h-px bg-[#141414]" />
+              </div>
+
+              {filteredEvents.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {filteredEvents.map((e) => (
+                    <EventCard key={e.id} event={e} onToggleCalendar={handleToggleCalendar} />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="flex flex-col items-center justify-center gap-3"
+                  style={{ padding: "64px 0" }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  <p className="text-[12px] font-mono text-[#2a2a2a]">No events found.</p>
+                  {filter === "added" && (
+                    <button
+                      onClick={() => setFilter("all")}
+                      className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                    >
+                      Browse all events
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {view === "calendar" && (
+            <CalendarView events={events} onToggleCalendar={handleToggleCalendar} />
+          )}
+        </div>
       </div>
 
       {showCreate && <CreateEventModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />}

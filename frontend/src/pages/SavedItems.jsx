@@ -145,7 +145,10 @@ const INITIAL_ITEMS = [
 
 function Toast({ message, visible }) {
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg px-5 py-2.5 text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+    <div
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+      style={{ padding: "10px 20px" }}
+    >
       {message}
     </div>
   );
@@ -179,10 +182,18 @@ function SaveResourceModal({ onClose, onSave }) {
   const domainPreview = url.trim() ? extractDomain(url.trim()) : null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{ padding: "16px" }}
+    >
       <div className="w-full max-w-[480px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
 
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#141414]">
+        {/* Modal header */}
+        <div
+          className="flex items-center justify-between border-b border-[#141414]"
+          style={{ padding: "16px 24px" }}
+        >
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#BA7517" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -192,14 +203,19 @@ function SaveResourceModal({ onClose, onSave }) {
             </div>
             <span className="text-[13px] font-semibold text-white">Save a link</span>
           </div>
-          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1">
+          <button
+            onClick={onClose}
+            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            style={{ padding: "4px" }}
+          >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
 
-        <div className="px-6 py-6 space-y-5">
+        {/* Modal body */}
+        <div className="space-y-5" style={{ padding: "24px" }}>
           <div>
             <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">URL</label>
             <input
@@ -209,7 +225,8 @@ function SaveResourceModal({ onClose, onSave }) {
               onChange={(e) => { setUrl(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
               placeholder="hacktricks.xyz/some-page"
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              style={{ padding: "12px 16px" }}
             />
             {domainPreview && (
               <p className="text-[10.5px] font-mono text-[#444] mt-1.5">Will save from <span className="text-[#888]">{domainPreview}</span></p>
@@ -225,7 +242,8 @@ function SaveResourceModal({ onClose, onSave }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Defaults to the domain name"
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              style={{ padding: "12px 16px" }}
             />
           </div>
 
@@ -238,18 +256,31 @@ function SaveResourceModal({ onClose, onSave }) {
               onChange={(e) => setNote(e.target.value)}
               placeholder="Why you're saving this"
               rows={2}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] px-4 py-3 outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]"
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]"
+              style={{ padding: "12px 16px" }}
             />
           </div>
 
           {error && <p className="text-[11px] text-[#E24B4A] font-mono">{error}</p>}
         </div>
 
-        <div className="flex justify-end gap-2.5 px-6 py-4 border-t border-[#141414]">
-          <button onClick={onClose} className="px-4 py-2 bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer">
+        {/* Modal footer */}
+        <div
+          className="flex justify-end gap-2.5 border-t border-[#141414]"
+          style={{ padding: "16px 24px" }}
+        >
+          <button
+            onClick={onClose}
+            className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+            style={{ padding: "8px 16px" }}
+          >
             Cancel
           </button>
-          <button onClick={handleSave} className="flex items-center gap-1.5 px-4 py-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none">
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            style={{ padding: "8px 16px" }}
+          >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
             </svg>
@@ -290,12 +321,16 @@ function SavedItemCard({ item, onRemove, onOpen }) {
   const meta = TYPE_META[item.type];
 
   return (
-    <div className="relative bg-[#080808] border border-[#1c1c1c] rounded-2xl px-5 py-5 hover:border-[#242424] transition-colors">
+    <div
+      className="relative bg-[#080808] border border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
+      style={{ padding: "20px" }}
+    >
       {/* Unsave toggle */}
       <button
         onClick={() => onRemove(item.id)}
         title="Remove from saved items"
-        className="absolute top-4 right-4 text-[#7F77DD] hover:text-[#E24B4A] transition-colors bg-transparent border-none cursor-pointer p-1"
+        className="absolute top-4 right-4 text-[#7F77DD] hover:text-[#E24B4A] transition-colors bg-transparent border-none cursor-pointer"
+        style={{ padding: "4px" }}
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
@@ -313,7 +348,12 @@ function SavedItemCard({ item, onRemove, onOpen }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="text-[14px] font-semibold text-white">{item.title}</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+            <span
+              className="text-[10px] font-mono rounded-md"
+              style={{ background: meta.bg, color: meta.color, padding: "2px 8px" }}
+            >
+              {meta.label}
+            </span>
           </div>
 
           {/* Context line */}
@@ -369,7 +409,8 @@ function SavedItemCard({ item, onRemove, onOpen }) {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#BA7517]/10 border-[#BA7517]/40 text-[#BA7517] hover:bg-[#BA7517]/20 no-underline"
+                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#BA7517]/10 border-[#BA7517]/40 text-[#BA7517] hover:bg-[#BA7517]/20 no-underline"
+                style={{ padding: "6px 12px" }}
               >
                 Visit
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -379,8 +420,8 @@ function SavedItemCard({ item, onRemove, onOpen }) {
             ) : (
               <button
                 onClick={() => onOpen(item)}
-                className="flex items-center gap-1.5 text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex-shrink-0"
-                style={{ background: meta.color + "1a", borderColor: meta.color + "55", color: meta.color }}
+                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0"
+                style={{ background: meta.color + "1a", borderColor: meta.color + "55", color: meta.color, padding: "6px 12px" }}
               >
                 Open
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -460,110 +501,128 @@ export default function SavedItems() {
   return (
     <div
       className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
-      style={{ 
+      style={{
         fontFamily: "'DM Sans', sans-serif",
         backgroundImage: `url(${mainBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
       }}
     >
       <div className="bg-[#080808]/75 min-h-screen">
-        <div className="w-full max-w-[900px] mx-auto px-8 lg:px-12 pt-12 pb-20">
+        <div
+          className="w-full max-w-[900px] mx-auto"
+          style={{ padding: "48px 32px 80px" }}
+        >
 
-        {/* Page header */}
-        <div className="flex items-start justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-[18px] font-semibold text-white tracking-tight">Saved Items</h1>
-            <p className="text-[11px] text-[#444] font-mono mt-1">{items.length} saved · for you</p>
-          </div>
-          <button
-            onClick={() => setShowSave(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-            Save a link
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="relative mb-4">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search saved items…"
-            className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] pl-9 pr-4 py-2.5 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
-          />
-        </div>
-
-        {/* Type filter pills */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {FILTERS.map((f) => {
-            const active = filter === f.key;
-            const color = f.key === "all" ? "#ffffff" : TYPE_META[f.key].color;
-            return (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
-                  active ? "font-semibold" : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
-                }`}
-                style={active ? { color, background: f.key === "all" ? "#ffffff14" : TYPE_META[f.key].bg, borderColor: color + "55" } : {}}
-              >
-                {f.label}
-                <span className="opacity-60">{counts[f.key]}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-3 mb-4">
-          <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
-            {query || filter !== "all" ? `${filteredItems.length} result${filteredItems.length !== 1 ? "s" : ""}` : "All saved items"}
-          </p>
-          <div className="flex-1 h-px bg-[#141414]" />
-        </div>
-
-        {/* List */}
-        {filteredItems.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {filteredItems.map((item) => (
-              <SavedItemCard key={item.id} item={item} onRemove={handleRemove} onOpen={handleOpen} />
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-            </svg>
-            <p className="text-[12px] font-mono text-[#2a2a2a] text-center max-w-[260px]">
-              Nothing saved yet. Bookmark posts and events as you browse, or save a link directly.
-            </p>
-            <button onClick={() => setShowSave(true)} className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
+          {/* Page header */}
+          <div className="flex items-start justify-between mb-6 gap-4">
+            <div>
+              <h1 className="text-[18px] font-semibold text-white tracking-tight">Saved Items</h1>
+              <p className="text-[11px] text-[#444] font-mono mt-1">{items.length} saved · for you</p>
+            </div>
+            <button
+              onClick={() => setShowSave(true)}
+              className="flex items-center gap-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
+              style={{ padding: "8px 16px" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
               Save a link
             </button>
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+
+          {/* Search */}
+          <div className="relative mb-4">
+            <svg
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"
+              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            >
               <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p className="text-[12px] font-mono text-[#2a2a2a]">No saved items match.</p>
-            {filter !== "all" && (
-              <button onClick={() => setFilter("all")} className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
-                Clear filter
-              </button>
-            )}
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search saved items…"
+              className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+              style={{ padding: "10px 16px 10px 36px" }}
+            />
           </div>
-        )}
-      </div>
+
+          {/* Type filter pills */}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {FILTERS.map((f) => {
+              const active = filter === f.key;
+              const color = f.key === "all" ? "#ffffff" : TYPE_META[f.key].color;
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={`flex items-center gap-1.5 rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
+                    active ? "font-semibold" : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
+                  }`}
+                  style={
+                    active
+                      ? { color, background: f.key === "all" ? "#ffffff14" : TYPE_META[f.key].bg, borderColor: color + "55", padding: "6px 12px" }
+                      : { padding: "6px 12px" }
+                  }
+                >
+                  {f.label}
+                  <span className="opacity-60">{counts[f.key]}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+              {query || filter !== "all" ? `${filteredItems.length} result${filteredItems.length !== 1 ? "s" : ""}` : "All saved items"}
+            </p>
+            <div className="flex-1 h-px bg-[#141414]" />
+          </div>
+
+          {/* List */}
+          {filteredItems.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {filteredItems.map((item) => (
+                <SavedItemCard key={item.id} item={item} onRemove={handleRemove} onOpen={handleOpen} />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3" style={{ padding: "64px 0" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              <p className="text-[12px] font-mono text-[#2a2a2a] text-center max-w-[260px]">
+                Nothing saved yet. Bookmark posts and events as you browse, or save a link directly.
+              </p>
+              <button
+                onClick={() => setShowSave(true)}
+                className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+              >
+                Save a link
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3" style={{ padding: "64px 0" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <p className="text-[12px] font-mono text-[#2a2a2a]">No saved items match.</p>
+              {filter !== "all" && (
+                <button
+                  onClick={() => setFilter("all")}
+                  className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                >
+                  Clear filter
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {showSave && <SaveResourceModal onClose={() => setShowSave(false)} onSave={handleSave} />}

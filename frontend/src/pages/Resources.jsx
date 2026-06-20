@@ -57,7 +57,6 @@ const AVATAR_COLORS = {
   default: "#2a2a3a",
 };
 
-// ─── Upload form ──────────────────────────────────────────────────────────────
 
 function UploadForm({ onPublish }) {
   const [title, setTitle] = useState("");
@@ -232,26 +231,50 @@ function UploadForm({ onPublish }) {
 
 // ─── Resource card ────────────────────────────────────────────────────────────
 
-function ResourceCard({ resource }) {
+function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
 
   return (
-    <div className="border border-[#1c1c1c] rounded-2xl bg-[#080808] hover:border-[#242424] transition-colors" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '20px', paddingBottom: '20px' }}>
+    <div className="border border-[#1c1c1c] rounded-2xl bg-[#080808] hover:border-[#242424] transition-colors flex flex-col" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '20px', paddingBottom: '20px' }}>
 
-      {/* Author row */}
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#222]"
-          style={{ background: avatarColor }}
+      {/* Author row + bookmark */}
+      <div className="flex items-start justify-between gap-2 mb-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#222]"
+            style={{ background: avatarColor }}
+          >
+            {resource.initials}
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold text-white leading-tight">{resource.author}</p>
+            <p className="text-[11px] text-[#444] font-mono mt-0.5">
+              {resource.handle} · {resource.date}
+            </p>
+          </div>
+        </div>
+
+        {/* Bookmark button */}
+        <button
+          onClick={() => onBookmarkToggle(resource.id)}
+          className="flex-shrink-0 bg-transparent border-none cursor-pointer transition-colors mt-0.5"
+          aria-label={isBookmarked ? "Remove bookmark" : "Bookmark resource"}
+          style={{ padding: '4px' }}
         >
-          {resource.initials}
-        </div>
-        <div>
-          <p className="text-[13px] font-semibold text-white leading-tight">{resource.author}</p>
-          <p className="text-[11px] text-[#444] font-mono mt-0.5">
-            {resource.handle} · {resource.date}
-          </p>
-        </div>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill={isBookmarked ? "#7F77DD" : "none"}
+            stroke={isBookmarked ? "#7F77DD" : "#444"}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ transition: 'all 0.15s ease' }}
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
       </div>
 
       {/* Title & body */}
@@ -285,7 +308,7 @@ function ResourceCard({ resource }) {
       )}
 
       {/* Footer — tags + comment */}
-      <div className="flex items-center justify-between border-t border-[#111]" style={{ paddingTop: '16px' }}>
+      <div className="flex items-center justify-between border-t border-[#111] mt-auto" style={{ paddingTop: '16px' }}>
         <div className="flex items-center gap-2 flex-wrap">
           {resource.tags.map((tag) => (
             <span
@@ -316,6 +339,7 @@ function ResourceCard({ resource }) {
 
 export default function Resources() {
   const [resources, setResources] = useState(SAMPLE_RESOURCES);
+  const [bookmarked, setBookmarked] = useState(new Set());
   const [view, setView] = useState("feed"); // "feed" | "upload"
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "" });
@@ -339,6 +363,20 @@ export default function Resources() {
     clearTimeout(toastTimer.current);
     setToast({ visible: true, message: msg });
     toastTimer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+  }
+
+  function handleBookmarkToggle(id) {
+    setBookmarked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        showToast("Bookmark removed.");
+      } else {
+        next.add(id);
+        showToast("Resource bookmarked.");
+      }
+      return next;
+    });
   }
 
   function handlePublish({ title, content, files }) {
@@ -365,7 +403,7 @@ export default function Resources() {
   return (
     <div
       className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
-      style={{ 
+      style={{
         fontFamily: "'DM Sans', sans-serif",
         backgroundImage: `url(${mainBg})`,
         backgroundSize: 'cover',
@@ -373,117 +411,127 @@ export default function Resources() {
         backgroundAttachment: 'fixed'
       }}
     >
-      <div className="bg-[#080808]/75 min-h-screen">
-        <div className="w-full max-w-[900px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '48px', paddingBottom: '80px' }}>
+      <div className="bg-[#080808]/75 min-h-screen w-full">
+        <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '48px', paddingBottom: '80px' }}>
 
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-[18px] font-semibold text-white tracking-tight">Resources</h1>
-            <p className="text-[11px] text-[#444] mt-0.5 font-mono tracking-wide">
-              {resources.length} entries
+          {/* Centered top section */}
+          <div className="max-w-[600px] mx-auto">
+            {/* Page header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-[18px] font-semibold text-white tracking-tight">Resources</h1>
+                <p className="text-[11px] text-[#444] mt-0.5 font-mono tracking-wide">
+                  {resources.length} entries · {bookmarked.size} saved
+                </p><br />
+              </div>
+              <button
+                onClick={() => { setView(view === "upload" ? "feed" : "upload"); setQuery(""); }}
+                className={`flex items-center gap-2 rounded-lg text-[12px] font-mono tracking-wide border transition-all cursor-pointer ${
+                  view === "upload"
+                    ? "bg-[#111] border-[#2a2a2a] text-[#888] hover:text-white"
+                    : "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
+                }`}
+                style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
+              >
+                {view === "upload" ? (
+                  <>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    Back to feed
+                  </>
+                ) : (
+                  <>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add resource
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Search bar — only on feed view */}
+            {view === "feed" && (
+              <div className="relative mb-6">
+                <svg
+                  className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" style={{ left: '16px' }}
+                  width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="search by title, author, tag, or filename..."
+                  className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '40px', paddingRight: '40px', paddingTop: '12px', paddingBottom: '12px' }}
+                />
+                {query && (
+                  <button
+                    onClick={() => { setQuery(""); searchRef.current?.focus(); }}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}
+                    aria-label="Clear search"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Section divider */}
+          <div className="flex items-center gap-3 mb-5">
+            <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+              {view === "upload"
+                ? "New Entry"
+                : query
+                ? `${filteredResources.length} result${filteredResources.length !== 1 ? "s" : ""}`
+                : "Recent Entries"}
             </p>
+            <div className="flex-1 h-px bg-[#151515]" />
           </div>
-          <button
-            onClick={() => { setView(view === "upload" ? "feed" : "upload"); setQuery(""); }}
-            className={`flex items-center gap-2 rounded-lg text-[12px] font-mono tracking-wide border transition-all cursor-pointer ${
-              view === "upload"
-                ? "bg-[#111] border-[#2a2a2a] text-[#888] hover:text-white"
-                : "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
-            }`}
-            style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
-          >
-            {view === "upload" ? (
-              <>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-                Back to feed
-              </>
+
+          {/* Upload form */}
+          {view === "upload" && (
+            <div className="max-w-[600px] mx-auto">
+              <UploadForm onPublish={handlePublish} />
+            </div>
+          )}
+
+          {/* Feed — responsive grid */}
+          {view === "feed" && (
+            filteredResources.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredResources.map((r) => (
+                  <ResourceCard
+                    key={r.id}
+                    resource={r}
+                    isBookmarked={bookmarked.has(r.id)}
+                    onBookmarkToggle={handleBookmarkToggle}
+                  />
+                ))}
+              </div>
             ) : (
-              <>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
-                Add resource
-              </>
-            )}
-          </button>
+                <p className="text-[12px] font-mono text-[#333]">No results for <span className="text-[#555]">"{query}"</span></p>
+                <button
+                  onClick={() => setQuery("")}
+                  className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                >
+                  Clear search
+                </button>
+              </div>
+            )
+          )}
         </div>
-
-        {/* Search bar — only on feed view */}
-        {view === "feed" && (
-          <div className="relative mb-6">
-            <svg
-              className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" style={{ left: '16px' }}
-              width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              ref={searchRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="search by title, author, tag, or filename..."
-              className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '40px', paddingRight: '40px', paddingTop: '12px', paddingBottom: '12px' }}
-            />
-            {query && (
-              <button
-                onClick={() => { setQuery(""); searchRef.current?.focus(); }}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}
-                aria-label="Clear search"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Section divider */}
-        <div className="flex items-center gap-3 mb-5">
-          <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
-            {view === "upload"
-              ? "New Entry"
-              : query
-              ? `${filteredResources.length} result${filteredResources.length !== 1 ? "s" : ""}`
-              : "Recent Entries"}
-          </p>
-          <div className="flex-1 h-px bg-[#151515]" />
-        </div>
-
-        {/* Upload form */}
-        {view === "upload" && (
-          <UploadForm onPublish={handlePublish} />
-        )}
-
-        {/* Feed */}
-        {view === "feed" && (
-          filteredResources.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {filteredResources.map((r) => (
-                <ResourceCard key={r.id} resource={r} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <p className="text-[12px] font-mono text-[#333]">No results for <span className="text-[#555]">"{query}"</span></p>
-              <button
-                onClick={() => setQuery("")}
-                className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
-              >
-                Clear search
-              </button>
-            </div>
-          )
-        )}
-      </div>
       </div>
 
       {/* Toast */}
