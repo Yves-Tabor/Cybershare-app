@@ -575,7 +575,6 @@ function CalendarView({ events, onToggleCalendar }) {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Events() {
   const [events, setEvents] = useState(INITIAL_EVENTS);

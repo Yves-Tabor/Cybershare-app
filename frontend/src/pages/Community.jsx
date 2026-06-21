@@ -605,7 +605,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
             <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0" style={{ background: ME.color }}>
               {ME.initials}
             </div>
-            <div className="flex-1 flex items-center gap-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg px-3 py-2 focus-within:border-[#252525] transition-colors">
+            <div className="flex-1 flex items-center gap-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg focus-within:border-[#252525] transition-colors" style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -649,7 +649,8 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
       {/* Back nav */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-[12px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer mb-6 p-0"
+        className="flex items-center gap-2 text-[12px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer mb-6"
+        style={{ padding: '0' }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6"/>
@@ -658,7 +659,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
       </button>
 
       {/* Group header card */}
-      <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl px-6 py-6 mb-5">
+      <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl mb-5" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div
@@ -670,11 +671,11 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-[16px] font-semibold text-white">{group.name}</h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md" style={{ background: group.categoryBg, color: group.categoryColor }}>
+                <span className="text-[10px] font-mono rounded-md" style={{ background: group.categoryBg, color: group.categoryColor, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>
                   {group.category}
                 </span>
                 {isOwner && (
-                  <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-[#1a1a1a] text-[#555] border border-[#222]">Owner</span>
+                  <span className="text-[9.5px] font-mono rounded-md bg-[#1a1a1a] text-[#555] border border-[#222]" style={{ paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>Owner</span>
                 )}
               </div>
               <p className="text-[12.5px] text-[#555] leading-relaxed mb-3 max-w-lg">{group.description}</p>
@@ -694,7 +695,8 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
             {isOwner && (
               <button
                 onClick={() => setShowInvite(true)}
-                className="flex items-center gap-1.5 text-[11px] font-mono px-3 py-2 rounded-lg border border-[#222] text-[#666] hover:text-white hover:border-[#333] transition-all cursor-pointer bg-transparent"
+                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-[#222] text-[#666] hover:text-white hover:border-[#333] transition-all cursor-pointer bg-transparent"
+                style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
@@ -704,11 +706,12 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
             )}
             <button
               onClick={() => onJoin(group.id)}
-              className={`text-[11px] font-mono px-4 py-2 rounded-lg border transition-all cursor-pointer ${
+              className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
                 group.joined
                   ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
                   : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
               }`}
+              style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
             >
               {group.joined ? "Leave group" : "Join group"}
             </button>
@@ -718,7 +721,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
 
       {/* Compose box — only for members */}
       {group.joined && (
-        <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl px-5 py-4 mb-4">
+        <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl mb-4" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
           <div className="flex gap-3">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0 mt-0.5" style={{ background: ME.color }}>
               {ME.initials}
@@ -735,7 +738,8 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
                 <button
                   onClick={handlePost}
                   disabled={!postText.trim()}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-[#080808] rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '6px', paddingBottom: '6px' }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -923,11 +927,11 @@ export default function Community() {
       }}
     >
       <div className="bg-[#080808]/75 min-h-screen">
-        <div className="w-full max-w-[900px] mx-auto px-8 lg:px-12 pt-12 pb-20">
+        <div className="w-full max-w-[900px] mx-auto" style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '48px', paddingBottom: '80px' }}>
 
         {view === "directory" && (
           <>
-            {/* Page header */}
+           
             <div className="flex items-start justify-between mb-7">
               <div>
                 <h1 className="text-[18px] font-semibold text-white tracking-tight">Community</h1>
@@ -943,7 +947,8 @@ export default function Community() {
               </div>
               <button
                 onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+                className="flex items-center gap-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+                style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -955,7 +960,7 @@ export default function Community() {
             {/* Search + filter row */}
             <div className="flex gap-2.5 mb-6">
               <div className="relative flex-1">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ left: '14px' }}>
                   <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input
@@ -963,7 +968,8 @@ export default function Community() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search groups..."
-                  className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] pl-9 pr-4 py-2.5 outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+                  className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+                  style={{ paddingLeft: '36px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
                 />
               </div>
               <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl overflow-hidden">
@@ -971,9 +977,10 @@ export default function Community() {
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-4 py-2.5 text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${
+                    className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${
                       filter === f ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
                     }`}
+                    style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
                   >
                     {f}
                   </button>
