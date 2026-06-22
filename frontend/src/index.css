@@ -145,7 +145,6 @@ nav { position:relative; z-index:10; display:flex; align-items:center; justify-c
 .tech-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .tech-lbl { font-size:13px; font-weight:600; color:var(--light-text); }
 .t-pill { width:38px; height:38px; border-radius:10px; border:1px solid var(--light-border); background:var(--light-card); display:grid; place-items:center; font-size:18px; }
-.tech-icon { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; color:currentColor; }
 
 .threats-wrap { flex:1; display:flex; flex-direction:column; padding:20px 48px 24px; gap:14px; overflow:hidden; }
 .sec-head { text-align:center; }
@@ -158,8 +157,8 @@ nav { position:relative; z-index:10; display:flex; align-items:center; justify-c
 .dc-sub { font-size:11px; color:var(--muted); }
 
 #p-features { background:#0a0a0a; }
-.feat-wrap { flex:1; display:flex; flex-direction:column; padding:20px 48px 24px; gap:14px; overflow:hidden; }
-.feat-grid { flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; }
+.feat-wrap { flex:1; display:flex; flex-direction:column; padding:20px 48px 24px 24px; gap:14px; overflow:hidden; }
+.feat-grid { flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 2/3fr; gap:12px; }
 .fc { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:24px 28px; display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; transition:border-color .3s; }
 .fc:hover { border-color:rgba(245,158,11,.4); }
 .fc h3 { font-size:clamp(18px,2vw,26px); font-weight:900; letter-spacing:-.04em; color:var(--white); line-height:1.08; white-space:pre-line; }
@@ -167,7 +166,7 @@ nav { position:relative; z-index:10; display:flex; align-items:center; justify-c
 .icon-row { display:flex; gap:7px; flex-wrap:wrap; }
 .ic { width:32px; height:32px; background:var(--border); border-radius:9px; display:grid; place-items:center; font-size:12px; color:var(--sub); transition:background .2s, color .2s; cursor:pointer; }
 .ic:hover { background:var(--amber); color:var(--black); }
-.world-svg { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:160px; opacity:.45; pointer-events:none; }
+.world-svg { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:190px; opacity:.45; pointer-events:none; }
 .big-stat { font-size:clamp(32px,4vw,52px); font-weight:900; letter-spacing:-.05em; color:var(--white); margin-top:auto; line-height:1; }
 .big-stat small { display:block; font-size:.4em; font-weight:600; color:var(--muted); letter-spacing:0; }
 .orbit { position:absolute; right:20px; top:50%; transform:translateY(-50%); width:110px; height:110px; }

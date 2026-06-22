@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import mainBg from "../assets/mainBg.png";
+import worldMap from "../assets/worldMap.png";
+import welcomeOwasp from "../assets/welcomeOwasp.png";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -407,7 +409,7 @@ export default function Welcome() {
               <div className="icon-row">
                 {FEATURES[0].icons.map((ic, i) => (
                   <div className="ic" key={i}>
-                    [IMG]
+                    {ic}
                   </div>
                 ))}
               </div>
@@ -415,24 +417,18 @@ export default function Welcome() {
               <p>{FEATURES[0].body}</p>
             </div>
 
-            <div className="fc anim-up d200">
+            <div className="fc anim-up d200" style={{ position: 'relative', overflow: 'hidden' }}>
               <h3>{FEATURES[1].title}</h3>
               <p>{FEATURES[1].body}</p>
-              [IMG - World Map SVG]
-              <div className="big-stat" style={{ marginTop: "auto" }}>
+              <div className="big-stat" style={{ marginTop: "auto", position: 'relative', zIndex: 1 }}>
                 {FEATURES[1].stat.value}
                 <small>{FEATURES[1].stat.label}</small>
               </div>
+              <div className="world-map-bg" style={{ backgroundImage: `url(${worldMap})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'absolute', bottom: 0, right: 0, width: '150px', height: '100px', borderRadius: '12px', opacity: 0.3, zIndex: 0 }}></div>
             </div>
 
             <div className="fc anim-left d300">
-              [IMG - Orbit Animation]
-              <div className="big-stat">
-                {FEATURES[2].stat.value}
-                <small>{FEATURES[2].stat.label}</small>
-              </div>
-              <h3 style={{ fontSize: 18 }}>{FEATURES[2].title}</h3>
-              <p>{FEATURES[2].body}</p>
+              <img src={welcomeOwasp} alt="OWASP Top 10 Coverage" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
             </div>
 
             <div className="fc anim-right d400">
@@ -444,7 +440,7 @@ export default function Welcome() {
               <div className="icon-row" style={{ marginTop: "auto" }}>
                 {FEATURES[3].icons.map((ic, i) => (
                   <div className="ic" key={i}>
-                    [IMG]
+                    {ic}
                   </div>
                 ))}
               </div>
