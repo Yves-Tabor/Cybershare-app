@@ -155,15 +155,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/*
-        ── Z-index layer plan ──────────────────────────────────────
-        header   z-[60]  sticky — always on top, never blurred
-        nav      z-[60]  fixed  — same layer as header, never blurred
-        backdrop z-[50]  fixed  — sits BELOW header + nav, blurs everything else
-        page     z-[0]   normal flow
-      */}
-
-      {/* ── Sticky header — always clear, never blurred ── */}
       <header className="sticky top-0 z-[60] flex items-center justify-between px-4 sm:px-5 py-3.5 bg-[#080808]">
         <button
           ref={toggleRef}

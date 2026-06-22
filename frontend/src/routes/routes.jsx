@@ -7,6 +7,10 @@ import Community from '../pages/Community';
 import MainLayout from '../layouts/MainLayout';
 import Welcome from '../pages/Welcome';
 import NotFound from '../pages/NotFound';
+import Resources from '../pages/Resources';
+import Events from '../pages/Events';
+import SavedItems from '../pages/SavedItems'
+import Settings from '../pages/Settings'
 
 const router = createBrowserRouter([
   {
@@ -23,13 +27,29 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: 'Scanner',
+        path: 'scanner',
         element: <Scanner />,
       },
       {
-        path: 'Community',
+        path: 'resources',
+        element: <Resources />,
+      },
+      {
+        path: 'community',
         element: <Community />,
       },
+      {
+        path: 'events',
+        element: <Events />,
+      },
+      {
+        path: 'saved',
+        element: <SavedItems />,
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
+      }
     ],
   },
   {
