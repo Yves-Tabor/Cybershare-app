@@ -200,72 +200,43 @@ export default function Navbar() {
         </button>
       </header>
 
-      {/*
-        ── Full-screen overlay (below the header) ───────────────────
-        A single fixed container that covers the entire viewport below
-        the header. It is split into two side-by-side columns:
-          • Left  (menu panel)  — opaque #111, holds the nav links
-          • Right (dismiss area) — dark semi-transparent, click to close
-
-        This is the only reliable way to:
-          1. Keep the menu crisp (no backdrop-blur touching it)
-          2. Fully hide page content on both sides
-          3. Make the right side clickable to close
-
-        z-[60] — above everything, same layer as header so it's flush.
-        Slides in/out as a unit via translateX so the transition is clean.
-      */}
+      {/* Overlay */}
       <div
         aria-hidden={!open}
-        className={`
-          fixed top-[53px] left-0 right-0 bottom-0 z-[60]
-          flex
-          transition-transform duration-300 ease-out
-          ${open ? "translate-x-0" : "-translate-x-full"}
-        `}
+        className={`fixed top-9 left-0 right-0 bottom-0 z-[55] flex transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* ── Left: menu panel ── */}
-        <nav
-          id="nav-panel"
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
-          className="
-            w-[220px] sm:w-[260px] flex-shrink-0
-            h-full bg-[#111] border-r border-[#222]
-            overflow-y-auto
-          "
-        >
-          <div className="px-2 sm:px-3 pt-3 sm:pt-4 pb-6 flex flex-col gap-0.5 sm:gap-1">
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item.label}
-                href="#"
-                onClick={() => setOpen(false)}
-                className="
-                  flex items-center gap-3
-                  px-2.5 sm:px-3
-                  py-2 sm:py-2.5
-                  rounded-lg
-                  text-[#cfd2d8] hover:text-white hover:bg-white/[0.07]
-                  transition-colors
-                  text-[13px] sm:text-[14px] font-medium
-                "
-              >
-                <span className="text-[#cfd2d8] flex-shrink-0">{item.icon}</span>
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </nav>
+        {/* Sidebar background panel */}
+        <div className="w-[220px] flex-shrink-0 h-full bg-[#111] border-r border-[#222] relative">
 
-        {/* ── Right: dark dismiss area — hides page content, click to close ── */}
-        <div
-          onClick={() => setOpen(false)}
-          className="flex-1 h-full bg-black/80 backdrop-blur-sm cursor-default"
-        />
-      </div>
+          {/* Nav items float ON TOP of the sidebar */}
+          <nav
+        id="nav-panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className="absolute inset-0 flex flex-col items-center gap-3 sm:gap-3 px-3 sm:px-4 pt-[79px] pb-6 z-10"
+      >
+        {NAV_ITEMS.map((item) => (
+          <a
+            key={item.label}
+            href="#"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 w-full px-3 py-2.5 text-[#cfd2d8] hover:text-white transition-colors text-[13px] sm:text-[14px] font-medium whitespace-nowrap"
+          >
+            <span className="text-[#cfd2d8] flex-shrink-0">{item.icon}</span>
+            {item.label}
+          </a>
+        ))}
+      </nav>
+        </div>
+
+  {/* Dismiss area */}
+  <div
+    onClick={() => setOpen(false)}
+    className="flex-1 h-full bg-black/80 backdrop-blur-sm cursor-default"
+  />
+</div>
     </>
   );
 }
