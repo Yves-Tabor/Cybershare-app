@@ -6,7 +6,7 @@ import mainBg from "../assets/mainBg.png";
 const ME = { handle: "you", initials: "YO", color: "#534AB7" };
 
 const AVATAR_COLORS = [
-  "#534AB7","#0F6E56","#993C1D","#185FA5","#854F0B","#993556","#2a6b6b","#6b2a55",
+  "#534AB7", "#0F6E56", "#993C1D", "#185FA5", "#854F0B", "#993556", "#2a6b6b", "#6b2a55",
 ];
 
 const INITIAL_GROUPS = [
@@ -21,21 +21,21 @@ const INITIAL_GROUPS = [
     memberCount: 312,
     joined: false,
     owner: "cypher_x",
-    members: ["cypher_x","0xmira","defcon_jay","vxresearch"],
+    members: ["cypher_x", "0xmira", "defcon_jay", "vxresearch"],
     posts: [
       {
         id: 101, author: "cypher_x", initials: "CY", color: "#534AB7",
         body: "New lateral movement technique using DCOM — avoids Sysmon event 3 entirely. Full write-up in thread.",
-        ts: Date.now() - 1000*60*34, likes: 41, liked: false,
+        ts: Date.now() - 1000 * 60 * 34, likes: 41, liked: false,
         comments: [
-          { id: 1001, author: "0xmira", initials: "0X", color: "#993556", body: "Tested this in lab, works perfectly on Win11 22H2. Nice find.", ts: Date.now() - 1000*60*20 },
-          { id: 1002, author: "defcon_jay", initials: "DJ", color: "#0F6E56", body: "Any bypass for CrowdStrike Falcon in this setup?", ts: Date.now() - 1000*60*10 },
+          { id: 1001, author: "0xmira", initials: "0X", color: "#993556", body: "Tested this in lab, works perfectly on Win11 22H2. Nice find.", ts: Date.now() - 1000 * 60 * 20 },
+          { id: 1002, author: "defcon_jay", initials: "DJ", color: "#0F6E56", body: "Any bypass for CrowdStrike Falcon in this setup?", ts: Date.now() - 1000 * 60 * 10 },
         ],
       },
       {
         id: 102, author: "vxresearch", initials: "VX", color: "#854F0B",
         body: "Compiled a list of 23 living-off-the-land binaries that most EDRs still miss in 2026. DM for the list.",
-        ts: Date.now() - 1000*60*60*3, likes: 88, liked: false,
+        ts: Date.now() - 1000 * 60 * 60 * 3, likes: 88, liked: false,
         comments: [],
       },
     ],
@@ -51,20 +51,20 @@ const INITIAL_GROUPS = [
     memberCount: 478,
     joined: true,
     owner: "patchwatcher",
-    members: ["patchwatcher","alex_hunt","sec_raven","threat_ly"],
+    members: ["patchwatcher", "alex_hunt", "sec_raven", "threat_ly"],
     posts: [
       {
         id: 201, author: "patchwatcher", initials: "PA", color: "#185FA5",
         body: "New sigma rule drop: detects PrintNightmare-style abuse via Event ID 316. Tested against 14 adversary simulations.",
-        ts: Date.now() - 1000*60*12, likes: 67, liked: true,
+        ts: Date.now() - 1000 * 60 * 12, likes: 67, liked: true,
         comments: [
-          { id: 2001, author: "alex_hunt", initials: "AL", color: "#534AB7", body: "Great rule. I added a condition for non-system printers, cut false positives by ~40%.", ts: Date.now() - 1000*60*5 },
+          { id: 2001, author: "alex_hunt", initials: "AL", color: "#534AB7", body: "Great rule. I added a condition for non-system printers, cut false positives by ~40%.", ts: Date.now() - 1000 * 60 * 5 },
         ],
       },
       {
         id: 202, author: "sec_raven", initials: "SE", color: "#993C1D",
         body: "Anyone else correlation mapping MITRE T1548.002 to Windows EID 4688? Sharing my KQL query below.",
-        ts: Date.now() - 1000*60*60*2, likes: 29, liked: false,
+        ts: Date.now() - 1000 * 60 * 60 * 2, likes: 29, liked: false,
         comments: [],
       },
     ],
@@ -80,12 +80,12 @@ const INITIAL_GROUPS = [
     memberCount: 193,
     joined: false,
     owner: "nullbyte",
-    members: ["nullbyte","root_kai","vxresearch"],
+    members: ["nullbyte", "root_kai", "vxresearch"],
     posts: [
       {
         id: 301, author: "nullbyte", initials: "NU", color: "#0F6E56",
         body: "Decompiled a new infostealer variant. It's using a custom XOR-chain obfuscation over 4 layers. Sharing IOCs.",
-        ts: Date.now() - 1000*60*90, likes: 54, liked: false,
+        ts: Date.now() - 1000 * 60 * 90, likes: 54, liked: false,
         comments: [],
       },
     ],
@@ -101,14 +101,14 @@ const INITIAL_GROUPS = [
     memberCount: 541,
     joined: false,
     owner: "root_kai",
-    members: ["root_kai","0xmira","sec_raven","threat_ly","defcon_jay"],
+    members: ["root_kai", "0xmira", "sec_raven", "threat_ly", "defcon_jay"],
     posts: [
       {
         id: 401, author: "root_kai", initials: "RO", color: "#854F0B",
         body: "Just got a P1 SSRF on a major fintech — $18k payout. The trick was chaining it with an open redirect nobody had noticed.",
-        ts: Date.now() - 1000*60*60*5, likes: 112, liked: false,
+        ts: Date.now() - 1000 * 60 * 60 * 5, likes: 112, liked: false,
         comments: [
-          { id: 4001, author: "0xmira", initials: "0X", color: "#993556", body: "Absolute beast. Did you escalate to RCE or stay at SSRF?", ts: Date.now() - 1000*60*60*4 },
+          { id: 4001, author: "0xmira", initials: "0X", color: "#993556", body: "Absolute beast. Did you escalate to RCE or stay at SSRF?", ts: Date.now() - 1000 * 60 * 60 * 4 },
         ],
       },
     ],
@@ -124,15 +124,15 @@ const INITIAL_GROUPS = [
     memberCount: 267,
     joined: true,
     owner: "defcon_jay",
-    members: ["defcon_jay","nullbyte","0xmira","vxresearch","root_kai"],
+    members: ["defcon_jay", "nullbyte", "0xmira", "vxresearch", "root_kai"],
     posts: [
       {
         id: 501, author: "defcon_jay", initials: "DJ", color: "#993556",
         body: "PicoCTF qualifier this weekend — anyone want to team up? We need a crypto and a pwn player.",
-        ts: Date.now() - 1000*60*60*1, likes: 33, liked: false,
+        ts: Date.now() - 1000 * 60 * 60 * 1, likes: 33, liked: false,
         comments: [
-          { id: 5001, author: "nullbyte", initials: "NU", color: "#0F6E56", body: "I'm in for pwn. DM me the team link.", ts: Date.now() - 1000*60*45 },
-          { id: 5002, author: "vxresearch", initials: "VX", color: "#854F0B", body: "I can cover crypto. Count me in.", ts: Date.now() - 1000*60*30 },
+          { id: 5001, author: "nullbyte", initials: "NU", color: "#0F6E56", body: "I'm in for pwn. DM me the team link.", ts: Date.now() - 1000 * 60 * 45 },
+          { id: 5002, author: "vxresearch", initials: "VX", color: "#854F0B", body: "I can cover crypto. Count me in.", ts: Date.now() - 1000 * 60 * 30 },
         ],
       },
     ],
@@ -194,9 +194,9 @@ function CreateGroupModal({ onClose, onCreate }) {
   const CATEGORIES = [
     { label: "Offensive", color: "#E24B4A", bg: "#2e1a1a" },
     { label: "Defensive", color: "#1D9E75", bg: "#1a2a2e" },
-    { label: "Research",  color: "#7F77DD", bg: "#1a1a2e" },
-    { label: "Bounty",    color: "#BA7517", bg: "#2e2a1a" },
-    { label: "Learning",  color: "#639922", bg: "#1a2e1a" },
+    { label: "Research", color: "#7F77DD", bg: "#1a1a2e" },
+    { label: "Bounty", color: "#BA7517", bg: "#2e2a1a" },
+    { label: "Learning", color: "#639922", bg: "#1a2e1a" },
   ];
 
   useEffect(() => {
@@ -247,15 +247,15 @@ function CreateGroupModal({ onClose, onCreate }) {
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                <line x1="23" y1="11" x2="17" y2="11" /><line x1="20" y1="8" x2="20" y2="14" />
               </svg>
             </div>
             <span className="text-[13px] font-semibold text-[#080808]">Create a group</span>
           </div>
           <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -296,11 +296,10 @@ function CreateGroupModal({ onClose, onCreate }) {
                 <button
                   key={cat.label}
                   onClick={() => setCategory(cat.label)}
-                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
-                    category === cat.label
-                      ? "border-current font-semibold"
-                      : "border-silver text-silver bg-transparent hover:border-gray hover:text-[#080808]"
-                  }`}
+                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${category === cat.label
+                    ? "border-current font-semibold"
+                    : "border-silver text-silver bg-transparent hover:border-gray hover:text-[#080808]"
+                    }`}
                   style={{
                     paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px',
                     ...(category === cat.label ? { color: cat.color, background: cat.bg, borderColor: cat.color + "55" } : {})
@@ -340,12 +339,12 @@ function CreateGroupModal({ onClose, onCreate }) {
                 {invites.map((email) => (
                   <span key={email} className="flex items-center gap-1.5 bg-gray border border-gray rounded-lg text-[11px] font-mono text-silver" style={{ paddingLeft: '10px', paddingRight: '10px', paddingTop: '4px', paddingBottom: '4px' }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="silver" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
                     </svg>
                     {email}
                     <button onClick={() => setInvites((p) => p.filter((e) => e !== email))} className="text-silver hover:text-[#080808] transition-colors bg-transparent border-none cursor-pointer ml-0.5" style={{ padding: '0' }}>
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                       </svg>
                     </button>
                   </span>
@@ -381,7 +380,7 @@ function CreateGroupModal({ onClose, onCreate }) {
           </button>
           <button onClick={handleCreate} className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             Create group
           </button>
@@ -422,7 +421,7 @@ function InviteModal({ group, onClose, onInvite }) {
           </div>
           <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -448,7 +447,7 @@ function InviteModal({ group, onClose, onInvite }) {
               {sent.map((e) => (
                 <div key={e} className="flex items-center gap-2 text-[12px] font-mono text-[#080808]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {e}
                 </div>
@@ -501,7 +500,6 @@ function GroupCard({ group, onJoin, onOpen }) {
                   </div>
                 ))}
               </div>
-              <span className="text-[11px] text-[#444] font-mono">{group.memberCount.toLocaleString()} members</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -513,11 +511,10 @@ function GroupCard({ group, onJoin, onOpen }) {
               </button>
               <button
                 onClick={() => onJoin(group.id)}
-                className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
-                  group.joined
-                    ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
-                    : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
-                }`}
+                className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${group.joined
+                  ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
+                  : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                  }`}
                 style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px' }}
               >
                 {group.joined ? "Leave" : "Join"}
@@ -566,7 +563,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
           style={{ color: post.liked ? "#E24B4A" : "silver" }}
         >
           <svg viewBox="0 0 24 24" width="13" height="13" fill={post.liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
           <span className="tabular-nums">{post.likes}</span>
         </button>
@@ -575,7 +572,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
           className="flex items-center gap-1.5 text-[11.5px] text-silver hover:text-white bg-transparent border-none cursor-pointer transition-colors"
         >
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span className="tabular-nums">{post.comments.length}</span>
         </button>
@@ -621,7 +618,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
                 className="text-silver hover:text-[#7F77DD] disabled:opacity-30 transition-colors bg-transparent border-none cursor-pointer p-0 flex-shrink-0"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
               </button>
             </div>
@@ -653,14 +650,14 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
         style={{ padding: '0' }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
+          <polyline points="15 18 9 12 15 6" />
         </svg>
         All groups
-      </button>
+      </button><br />
 
       {/* Group header card */}
       <div className="border border-gray rounded-2xl mb-5 bg-[#111]/5" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4" style={{ gap: '40px' }}>
           <div className="flex items-start gap-4">
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center text-[15px] font-bold flex-shrink-0"
@@ -699,25 +696,24 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
                 style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
                 </svg>
                 Invite
               </button>
             )}
             <button
               onClick={() => onJoin(group.id)}
-              className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
-                group.joined
-                  ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
-                  : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
-              }`}
+              className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${group.joined
+                ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
+                : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                }`}
               style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
             >
               {group.joined ? "Leave group" : "Join group"}
             </button>
           </div>
         </div>
-      </div>
+      </div><br />
 
       {/* Compose box — only for members */}
       {group.joined && (
@@ -742,7 +738,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
                   style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '6px', paddingBottom: '6px' }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
                   </svg>
                   Post
                 </button>
@@ -764,7 +760,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
       {group.posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-2">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <p className="text-[12px] font-mono text-silver">No posts yet. Be the first.</p>
         </div>
@@ -934,7 +930,7 @@ export default function Community() {
   return (
     <div
       className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
-      style={{ 
+      style={{
         fontFamily: "'DM Sans', sans-serif",
         backgroundImage: `url(${mainBg})`,
         backgroundSize: 'cover',
@@ -945,128 +941,127 @@ export default function Community() {
       <div className="bg-transparent min-h-screen">
         <div className="w-full max-w-[900px] mx-auto" style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '48px', paddingBottom: '80px' }}>
 
-        {view === "directory" && (
-          <>
-           
-            <div className="flex items-start justify-between mb-7">
-              <div>
-                <h1 className="text-[18px] font-semibold text-white tracking-tight">Community</h1>
-                <div className="flex items-center gap-3 mt-1">
-                  <p className="text-[11px] text-silver font-mono">{groups.length} groups</p>
-                  {joinedCount > 0 && (
-                    <>
-                      <span className="text-gray">·</span>
-                      <p className="text-[11px] text-silver font-mono">{joinedCount} joined</p>
-                    </>
+          {view === "directory" && (
+            <>
+
+              <div className="flex items-start justify-between mb-7">
+                <div>
+                  <h1 className="text-[18px] font-semibold text-white tracking-tight">Community</h1>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-[11px] text-silver font-mono">{groups.length} groups</p>
+                    {joinedCount > 0 && (
+                      <>
+                        <span className="text-gray">·</span>
+                        <p className="text-[11px] text-silver font-mono">{joinedCount} joined</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+                  style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  New group
+                </button>
+              </div>
+
+              {/* Search + filter row */}
+              <div className="flex gap-2.5 mb-6">
+                <div className="relative flex-1">
+                  <svg className="absolute top-1/2 -translate-y-1/2 text-silver pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ left: '14px' }}>
+                    <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onClick={() => setSearchOpen(true)}
+                    placeholder="Search groups..."
+                    className="w-full md:w-fit bg-transparent border md:border-silver border-transparent rounded-xl text-[12.5px] font-mono text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+                    style={{ paddingLeft: '36px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
+                  />
+                  {searchOpen && query && (
+                    <div
+                      ref={searchPopupRef}
+                      className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray rounded-xl shadow-lg z-50"
+                      style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+                    >
+                      <p className="text-[11px] font-mono text-[#080808]">Searching: <span className="font-semibold">{query}</span></p>
+                    </div>
                   )}
                 </div>
-              </div>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
-                style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                New group
-              </button>
-            </div>
+                <div className="flex bg-[#0a0a0a] border border-silver rounded-xl overflow-hidden">
+                  {["all", "joined"].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFilter(f)}
+                      className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${filter === f ? "bg-gray text-white" : "bg-transparent text-silver hover:text-white"
+                        }`}
+                      style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div><br />
 
-            {/* Search + filter row */}
-            <div className="flex gap-2.5 mb-6">
-              <div className="relative flex-1">
-                <svg className="absolute top-1/2 -translate-y-1/2 text-silver pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ left: '14px' }}>
-                  <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onClick={() => setSearchOpen(true)}
-                  placeholder="Search groups..."
-                  className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[12.5px] font-mono text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver"
-                  style={{ paddingLeft: '36px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
-                />
-                {searchOpen && query && (
-                  <div 
-                    ref={searchPopupRef}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray rounded-xl shadow-lg z-50"
-                    style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
-                  >
-                    <p className="text-[11px] font-mono text-[#080808]">Searching: <span className="font-semibold">{query}</span></p>
-                  </div>
-                )}
-              </div>
-              <div className="flex bg-[#0a0a0a] border border-silver rounded-xl overflow-hidden">
-                {["all", "joined"].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${
-                      filter === f ? "bg-gray text-white" : "bg-transparent text-silver hover:text-white"
-                    }`}
-                    style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
+              {/* Section divider */}
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
+                  {query || filter !== "all"
+                    ? `${filteredGroups.length} result${filteredGroups.length !== 1 ? "s" : ""}`
+                    : "All groups"}
+                </p>
+                <div className="flex-1 h-px bg-white" />
+              </div><br />
 
-            {/* Section divider */}
-            <div className="flex items-center gap-3 mb-4">
-              <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
-                {query || filter !== "all"
-                  ? `${filteredGroups.length} result${filteredGroups.length !== 1 ? "s" : ""}`
-                  : "All groups"}
-              </p>
-              <div className="flex-1 h-px bg-gray" />
-            </div>
+              {/* Group list */}
+              {filteredGroups.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {filteredGroups.map((g) => (
+                    <GroupCard
+                      key={g.id}
+                      group={g}
+                      onJoin={handleJoin}
+                      onOpen={(g) => { setActiveGroupId(g.id); setView("group"); }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <p className="text-[12px] font-mono text-silver">No groups found.</p>
+                  {filter === "joined" && (
+                    <button onClick={() => setFilter("all")} className="text-[11px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
+                      Browse all groups
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
 
-            {/* Group list */}
-            {filteredGroups.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {filteredGroups.map((g) => (
-                  <GroupCard
-                    key={g.id}
-                    group={g}
-                    onJoin={handleJoin}
-                    onOpen={(g) => { setActiveGroupId(g.id); setView("group"); }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <p className="text-[12px] font-mono text-silver">No groups found.</p>
-                {filter === "joined" && (
-                  <button onClick={() => setFilter("all")} className="text-[11px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
-                    Browse all groups
-                  </button>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {view === "group" && activeGroup && (
-          <GroupDetail
-            group={activeGroup}
-            onBack={() => { setView("directory"); setActiveGroupId(null); }}
-            onLike={handleLike}
-            onComment={handleComment}
-            onPublish={handlePublish}
-            onInvite={handleInvite}
-            onJoin={handleJoin}
-            isOwner={isOwner}
-          />
-        )}
-      </div>
+          {view === "group" && activeGroup && (
+            <GroupDetail
+              group={activeGroup}
+              onBack={() => { setView("directory"); setActiveGroupId(null); }}
+              onLike={handleLike}
+              onComment={handleComment}
+              onPublish={handlePublish}
+              onInvite={handleInvite}
+              onJoin={handleJoin}
+              isOwner={isOwner}
+            />
+          )}
+        </div>
       </div>
 
       {showCreate && (
