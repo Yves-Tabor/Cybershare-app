@@ -995,12 +995,12 @@ export default function Community() {
                     </div>
                   )}
                 </div>
-                <div className="flex bg-[#0a0a0a] border border-silver rounded-xl overflow-hidden">
+                <div className="flex bg-transparent border border-silver rounded-xl overflow-hidden">
                   {["all", "joined"].map((f) => (
                     <button
                       key={f}
                       onClick={() => setFilter(f)}
-                      className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${filter === f ? "bg-gray text-white" : "bg-transparent text-silver hover:text-white"
+                      className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${filter === f ? "bg-white hover:bg-gray-500 text-black" : "bg-transparent text-silver hover:text-blue-400"
                         }`}
                       style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
                     >
