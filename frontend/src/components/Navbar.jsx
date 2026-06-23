@@ -130,7 +130,6 @@ const UserIcon = () => (
 
 const MOCK_USER = {
   username: "WALVESTH72",
-  handle: "@walvesth72",
   role: "Security Researcher",
   joined: "March 2025",
   initials: "WA",
@@ -223,7 +222,7 @@ function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
               {MOCK_USER.role}
             </span>
             <p style={{ margin: "2px 0 0", fontSize: "11px", fontFamily: "monospace", color: "#666" }}>
-              {MOCK_USER.handle}
+              {MOCK_USER.username.toLowerCase()}
             </p>
           </div>
         </div>
