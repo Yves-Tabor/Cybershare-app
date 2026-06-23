@@ -240,11 +240,11 @@ function CreateGroupModal({ onClose, onCreate }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ padding: '16px' }}>
-      <div className="w-full max-w-[540px] bg-white border border-gray rounded-2xl overflow-hidden">
+      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between border-b border-white" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <div className="flex items-center bg-white gap-2.5 rounded-md" style={{ padding: '10px' }}>
             <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
@@ -253,7 +253,7 @@ function CreateGroupModal({ onClose, onCreate }) {
             </div>
             <span className="text-[13px] font-semibold text-[#080808]">Create a group</span>
           </div>
-          <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
+          <button onClick={onClose} className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -264,7 +264,7 @@ function CreateGroupModal({ onClose, onCreate }) {
 
           {/* Group name */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2">Group Name</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Group Name</label>
             <input
               ref={nameRef}
               type="text"
@@ -272,25 +272,25 @@ function CreateGroupModal({ onClose, onCreate }) {
               onChange={(e) => { setName(e.target.value); setFormError(""); }}
               placeholder="e.g. Exploit Dev Circle"
               maxLength={60}
-              className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
-          </div>
+          </div><br />
 
           {/* Description */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2">Description</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => { setDescription(e.target.value); setFormError(""); }}
               placeholder="What is this group about?"
               rows={3}
-              className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors resize-none placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
-          </div>
+          </div><br />
 
           {/* Category */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2.5">Category</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">Category</label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => (
                 <button
@@ -298,7 +298,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                   onClick={() => setCategory(cat.label)}
                   className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${category === cat.label
                     ? "border-current font-semibold"
-                    : "border-silver text-silver bg-transparent hover:border-gray hover:text-[#080808]"
+                    : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
                     }`}
                   style={{
                     paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px',
@@ -309,11 +309,11 @@ function CreateGroupModal({ onClose, onCreate }) {
                 </button>
               ))}
             </div>
-          </div>
+          </div><br />
 
           {/* Invite members */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2">
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
               Invite Members <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
             </label>
             <div className="flex gap-2">
@@ -323,7 +323,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                 onChange={(e) => { setInviteEmail(e.target.value); setInviteError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && addInvite()}
                 placeholder="colleague@example.com"
-                className="flex-1 bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+                className="flex-1 text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
               />
               <button
                 onClick={addInvite}
@@ -357,12 +357,12 @@ function CreateGroupModal({ onClose, onCreate }) {
           <div className="border border-gray rounded-xl bg-gray" style={{ padding: '16px' }}>
             <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">Preview</p>
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, border: `1px solid ${selectedCat.color}22` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, border: `1px solid ${selectedCat.color}22` }}>
                 {name ? name.slice(0, 2).toUpperCase() : "GR"}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[13px] font-semibold text-[#080808] truncate">{name || "Group name"}</p>
+                  <p className="text-[13px] font-semibold text-white truncate">{name || "Group name"}</p>
                   <span className="text-[10px] font-mono rounded-md flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>{category}</span>
                 </div>
                 <p className="text-[12px] text-silver leading-relaxed line-clamp-2">{description || "Your description will appear here."}</p>
@@ -370,12 +370,12 @@ function CreateGroupModal({ onClose, onCreate }) {
             </div>
           </div>
 
-          {formError && <p className="text-[11px] text-[#E24B4A] font-mono">{formError}</p>}
+          {formError && <p className="text-[11px] text-white font-mono">{formError}</p>}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2.5 border-t border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
-          <button onClick={onClose} className="bg-transparent border border-gray rounded-lg text-[12px] text-silver hover:text-[#080808] hover:border-gray transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+        <div className="flex justify-end gap-2.5 border-t border-white bg-white/10" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <button onClick={onClose} className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             Cancel
           </button>
           <button onClick={handleCreate} className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
