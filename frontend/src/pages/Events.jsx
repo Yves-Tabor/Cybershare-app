@@ -543,9 +543,9 @@ function CalendarView({ events, onToggleCalendar }) {
   const dayEventsForSelected = selectedDay ? addedEvents.filter((e) => e.date === selectedDay) : [];
 
   return (
-    <div>
+    <div className="flex flex-col md:flex-row gap-5">
       <div
-        className="bg-[#080808] border border-[#1c1c1c] rounded-2xl mb-5"
+        className="bg-[#080808] border border-[#1c1c1c] rounded-2xl flex-shrink-0 w-full md:w-[380px]"
         style={{ padding: "20px" }}
       >
         <div className="flex items-center justify-between mb-5">
@@ -619,43 +619,45 @@ function CalendarView({ events, onToggleCalendar }) {
         </div>
       </div>
 
-      <p className="text-[10.5px] font-mono text-[#333] text-center mb-5">
-        Showing events you've added · switch to Events to add more
-      </p>
+      <div className="flex-1 flex flex-col">
+        <p className="text-[10.5px] font-mono text-[#333] text-center mb-5 md:text-left">
+          Showing events you've added · switch to Events to add more
+        </p>
 
-      <div
-        className="bg-[#080808] border border-[#1c1c1c] rounded-2xl"
-        style={{ padding: "20px" }}
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
-            {selectedDay ? formatLong(selectedDay) : "Select a day"}
-          </p>
-          <div className="flex-1 h-px bg-[#141414]" />
+        <div
+          className="bg-[#080808] border border-[#1c1c1c] rounded-2xl flex-1"
+          style={{ padding: "20px" }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+              {selectedDay ? formatLong(selectedDay) : "Select a day"}
+            </p>
+            <div className="flex-1 h-px bg-[#141414]" />
+          </div>
+
+          {!selectedDay && (
+            <div className="flex flex-col items-center justify-center py-8 gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <p className="text-[12px] font-mono text-[#2a2a2a]">Tap a day with dots to see what you've added.</p>
+            </div>
+          )}
+
+          {selectedDay && dayEventsForSelected.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 gap-2">
+              <p className="text-[12px] font-mono text-[#2a2a2a]">No events added for this day.</p>
+            </div>
+          )}
+
+          {selectedDay && dayEventsForSelected.length > 0 && (
+            <div className="flex flex-col gap-2.5">
+              {dayEventsForSelected.map((e) => (
+                <MiniEventRow key={e.id} event={e} onToggleCalendar={onToggleCalendar} />
+              ))}
+            </div>
+          )}
         </div>
-
-        {!selectedDay && (
-          <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <p className="text-[12px] font-mono text-[#2a2a2a]">Tap a day with dots to see what you've added.</p>
-          </div>
-        )}
-
-        {selectedDay && dayEventsForSelected.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <p className="text-[12px] font-mono text-[#2a2a2a]">No events added for this day.</p>
-          </div>
-        )}
-
-        {selectedDay && dayEventsForSelected.length > 0 && (
-          <div className="flex flex-col gap-2.5">
-            {dayEventsForSelected.map((e) => (
-              <MiniEventRow key={e.id} event={e} onToggleCalendar={onToggleCalendar} />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -725,12 +727,12 @@ export default function Events() {
     >
       <div className="bg-[#080808]/75 min-h-screen">
         <div
-          className="w-full max-w-[900px] mx-auto"
+          className="w-[375px] sm:w-[768px] lg:w-[1100px] mx-auto"
           style={{ padding: "48px 32px 80px" }}
         >
 
           {/* Page header */}
-          <div className="flex items-start justify-between mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
             <div>
               <h1 className="text-[18px] font-semibold text-white tracking-tight">Events</h1>
               <div className="flex items-center gap-3 mt-1">
@@ -792,7 +794,7 @@ export default function Events() {
           {view === "events" && (
             <>
               {/* Search + filter */}
-              <div className="flex gap-2.5 mb-6">
+              <div className="flex flex-col sm:flex-row gap-2.5 mb-6">
                 <div className="relative flex-1">
                   <svg
                     className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"

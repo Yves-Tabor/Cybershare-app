@@ -240,18 +240,18 @@ function CreateGroupModal({ onClose, onCreate }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ padding: '16px' }}>
-      <div className="w-full max-w-[540px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+      <div className="w-full max-w-[540px] bg-white border border-gray rounded-2xl overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center">
+            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                 <line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/>
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-white">Create a group</span>
+            <span className="text-[13px] font-semibold text-[#080808]">Create a group</span>
           </div>
           <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -264,7 +264,7 @@ function CreateGroupModal({ onClose, onCreate }) {
 
           {/* Group name */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">Group Name</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2">Group Name</label>
             <input
               ref={nameRef}
               type="text"
@@ -272,25 +272,25 @@ function CreateGroupModal({ onClose, onCreate }) {
               onChange={(e) => { setName(e.target.value); setFormError(""); }}
               placeholder="e.g. Exploit Dev Circle"
               maxLength={60}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">Description</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => { setDescription(e.target.value); setFormError(""); }}
               placeholder="What is this group about?"
               rows={3}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors resize-none placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2.5">Category</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2.5">Category</label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => (
                 <button
@@ -299,7 +299,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                   className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
                     category === cat.label
                       ? "border-current font-semibold"
-                      : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
+                      : "border-silver text-silver bg-transparent hover:border-gray hover:text-[#080808]"
                   }`}
                   style={{
                     paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px',
@@ -314,8 +314,8 @@ function CreateGroupModal({ onClose, onCreate }) {
 
           {/* Invite members */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
-              Invite Members <span className="text-[#333] normal-case tracking-normal font-normal">— optional</span>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-400 mb-2">
+              Invite Members <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -324,11 +324,11 @@ function CreateGroupModal({ onClose, onCreate }) {
                 onChange={(e) => { setInviteEmail(e.target.value); setInviteError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && addInvite()}
                 placeholder="colleague@example.com"
-                className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+                className="flex-1 bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
               />
               <button
                 onClick={addInvite}
-                className="bg-[#141414] border border-[#222] rounded-xl text-[12px] font-mono text-[#888] hover:text-white hover:border-[#333] transition-all cursor-pointer flex-shrink-0" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+                className="bg-gray border border-gray rounded-xl text-[12px] font-mono text-silver hover:text-[#080808] hover:border-gray transition-all cursor-pointer flex-shrink-0" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
               >
                 Add
               </button>
@@ -338,12 +338,12 @@ function CreateGroupModal({ onClose, onCreate }) {
             {invites.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {invites.map((email) => (
-                  <span key={email} className="flex items-center gap-1.5 bg-[#111] border border-[#1e1e1e] rounded-lg text-[11px] font-mono text-[#888]" style={{ paddingLeft: '10px', paddingRight: '10px', paddingTop: '4px', paddingBottom: '4px' }}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <span key={email} className="flex items-center gap-1.5 bg-gray border border-gray rounded-lg text-[11px] font-mono text-silver" style={{ paddingLeft: '10px', paddingRight: '10px', paddingTop: '4px', paddingBottom: '4px' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="silver" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                     </svg>
                     {email}
-                    <button onClick={() => setInvites((p) => p.filter((e) => e !== email))} className="text-[#333] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer ml-0.5" style={{ padding: '0' }}>
+                    <button onClick={() => setInvites((p) => p.filter((e) => e !== email))} className="text-silver hover:text-[#080808] transition-colors bg-transparent border-none cursor-pointer ml-0.5" style={{ padding: '0' }}>
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
@@ -355,18 +355,18 @@ function CreateGroupModal({ onClose, onCreate }) {
           </div>
 
           {/* Preview */}
-          <div className="border border-[#141414] rounded-xl bg-[#080808]" style={{ padding: '16px' }}>
-            <p className="text-[9.5px] font-mono text-[#333] tracking-[0.15em] uppercase mb-3">Preview</p>
+          <div className="border border-gray rounded-xl bg-gray" style={{ padding: '16px' }}>
+            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">Preview</p>
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, border: `1px solid ${selectedCat.color}22` }}>
                 {name ? name.slice(0, 2).toUpperCase() : "GR"}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[13px] font-semibold text-white truncate">{name || "Group name"}</p>
+                  <p className="text-[13px] font-semibold text-[#080808] truncate">{name || "Group name"}</p>
                   <span className="text-[10px] font-mono rounded-md flex-shrink-0" style={{ background: selectedCat.bg, color: selectedCat.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>{category}</span>
                 </div>
-                <p className="text-[12px] text-[#444] leading-relaxed line-clamp-2">{description || "Your description will appear here."}</p>
+                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">{description || "Your description will appear here."}</p>
               </div>
             </div>
           </div>
@@ -376,10 +376,10 @@ function CreateGroupModal({ onClose, onCreate }) {
 
         {/* Footer */}
         <div className="flex justify-end gap-2.5 border-t border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
-          <button onClick={onClose} className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+          <button onClick={onClose} className="bg-transparent border border-gray rounded-lg text-[12px] text-silver hover:text-[#080808] hover:border-gray transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             Cancel
           </button>
-          <button onClick={handleCreate} className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+          <button onClick={handleCreate} className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
@@ -414,11 +414,11 @@ function InviteModal({ group, onClose, onInvite }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ padding: '16px' }}>
-      <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+      <div className="w-full max-w-[420px] bg-white border border-gray rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-[#141414]" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
           <div>
-            <p className="text-[13px] font-semibold text-white">Invite to {group.name}</p>
-            <p className="text-[10.5px] text-[#444] font-mono mt-0.5">Invitations sent by email</p>
+            <p className="text-[13px] font-semibold text-[#080808]">Invite to {group.name}</p>
+            <p className="text-[10.5px] text-silver font-mono mt-0.5">Invitations sent by email</p>
           </div>
           <button onClick={onClose} className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -435,18 +435,18 @@ function InviteModal({ group, onClose, onInvite }) {
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && send()}
               placeholder="Enter email address"
-              className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+              className="flex-1 bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
             />
-            <button onClick={send} className="bg-white text-[#080808] rounded-xl text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}>
+            <button onClick={send} className="bg-[#080808] text-white rounded-xl text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}>
               Send
             </button>
           </div>
           {error && <p className="text-[11px] text-[#E24B4A] font-mono">{error}</p>}
           {sent.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-[#333] tracking-widest uppercase">Sent</p>
+              <p className="text-[10px] font-mono text-silver tracking-widest uppercase">Sent</p>
               {sent.map((e) => (
-                <div key={e} className="flex items-center gap-2 text-[12px] font-mono text-[#555]">
+                <div key={e} className="flex items-center gap-2 text-[12px] font-mono text-[#080808]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
@@ -457,7 +457,7 @@ function InviteModal({ group, onClose, onInvite }) {
           )}
         </div>
         <div className="border-t border-[#141414] flex justify-end" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
-          <button onClick={onClose} className="bg-[#141414] border border-[#222] rounded-lg text-[12px] text-[#888] hover:text-white transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+          <button onClick={onClose} className="bg-gray border border-gray rounded-lg text-[12px] text-silver hover:text-[#080808] transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             Done
           </button>
         </div>
@@ -470,7 +470,7 @@ function InviteModal({ group, onClose, onInvite }) {
 
 function GroupCard({ group, onJoin, onOpen }) {
   return (
-    <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '20px', paddingBottom: '20px' }}>
+    <div className="border border-gray rounded-2xl hover:border-gray bg-[#111]/5 transition-colors" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '20px', paddingBottom: '20px' }}>
       <div className="flex items-start gap-4">
         {/* Group icon */}
         <div
@@ -489,7 +489,7 @@ function GroupCard({ group, onJoin, onOpen }) {
               {group.category}
             </span>
           </div>
-          <p className="text-[12.5px] text-[#555] leading-relaxed mb-3 line-clamp-2">{group.description}</p>
+          <p className="text-[12.5px] text-silver leading-relaxed mb-3 line-clamp-2">{group.description}</p>
 
           {/* Members row */}
           <div className="flex items-center justify-between">
@@ -506,7 +506,7 @@ function GroupCard({ group, onJoin, onOpen }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpen(group)}
-                className="text-[11px] font-mono text-[#555] hover:text-[#999] transition-colors bg-transparent border-none cursor-pointer"
+                className="text-[11px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer"
                 style={{ paddingLeft: '0', paddingRight: '0' }}
               >
                 View
@@ -544,7 +544,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
   }
 
   return (
-    <div className="border border-[#171717] rounded-xl bg-[#080808] hover:border-[#212121] transition-colors" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
+    <div className="border border-gray rounded-xl hover:border-gray bg-[#111]/5 transition-colors" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
       {/* Author */}
       <div className="flex items-center gap-2.5 mb-3">
         <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0" style={{ background: post.color }}>
@@ -552,18 +552,18 @@ function GroupPost({ post, groupId, onLike, onComment }) {
         </div>
         <div className="flex-1 min-w-0">
           <span className="text-[12px] font-semibold text-white">{post.author}</span>
-          <span className="text-[11px] text-[#444] font-mono ml-2">{timeAgo(post.ts)}</span>
+          <span className="text-[11px] text-silver font-mono ml-2">{timeAgo(post.ts)}</span>
         </div>
       </div>
 
-      <p className="text-[13px] text-[#aaa] leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]">{post.body}</p>
+      <p className="text-[13px] text-white leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]">{post.body}</p>
 
       {/* Actions */}
       <div className="flex items-center gap-4 pl-[calc(1.75rem+0.625rem)]">
         <button
           onClick={() => onLike(groupId, post.id)}
           className="flex items-center gap-1.5 text-[11.5px] bg-transparent border-none cursor-pointer transition-colors"
-          style={{ color: post.liked ? "#E24B4A" : "#444" }}
+          style={{ color: post.liked ? "#E24B4A" : "silver" }}
         >
           <svg viewBox="0 0 24 24" width="13" height="13" fill={post.liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -572,7 +572,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
         </button>
         <button
           onClick={() => { setShowComments((v) => !v); setTimeout(() => inputRef.current?.focus(), 50); }}
-          className="flex items-center gap-1.5 text-[11.5px] text-[#444] hover:text-[#888] bg-transparent border-none cursor-pointer transition-colors"
+          className="flex items-center gap-1.5 text-[11.5px] text-silver hover:text-white bg-transparent border-none cursor-pointer transition-colors"
         >
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -585,7 +585,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
       {showComments && (
         <div className="mt-4 pl-[calc(1.75rem+0.625rem)] space-y-3">
           {post.comments.length > 0 && (
-            <div className="space-y-2.5 border-l border-[#181818] pl-3">
+            <div className="space-y-2.5 border-l border-gray pl-3">
               {post.comments.map((c) => (
                 <div key={c.id} className="flex gap-2">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0 mt-0.5" style={{ background: c.color }}>
@@ -593,8 +593,8 @@ function GroupPost({ post, groupId, onLike, onComment }) {
                   </div>
                   <div className="flex-1">
                     <span className="text-[11px] font-semibold text-[#888]">{c.author}</span>
-                    <span className="text-[10px] text-[#333] font-mono ml-1.5">{timeAgo(c.ts)}</span>
-                    <p className="text-[12px] text-[#666] mt-0.5 leading-relaxed">{c.body}</p>
+                    <span className="text-[10px] text-silver font-mono ml-1.5">{timeAgo(c.ts)}</span>
+                    <p className="text-[12px] text-white mt-0.5 leading-relaxed">{c.body}</p>
                   </div>
                 </div>
               ))}
@@ -605,7 +605,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
             <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0" style={{ background: ME.color }}>
               {ME.initials}
             </div>
-            <div className="flex-1 flex items-center gap-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg focus-within:border-[#252525] transition-colors" style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}>
+            <div className="flex-1 flex items-center gap-2 bg-[#0d0d0d] border border-silver rounded-lg focus-within:border-white transition-colors" style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -613,12 +613,12 @@ function GroupPost({ post, groupId, onLike, onComment }) {
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitComment()}
                 placeholder="Write a comment..."
-                className="flex-1 bg-transparent border-none outline-none text-[12px] text-[#ccc] placeholder:text-[#2a2a2a] font-mono"
+                className="flex-1 bg-transparent border-none outline-none text-[12px] text-white placeholder:text-silver font-mono"
               />
               <button
                 onClick={submitComment}
                 disabled={!commentText.trim()}
-                className="text-[#333] hover:text-[#7F77DD] disabled:opacity-30 transition-colors bg-transparent border-none cursor-pointer p-0 flex-shrink-0"
+                className="text-silver hover:text-[#7F77DD] disabled:opacity-30 transition-colors bg-transparent border-none cursor-pointer p-0 flex-shrink-0"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -649,7 +649,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
       {/* Back nav */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-[12px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer mb-6"
+        className="flex items-center gap-2 text-[12px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer mb-6"
         style={{ padding: '0' }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -659,7 +659,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
       </button>
 
       {/* Group header card */}
-      <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl mb-5" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
+      <div className="border border-gray rounded-2xl mb-5 bg-[#111]/5" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div
@@ -678,7 +678,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
                   <span className="text-[9.5px] font-mono rounded-md bg-[#1a1a1a] text-[#555] border border-[#222]" style={{ paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>Owner</span>
                 )}
               </div>
-              <p className="text-[12.5px] text-[#555] leading-relaxed mb-3 max-w-lg">{group.description}</p>
+              <p className="text-[12.5px] text-silver leading-relaxed mb-3 max-w-lg">{group.description}</p>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-1.5">
                   {group.members.slice(0, 5).map((m, i) => (
@@ -687,7 +687,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
                     </div>
                   ))}
                 </div>
-                <span className="text-[11px] text-[#444] font-mono">{group.memberCount.toLocaleString()} members</span>
+                <span className="text-[11px] text-silver font-mono">{group.memberCount.toLocaleString()} members</span>
               </div>
             </div>
           </div>
@@ -695,7 +695,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
             {isOwner && (
               <button
                 onClick={() => setShowInvite(true)}
-                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-[#222] text-[#666] hover:text-white hover:border-[#333] transition-all cursor-pointer bg-transparent"
+                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-gray text-silver hover:text-white hover:border-gray transition-all cursor-pointer bg-transparent"
                 style={{ paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -721,7 +721,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
 
       {/* Compose box — only for members */}
       {group.joined && (
-        <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl mb-4" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
+        <div className="border border-gray rounded-2xl mb-4 bg-[#111]/5" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
           <div className="flex gap-3">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0 mt-0.5" style={{ background: ME.color }}>
               {ME.initials}
@@ -732,13 +732,13 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
                 onChange={(e) => setPostText(e.target.value)}
                 placeholder={`Share something with ${group.name}…`}
                 rows={3}
-                className="w-full bg-transparent border-none outline-none text-[13px] text-[#ccc] resize-none placeholder:text-[#2a2a2a] leading-relaxed"
+                className="w-full bg-transparent border-none outline-none text-[13px] text-white resize-none placeholder:text-silver leading-relaxed"
               />
-              <div className="flex justify-end mt-2 pt-2 border-t border-[#111]">
+              <div className="flex justify-end mt-2 pt-2 border-t border-gray">
                 <button
                   onClick={handlePost}
                   disabled={!postText.trim()}
-                  className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
                   style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '6px', paddingBottom: '6px' }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -754,19 +754,19 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
 
       {/* Section label */}
       <div className="flex items-center gap-3 mb-4">
-        <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+        <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
           {group.posts.length} post{group.posts.length !== 1 ? "s" : ""}
         </p>
-        <div className="flex-1 h-px bg-[#141414]" />
+        <div className="flex-1 h-px bg-gray" />
       </div>
 
       {/* Posts */}
       {group.posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          <p className="text-[12px] font-mono text-[#2a2a2a]">No posts yet. Be the first.</p>
+          <p className="text-[12px] font-mono text-silver">No posts yet. Be the first.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -803,10 +803,26 @@ export default function Community() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all"); // "all" | "joined"
   const [toast, setToast] = useState({ visible: false, message: "" });
+  const [searchOpen, setSearchOpen] = useState(false);
   const toastTimer = useRef(null);
+  const searchInputRef = useRef(null);
+  const searchPopupRef = useRef(null);
 
   const activeGroup = groups.find((g) => g.id === activeGroupId);
   const isOwner = activeGroup?.owner === ME.handle;
+
+  // Close search popup on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (searchPopupRef.current && !searchPopupRef.current.contains(e.target) && !searchInputRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
+    }
+    if (searchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [searchOpen]);
 
   function showToast(msg) {
     clearTimeout(toastTimer.current);
@@ -926,7 +942,7 @@ export default function Community() {
         backgroundAttachment: 'fixed'
       }}
     >
-      <div className="bg-[#080808]/75 min-h-screen">
+      <div className="bg-transparent min-h-screen">
         <div className="w-full max-w-[900px] mx-auto" style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '48px', paddingBottom: '80px' }}>
 
         {view === "directory" && (
@@ -936,18 +952,18 @@ export default function Community() {
               <div>
                 <h1 className="text-[18px] font-semibold text-white tracking-tight">Community</h1>
                 <div className="flex items-center gap-3 mt-1">
-                  <p className="text-[11px] text-[#444] font-mono">{groups.length} groups</p>
+                  <p className="text-[11px] text-silver font-mono">{groups.length} groups</p>
                   {joinedCount > 0 && (
                     <>
-                      <span className="text-[#222]">·</span>
-                      <p className="text-[11px] text-[#444] font-mono">{joinedCount} joined</p>
+                      <span className="text-gray">·</span>
+                      <p className="text-[11px] text-silver font-mono">{joinedCount} joined</p>
                     </>
                   )}
                 </div>
               </div>
               <button
                 onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+                className="flex items-center gap-2 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
                 style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -960,25 +976,36 @@ export default function Community() {
             {/* Search + filter row */}
             <div className="flex gap-2.5 mb-6">
               <div className="relative flex-1">
-                <svg className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ left: '14px' }}>
+                <svg className="absolute top-1/2 -translate-y-1/2 text-silver pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ left: '14px' }}>
                   <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input
+                  ref={searchInputRef}
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
+                  onClick={() => setSearchOpen(true)}
                   placeholder="Search groups..."
-                  className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+                  className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[12.5px] font-mono text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver"
                   style={{ paddingLeft: '36px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
                 />
+                {searchOpen && query && (
+                  <div 
+                    ref={searchPopupRef}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray rounded-xl shadow-lg z-50"
+                    style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px' }}
+                  >
+                    <p className="text-[11px] font-mono text-[#080808]">Searching: <span className="font-semibold">{query}</span></p>
+                  </div>
+                )}
               </div>
-              <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl overflow-hidden">
+              <div className="flex bg-[#0a0a0a] border border-silver rounded-xl overflow-hidden">
                 {["all", "joined"].map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
                     className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${
-                      filter === f ? "bg-[#141414] text-white" : "bg-transparent text-[#444] hover:text-[#777]"
+                      filter === f ? "bg-gray text-white" : "bg-transparent text-silver hover:text-white"
                     }`}
                     style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
                   >
@@ -990,12 +1017,12 @@ export default function Community() {
 
             {/* Section divider */}
             <div className="flex items-center gap-3 mb-4">
-              <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+              <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
                 {query || filter !== "all"
                   ? `${filteredGroups.length} result${filteredGroups.length !== 1 ? "s" : ""}`
                   : "All groups"}
               </p>
-              <div className="flex-1 h-px bg-[#141414]" />
+              <div className="flex-1 h-px bg-gray" />
             </div>
 
             {/* Group list */}
@@ -1012,13 +1039,13 @@ export default function Community() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
-                <p className="text-[12px] font-mono text-[#2a2a2a]">No groups found.</p>
+                <p className="text-[12px] font-mono text-silver">No groups found.</p>
                 {filter === "joined" && (
-                  <button onClick={() => setFilter("all")} className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
+                  <button onClick={() => setFilter("all")} className="text-[11px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2">
                     Browse all groups
                   </button>
                 )}

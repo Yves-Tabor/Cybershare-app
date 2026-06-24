@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 import mainBg from "../assets/mainBg.png";
+import { Link } from "react-router-dom";
 
 
 
@@ -810,7 +811,8 @@ export default function Home() {
 
         <div className="flex gap-3 mb-8">
 
-          <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
+          <Link to="/main/community">
+            <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
 
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
 
@@ -823,7 +825,9 @@ export default function Home() {
             Community
 
           </button>
+          </Link>
 
+          <Link to="/main/scanner">
           <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
 
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -837,6 +841,7 @@ export default function Home() {
             Scanner
 
           </button>
+          </Link>
 
         </div><br/>
 

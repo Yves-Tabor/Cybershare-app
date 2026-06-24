@@ -136,7 +136,7 @@ export default function Scanner() {
         backgroundAttachment: 'fixed'
       }}
     >
-      <div className="bg-[#080808]/75 min-h-screen">
+      <div className="bg-transparent min-h-screen">
       {/* ── Scanline overlay ── */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -152,8 +152,8 @@ export default function Scanner() {
         {/* Header */}
         <header className="flex items-center justify-between mb-14">
           <div className="flex items-center gap-2.5">
-            <IconShield size={18} className="text-[#7F77DD]" />
-            <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#7F77DD]">
+            <IconShield size={18} className="text-white" />
+            <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-white">
               Platform Security Layer
             </span>
           </div>
@@ -165,7 +165,7 @@ export default function Scanner() {
 
         {/* Main card */}
         <main className="flex-1">
-          <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-[#080808]/80 backdrop-blur-sm">
+          <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
 
             {/* Card top strip */}
             <div className="border-b border-[#141414] flex items-center gap-3" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '16px', paddingBottom: '16px' }}>
@@ -181,7 +181,7 @@ export default function Scanner() {
               <div>
                 <label
                   htmlFor="scan-url"
-                  className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[#555] mb-2.5"
+                  className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-gray-400 mb-2.5"
                 >
                   Enter website URL
                 </label>
@@ -195,7 +195,7 @@ export default function Scanner() {
                     onKeyDown={(e) => e.key === "Enter" && canScan && startScan()}
                     placeholder="https://example.com"
                     disabled={scanning}
-                    className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-[#e0e0e0] outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 ${
+                    className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-silver outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 ${
                       urlError
                         ? "border-[#E24B4A]/60 focus:border-[#E24B4A]"
                         : "border-[#1e1e1e] focus:border-[#2e2e2e]"
@@ -244,7 +244,7 @@ export default function Scanner() {
                       </svg>
                     )}
                   </div>
-                  <p className="text-[12px] font-mono leading-relaxed text-[#666] select-none">
+                  <p className="text-[12px] font-mono leading-relaxed text-silver select-none">
                     I acknowledge I have authorization to conduct a security scan including header analysis, fingerprinting, and disclosure checks.{" "}
                     <button
                       onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}
@@ -291,7 +291,7 @@ export default function Scanner() {
 
               {/* Progress steps — only visible once scan starts */}
               {stepIndex >= 0 && (
-                <div className="border border-[#141414] rounded-xl space-y-2.5" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}>
+                <div className="border border-[#141414] rounded-xl space-y-2.5" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '5px', paddingBottom: '5px' }}>
                   <p className="text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#333] mb-3.5">
                     Scan Progress
                   </p>
@@ -325,7 +325,7 @@ export default function Scanner() {
         </main>
 
         {/* Footer status line */}
-        <footer className="mt-8 flex items-center justify-center gap-2.5">
+        <footer className="mt-1 flex items-center justify-center gap-2.5">
           {scanning && <IconLoader size={10} className="text-[#444]" />}
           <span className={`text-[10px] font-mono tracking-[0.18em] uppercase transition-colors ${
             isDone ? "text-[#1D9E75]" : "text-[#444]"

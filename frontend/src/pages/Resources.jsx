@@ -107,15 +107,14 @@ function UploadForm({ onPublish }) {
   }
 
   return (
-    <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-[#080808]">
+    <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-transparent">
       {/* Form header */}
-      <div className="border-b border-[#141414] flex items-center justify-between" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '14px', paddingBottom: '14px' }}>
-        <span className="text-[9.5px] font-mono font-bold tracking-[0.22em] uppercase text-[#555]">
+      <div className="border-b border-white flex items-center justify-between" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '14px', paddingBottom: '14px' }}>
+        <span className="text-[9.5px] font-mono font-bold tracking-[0.22em] uppercase text-silver">
           Platform Resource Interface
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]" />
-          <span className="text-[9px] font-mono tracking-widest uppercase text-[#333]">Ready</span>
         </span>
       </div>
 
@@ -123,7 +122,7 @@ function UploadForm({ onPublish }) {
 
         {/* Title */}
         <div>
-          <label className="block text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#555] mb-2">
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
             Resource Title <span className="text-[#333]">[Entry Required]</span>
           </label>
           <input
@@ -131,13 +130,13 @@ function UploadForm({ onPublish }) {
             value={title}
             onChange={(e) => { setTitle(e.target.value); setError(""); }}
             placeholder="enter resource title..."
-            className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px' }}
+            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px' }}
           />
         </div>
 
         {/* Content */}
         <div>
-          <label className="block text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#555] mb-2">
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
             Content
           </label>
           <textarea
@@ -145,13 +144,14 @@ function UploadForm({ onPublish }) {
             onChange={(e) => { setContent(e.target.value); setError(""); }}
             placeholder="enter resource content..."
             rows={4}
-            className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] font-mono text-[#ccc] px-4 py-3.5 outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2a2a2a]"
+            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] px-4 py-3.5 outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2a2a2a]"
+             style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px' }}
           />
         </div>
 
         {/* File attachments */}
         <div>
-          <label className="block text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#555] mb-2">
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
             File Attachments
           </label>
 
@@ -163,7 +163,7 @@ function UploadForm({ onPublish }) {
             onClick={() => fileInputRef.current?.click()}
             className={`border rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
               dragging
-                ? "border-[#7F77DD]/50 bg-[#7F77DD]/5"
+                ? "border-white/50 bg-white/5"
                 : "border-dashed border-[#1e1e1e] hover:border-[#2e2e2e] bg-[#0a0a0a]"
             }`}
             style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '32px', paddingBottom: '32px' }}
@@ -173,10 +173,10 @@ function UploadForm({ onPublish }) {
               <line x1="12" y1="12" x2="12" y2="21" />
               <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
             </svg>
-            <span className="text-[12px] font-mono text-[#444]">
+            <span className="text-[12px] font-mono text-silver">
               drag &amp; drop files here
             </span>
-            <span className="text-[11px] font-mono text-[#2a2a2a]">or click to browse</span>
+            <span className="text-[11px] font-mono text-gray">or click to browse</span>
           </div>
           <input
             ref={fileInputRef}
@@ -218,9 +218,10 @@ function UploadForm({ onPublish }) {
         )}
 
         {/* Publish button */}
+        <br/>
         <button
           onClick={handlePublish}
-          className="w-full bg-[#0e0e0e] border border-[#2a2a2a] rounded-xl text-[12px] font-mono font-bold tracking-[0.18em] uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white hover:bg-[#111] transition-all active:scale-[0.99]" style={{ paddingTop: '14px', paddingBottom: '14px' }}
+          className="w-full bg-[#0e0e0e] border border-white rounded-xl text-[12px] font-mono font-bold tracking-[0.18em] uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white hover:bg-[#111] transition-all active:scale-[0.99]" style={{ paddingTop: '14px', paddingBottom: '14px' }}
         >
           Publish Resource
         </button>
@@ -235,7 +236,7 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
 
   return (
-    <div className="border border-[#1c1c1c] rounded-2xl bg-[#080808] hover:border-[#242424] transition-colors flex flex-col" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '20px', paddingBottom: '20px' }}>
+    <div className="border border-gray rounded-2xl hover:border-gray bg-[#111]/5 transition-colors flex flex-col" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '20px', paddingBottom: '20px' }}>
 
       {/* Author row + bookmark */}
       <div className="flex items-start justify-between gap-2 mb-4">
@@ -418,7 +419,7 @@ export default function Resources() {
           <div className="max-w-[600px] mx-auto">
             {/* Page header */}
             <div className="flex items-center justify-between mb-6">
-              <div>
+              <div style={{paddingRight: '1rem'}}>
                 <h1 className="text-[18px] font-semibold text-white tracking-tight">Resources</h1>
                 <p className="text-[11px] text-[#444] mt-0.5 font-mono tracking-wide">
                   {resources.length} entries · {bookmarked.size} saved
@@ -428,7 +429,7 @@ export default function Resources() {
                 onClick={() => { setView(view === "upload" ? "feed" : "upload"); setQuery(""); }}
                 className={`flex items-center gap-2 rounded-lg text-[12px] font-mono tracking-wide border transition-all cursor-pointer ${
                   view === "upload"
-                    ? "bg-[#111] border-[#2a2a2a] text-[#888] hover:text-white"
+                    ? "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
                     : "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
                 }`}
                 style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
@@ -467,7 +468,7 @@ export default function Resources() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="search by title, author, tag, or filename..."
-                  className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]" style={{ paddingLeft: '40px', paddingRight: '40px', paddingTop: '12px', paddingBottom: '12px' }}
+                  className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-silver" style={{ paddingLeft: '40px', paddingRight: '40px', paddingTop: '12px', paddingBottom: '12px' }}
                 />
                 {query && (
                   <button
@@ -481,12 +482,12 @@ export default function Resources() {
                   </button>
                 )}
               </div>
-            )}
+            )}<br/>
           </div>
 
           {/* Section divider */}
           <div className="flex items-center gap-3 mb-5">
-            <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+            <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
               {view === "upload"
                 ? "New Entry"
                 : query
