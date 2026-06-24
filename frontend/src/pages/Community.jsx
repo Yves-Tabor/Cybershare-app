@@ -548,7 +548,7 @@ function GroupPost({ post, groupId, onLike, onComment }) {
           {post.initials}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[12px] font-semibold text-white">{post.author}</span>
+          <span className="text-[12px] font-semibold text-white" style={{ paddingRight: '8px' }}>{post.author}</span>
           <span className="text-[11px] text-silver font-mono ml-2">{timeAgo(post.ts)}</span>
         </div>
       </div>
@@ -588,8 +588,8 @@ function GroupPost({ post, groupId, onLike, onComment }) {
                   <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0 mt-0.5" style={{ background: c.color }}>
                     {c.initials}
                   </div>
-                  <div className="flex-1">
-                    <span className="text-[11px] font-semibold text-[#888]">{c.author}</span>
+                  <div className="flex-1" >
+                    <span className="text-[11px] font-semibold text-[#888]" style={{ paddingRight: '8px' }}>{c.author}</span>
                     <span className="text-[10px] text-silver font-mono ml-1.5">{timeAgo(c.ts)}</span>
                     <p className="text-[12px] text-white mt-0.5 leading-relaxed">{c.body}</p>
                   </div>
@@ -749,6 +749,7 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
       )}
 
       {/* Section label */}
+      <br />
       <div className="flex items-center gap-3 mb-4">
         <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
           {group.posts.length} post{group.posts.length !== 1 ? "s" : ""}
