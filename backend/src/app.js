@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const resourceRoutes = require('./routes/resourceRoutes');
 
 const app = express();
 
@@ -39,6 +40,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/resources', resourceRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
