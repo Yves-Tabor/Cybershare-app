@@ -187,25 +187,25 @@ function SaveResourceModal({ onClose, onSave }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[480px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+      <div className="w-full max-w-[480px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
 
         {/* Modal header */}
         <div
-          className="flex items-center justify-between border-b border-[#141414]"
+          className="flex items-center justify-between border-b border-white"
           style={{ padding: "16px 24px" }}
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center">
+          <div className="flex items-center bg-white gap-2.5 rounded-md" style={{ padding: "10px" }}>
+            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#BA7517" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-white">Save a link</span>
+            <span className="text-[13px] font-semibold text-[#080808]">Save a link</span>
           </div>
           <button
             onClick={onClose}
-            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
             style={{ padding: "4px" }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -217,7 +217,7 @@ function SaveResourceModal({ onClose, onSave }) {
         {/* Modal body */}
         <div className="space-y-5" style={{ padding: "24px" }}>
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">URL</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">URL</label>
             <input
               ref={urlRef}
               type="text"
@@ -225,60 +225,60 @@ function SaveResourceModal({ onClose, onSave }) {
               onChange={(e) => { setUrl(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
               placeholder="hacktricks.xyz/some-page"
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
             {domainPreview && (
-              <p className="text-[10.5px] font-mono text-[#444] mt-1.5">Will save from <span className="text-[#888]">{domainPreview}</span></p>
+              <p className="text-[10.5px] font-mono text-silver mt-1.5">Will save from <span className="text-white">{domainPreview}</span></p>
             )}
-          </div>
+          </div><br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
-              Title <span className="text-[#333] normal-case tracking-normal font-normal">— optional</span>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Title <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Defaults to the domain name"
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
-          </div>
+          </div><br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
-              Note <span className="text-[#333] normal-case tracking-normal font-normal">— optional</span>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Note <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Why you're saving this"
               rows={2}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2e2e2e]"
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
 
-          {error && <p className="text-[11px] text-[#E24B4A] font-mono">{error}</p>}
+          {error && <p className="text-[11px] text-white font-mono">{error}</p>}
         </div>
 
         {/* Modal footer */}
         <div
-          className="flex justify-end gap-2.5 border-t border-[#141414]"
+          className="flex justify-end gap-2.5 border-t border-white bg-white/10"
           style={{ padding: "16px 24px" }}
         >
           <button
             onClick={onClose}
-            className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+            className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
             style={{ padding: "8px 16px" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
             style={{ padding: "8px 16px" }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -347,9 +347,9 @@ function SavedItemCard({ item, onRemove, onOpen }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="text-[14px] font-semibold text-white">{item.title}</span>
+            <span className="text-[14px] font-semibold text-white truncate min-w-0">{item.title}</span>
             <span
-              className="text-[10px] font-mono rounded-md"
+              className="text-[10px] font-mono rounded-md flex-shrink-0"
               style={{ background: meta.bg, color: meta.color, padding: "2px 8px" }}
             >
               {meta.label}
@@ -360,18 +360,18 @@ function SavedItemCard({ item, onRemove, onOpen }) {
           <div className="flex items-center gap-2 text-[11px] text-[#555] font-mono mb-2.5 flex-wrap">
             {item.type === "post" && (
               <>
-                <span>{item.context}</span><span className="text-[#222]">·</span><span>by {item.author}</span>
+                <span className="truncate">{item.context}</span><span className="text-[#222] flex-shrink-0">·</span><span className="truncate">by {item.author}</span>
               </>
             )}
             {item.type === "event" && (
               <>
-                <span>{item.context}</span><span className="text-[#222]">·</span>
-                <span>{formatShort(item.date)} · {formatTime(item.time)}</span>
+                <span className="truncate">{item.context}</span><span className="text-[#222] flex-shrink-0">·</span>
+                <span className="flex-shrink-0">{formatShort(item.date)} · {formatTime(item.time)}</span>
               </>
             )}
             {item.type === "resource" && (
-              <span className="flex items-center gap-1.5 text-[#666]">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <span className="flex items-center gap-1.5 text-[#666] truncate">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                   <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                 </svg>
@@ -383,7 +383,7 @@ function SavedItemCard({ item, onRemove, onOpen }) {
           <p className="text-[12.5px] text-[#555] leading-relaxed mb-3.5 line-clamp-2">{item.snippet}</p>
 
           {/* Footer */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
               <span className="text-[10.5px] text-[#383838] font-mono flex-shrink-0">Saved {timeAgo(item.savedAt)}</span>
               {item.type === "post" && (
@@ -509,21 +509,25 @@ export default function SavedItems() {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="bg-[#080808]/75 min-h-screen">
+      <div className="bg-transparent min-h-screen">
         <div
-          className="w-full max-w-[900px] mx-auto"
+          className="w-[375px] sm:w-[768px] lg:w-[1100px] mx-auto"
           style={{ padding: "48px 32px 80px" }}
         >
 
           {/* Page header */}
-          <div className="flex items-start justify-between mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
             <div>
               <h1 className="text-[18px] font-semibold text-white tracking-tight">Saved Items</h1>
-              <p className="text-[11px] text-[#444] font-mono mt-1">{items.length} saved · for you</p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">{items.length} saved</p>
+                <span className="text-gray-400 md:text-[#444]">·</span>
+                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">for you</p>
+              </div>
             </div>
             <button
               onClick={() => setShowSave(true)}
-              className="flex items-center gap-2 bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
+              className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
               style={{ padding: "8px 16px" }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -534,55 +538,51 @@ export default function SavedItems() {
             </button>
           </div>
 
-          {/* Search */}
-          <div className="relative mb-4">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"
-              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search saved items…"
-              className="w-full bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
-              style={{ padding: "10px 16px 10px 36px" }}
-            />
-          </div>
-
-          {/* Type filter pills */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            {FILTERS.map((f) => {
-              const active = filter === f.key;
-              const color = f.key === "all" ? "#ffffff" : TYPE_META[f.key].color;
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setFilter(f.key)}
-                  className={`flex items-center gap-1.5 rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
-                    active ? "font-semibold" : "border-[#1e1e1e] text-[#444] bg-transparent hover:border-[#2a2a2a] hover:text-[#666]"
-                  }`}
-                  style={
-                    active
-                      ? { color, background: f.key === "all" ? "#ffffff14" : TYPE_META[f.key].bg, borderColor: color + "55", padding: "6px 12px" }
-                      : { padding: "6px 12px" }
-                  }
-                >
-                  {f.label}
-                  <span className="opacity-60">{counts[f.key]}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Search + filter */}
+          <div className="flex flex-col sm:flex-row gap-2.5 mb-6" style={{ padding: "10px 12px" }}>
+            <div className="relative flex-1">
+              <svg
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white pointer-events-none"
+                width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search saved items…"
+                className="w-full bg-transparent rounded-xl text-[12.5px] font-mono text-white outline-none transition-colors placeholder:text-white"
+                style={{ padding: "10px 16px 10px 36px" }}
+              />
+            </div>
+            {/* Type filter pills */}
+            <div className="flex w-fit rounded-xl overflow-hidden">
+              {FILTERS.map((f) => {
+                const active = filter === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilter(f.key)}
+                    className={`flex items-center gap-1.5 text-[11.5px] font-mono transition-colors cursor-pointer border-none ${
+                      active ? "bg-white text-black" : "bg-transparent text-white hover:text-[#777]"
+                    }`}
+                    style={{ padding: "10px 16px" }}
+                  >
+                    {f.label}
+                    <span className="opacity-60">{counts[f.key]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div><br />
 
           <div className="flex items-center gap-3 mb-4">
-            <p className="text-[9.5px] font-mono font-bold text-[#333] tracking-[0.18em] uppercase whitespace-nowrap">
+            <p className="text-[9.5px] font-mono font-bold text-white tracking-[0.18em] uppercase whitespace-nowrap">
               {query || filter !== "all" ? `${filteredItems.length} result${filteredItems.length !== 1 ? "s" : ""}` : "All saved items"}
             </p>
-            <div className="flex-1 h-px bg-[#141414]" />
-          </div>
+            <div className="flex-1 h-px bg-white" />
+          </div><br />
 
           {/* List */}
           {filteredItems.length > 0 ? (
