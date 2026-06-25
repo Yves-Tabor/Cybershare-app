@@ -493,7 +493,7 @@ function ProfileSection({ profile, setProfile, showToast }) {
         <p className="text-[10.5px] font-mono text-[#888] mt-1.5 text-right">{local.bio.length}/160</p>
       </div>
 
-      <div className="flex justify-end pt-3 border-t border-[#111]">
+      <div className="flex justify-end pt-3 border-t border-white/20" style={{ paddingBlock: '10px' }}>
         <SaveButton onClick={save} />
       </div>
     </SectionCard>
