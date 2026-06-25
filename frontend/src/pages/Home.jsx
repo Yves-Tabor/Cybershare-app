@@ -9,13 +9,13 @@ const TAGS = {
 
   "Threat Intel": { bg: "#1a1a2e", color: "#7F77DD" },
 
-  Vulnerability:  { bg: "#2e1a1a", color: "#E24B4A" },
+  Vulnerability: { bg: "#2e1a1a", color: "#E24B4A" },
 
-  Tool:           { bg: "#1a2e1a", color: "#639922" },
+  Tool: { bg: "#1a2e1a", color: "#639922" },
 
-  Discussion:     { bg: "#1a2a2e", color: "#1D9E75" },
+  Discussion: { bg: "#1a2a2e", color: "#1D9E75" },
 
-  Resource:       { bg: "#2e2a1a", color: "#BA7517" },
+  Resource: { bg: "#2e2a1a", color: "#BA7517" },
 
 };
 
@@ -287,6 +287,52 @@ function PostCard({ post, onLike }) {
 
 
 
+function MyPostCard({ post }) {
+  const tag = TAGS[post.cat] || TAGS["Discussion"];
+  const parts = post.body.split(" — ");
+  const title = parts.length > 1 ? parts[0] : "Post";
+  const body = parts.length > 1 ? parts.slice(1).join(" — ") : post.body;
+
+  return (
+    <div className="border border-[#2a2a2a] rounded-2xl hover:border-[#333] bg-[#111]/5 transition-colors mb-3" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '20px', paddingBottom: '20px' }}>
+      <div className="flex items-start gap-4">
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0"
+          style={{ background: tag.bg, color: tag.color, border: `1px solid ${tag.color}22` }}
+        >
+          {post.cat.slice(0, 2).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className="text-[14px] font-semibold text-white">
+              {title}
+            </span>
+            <span className="text-[10px] font-mono rounded-md" style={{ background: tag.bg, color: tag.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>
+              {post.cat}
+            </span>
+          </div>
+          <p className="text-[12.5px] text-[#888] leading-relaxed mb-3 line-clamp-2">{body}</p>
+          <div className="flex items-center gap-4">
+            <div className="text-[11px] font-mono text-[#555]">{timeAgo(post.ts)}</div>
+            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#555]">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {post.likes}
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#555]">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              {post.comments}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Pagination({ page, totalPages, onPageChange }) {
 
   const pages = [];
@@ -349,15 +395,13 @@ function Pagination({ page, totalPages, onPageChange }) {
 
             onClick={() => onPageChange(p.value)}
 
-            className={`flex items-center justify-center w-8 h-8 rounded-lg text-[13px] cursor-pointer transition-colors border ${
+            className={`flex items-center justify-center w-8 h-8 rounded-lg text-[13px] cursor-pointer transition-colors border ${p.value === page
 
-              p.value === page
+              ? "bg-white text-[#080808] border-white font-semibold"
 
-                ? "bg-white text-[#080808] border-white font-semibold"
+              : "bg-[#151515] border-[#2a2a2a] text-[#888] hover:bg-[#1e1e1e] hover:text-white"
 
-                : "bg-[#151515] border-[#2a2a2a] text-[#888] hover:bg-[#1e1e1e] hover:text-white"
-
-            }`}
+              }`}
 
           >
 
@@ -400,223 +444,138 @@ function Pagination({ page, totalPages, onPageChange }) {
 
 
 function CreatePostModal({ onClose, onSubmit }) {
-
   const [title, setTitle] = useState("");
-
   const [cat, setCat] = useState("Threat Intel");
-
   const [body, setBody] = useState("");
-
   const [error, setError] = useState("");
-
   const titleRef = useRef(null);
 
-
-
   useEffect(() => {
-
     titleRef.current?.focus();
-
     function onKey(e) { if (e.key === "Escape") onClose(); }
-
     document.addEventListener("keydown", onKey);
-
     return () => document.removeEventListener("keydown", onKey);
-
   }, [onClose]);
 
-
-
   function handleSubmit() {
-
     if (!title.trim() || !body.trim()) {
-
       setError("Please fill in both title and content.");
-
       return;
-
     }
-
     onSubmit({ title: title.trim(), body: body.trim(), cat });
-
   }
-
-
 
   function handleBackdrop(e) {
-
     if (e.target === e.currentTarget) onClose();
-
   }
 
-
+  const selectedTag = TAGS[cat] || TAGS["Threat Intel"];
 
   return (
-
-    <div
-
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center" style={{ padding: '16px' }}
-
-      onClick={handleBackdrop}
-
-    >
-
-      <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl w-full max-w-[540px]" style={{ padding: '24px' }}>
-
-        {/* Modal header */}
-
-        <div className="flex items-center justify-between mb-5">
-
-          <h2 className="text-[15px] font-semibold text-white">Create a post</h2>
-
-          <button
-
-            onClick={onClose}
-
-            aria-label="Close"
-
-            className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border-none text-[#555] hover:text-white hover:bg-[#1e1e1e] cursor-pointer transition-colors"
-
-          >
-
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-
+    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center" style={{ padding: '16px' }} onClick={handleBackdrop}>
+      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <div className="flex items-center bg-white gap-2.5 rounded-md" style={{ padding: '10px' }}>
+            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7F77DD" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </div>
+            <span className="text-[13px] font-semibold text-[#080808]">Create a post</span>
+          </div>
+          <button onClick={onClose} className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-
             </svg>
-
           </button>
-
         </div>
 
-
-
-        <div className="space-y-4">
-
+        <div className="space-y-5 max-h-[75vh] overflow-y-auto" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
+          {/* Title */}
           <div>
-
-            <label className="block text-[11px] font-medium text-[#555] uppercase tracking-widest mb-1.5">Title</label>
-
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Title</label>
             <input
-
               ref={titleRef}
-
               type="text"
-
               value={title}
-
               onChange={(e) => { setTitle(e.target.value); setError(""); }}
-
               placeholder="Give your post a title…"
-
               maxLength={120}
-
-              className="w-full bg-[#0d0d0d] border border-[#252525] rounded-lg text-[#e0e0e0] text-[13px] outline-none focus:border-[#3a3a3a] transition-colors placeholder:text-[#3a3a3a]" style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '10px', paddingBottom: '10px' }}
-
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'transparent' }}
             />
+          </div><br />
 
-          </div>
-
-
-
+          {/* Category */}
           <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">Category</label>
+            <div className="flex flex-wrap gap-2">
+              {CATS.map((c) => {
+                const cTag = TAGS[c];
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setCat(c)}
+                    className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${cat === c ? "border-current font-semibold" : "border-silver text-silver bg-transparent hover:border-white hover:text-white"}`}
+                    style={{
+                      paddingLeft: '12px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px',
+                      ...(cat === c ? { color: cTag.color, background: cTag.bg, borderColor: cTag.color + "55" } : {})
+                    }}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div><br />
 
-            <label className="block text-[11px] font-medium text-[#555] uppercase tracking-widest mb-1.5">Category</label>
-
-            <select
-
-              value={cat}
-
-              onChange={(e) => setCat(e.target.value)}
-
-              className="w-full bg-[#0d0d0d] border border-[#252525] rounded-lg text-[#e0e0e0] text-[13px] outline-none focus:border-[#3a3a3a] transition-colors" style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '10px', paddingBottom: '10px' }}
-
-            >
-
-              {CATS.map((c) => (
-
-                <option key={c} value={c} style={{ background: "#111" }}>{c}</option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-
-
+          {/* Content */}
           <div>
-
-            <label className="block text-[11px] font-medium text-[#555] uppercase tracking-widest mb-1.5">Content</label>
-
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Content</label>
             <textarea
-
               value={body}
-
               onChange={(e) => { setBody(e.target.value); setError(""); }}
-
               placeholder="Share something with the community…"
-
               rows={5}
-
-              className="w-full bg-[#0d0d0d] border border-[#252525] rounded-lg text-[#e0e0e0] text-[13px] outline-none focus:border-[#3a3a3a] transition-colors resize-none placeholder:text-[#3a3a3a]" style={{ paddingLeft: '14px', paddingRight: '14px', paddingTop: '10px', paddingBottom: '10px' }}
-
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'transparent' }}
             />
+          </div><br />
 
+          {/* Preview */}
+          <div className="border border-gray rounded-xl bg-gray" style={{ padding: '16px' }}>
+            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">Preview</p>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: selectedTag.bg, color: selectedTag.color, border: `1px solid ${selectedTag.color}22` }}>
+                {cat.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-[13px] font-semibold text-white truncate">{title || "Post title"}</p>
+                  <span className="text-[10px] font-mono rounded-md flex-shrink-0" style={{ background: selectedTag.bg, color: selectedTag.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>{cat}</span>
+                </div>
+                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">{body || "Your post content will appear here."}</p>
+              </div>
+            </div>
           </div>
 
+          {error && <p className="text-[11px] text-[#E24B4A] font-mono">{error}</p>}
         </div>
 
-
-
-        {error && (
-
-          <p className="text-[12px] text-[#E24B4A] mt-3">{error}</p>
-
-        )}
-
-
-
-        <div className="flex justify-end items-center gap-2.5 mt-5 border-t border-[#1a1a1a]" style={{ paddingTop: '16px' }}>
-
-          <button
-
-            onClick={onClose}
-
-            className="bg-transparent border border-[#2a2a2a] rounded-lg text-[#777] text-[13px] cursor-pointer hover:text-[#ccc] hover:border-[#3a3a3a] transition-colors" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
-
-          >
-
+        {/* Footer */}
+        <div className="flex justify-end gap-2.5 border-t border-white bg-white/10" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <button onClick={onClose} className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             Cancel
-
           </button>
-
-          <button
-
-            onClick={handleSubmit}
-
-            className="flex items-center gap-1.5 bg-white text-[#080808] rounded-lg text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
-
-          >
-
+          <button onClick={handleSubmit} className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-
               <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-
             </svg>
-
             Publish
-
           </button>
-
         </div>
-
       </div>
-
     </div>
-
   );
-
 }
 
 
@@ -627,9 +586,8 @@ function Toast({ message, visible }) {
 
     <div
 
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-[#333] rounded-lg text-[13px] text-[#e0e0e0] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-      }`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-[#333] rounded-lg text-[13px] text-[#e0e0e0] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        }`}
       style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px' }}
     >
 
@@ -654,6 +612,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [view, setView] = useState("all");
 
   const [toast, setToast] = useState({ message: "", visible: false });
 
@@ -753,11 +712,11 @@ export default function Home() {
 
   return (
 
-    <div 
+    <div
 
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]" 
+      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
 
-      style={{ 
+      style={{
 
         fontFamily: "'DM Sans', sans-serif",
 
@@ -775,119 +734,138 @@ export default function Home() {
 
       <div className="bg-[#080808]/5 min-h-screen">
 
-        <div className="w-full max-w-[1200px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '25px', paddingBottom: '80px' }}>
+        <div className="w-[375px] sm:w-[768px] lg:w-[1200px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '25px', paddingBottom: '80px' }}>
+
+
+          {/* Top bar */}
+
+          <div className="flex items-center justify-between mb-3">
+
+            <h1 className="text-[20px] font-semibold text-white tracking-tight">Home</h1>
+
+            <button
+
+              onClick={() => setModalOpen(true)}
+
+              className="flex items-center gap-2 bg-transparent text-white rounded-lg text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px' }}
+
+            >
+
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+
+              </svg>
+
+              Create post
+
+            </button>
+
+          </div>
 
 
 
-        {/* Top bar */}
+          {/* Quick nav */}
+          <div className="flex flex-col md:flex-row gap-3 mb-8 items-center justify-between">
+            <div className="flex">
+              <Link to="/main/community">
+                <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Community
+                </button>
+              </Link>
 
-        <div className="flex items-center justify-between mb-3">
+              <Link to="/main/scanner">
+                <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
+                  </svg>
+                  Scanner
+                </button>
+              </Link>
+            </div>
 
-          <h1 className="text-[20px] font-semibold text-white tracking-tight">Home</h1>
+            <div
+              className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1"
+              style={{ padding: "4px" }}
+            >
+              <button
+                onClick={() => setView("all")}
+                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${view === "all" ? "bg-white text-black" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
+                style={{ padding: "10px 16px" }}
+              >
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                All posts
+              </button>
+              <button
+                onClick={() => setView("my")}
+                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${view === "my" ? "bg-white text-black" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
+                style={{ padding: "10px 16px" }}
+              >
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                My posts
+              </button>
+            </div>
+          </div>
 
-          <button
+          {view === "my" && (
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
+                  My Posts
+                </p>
+                <div className="flex-1 h-px bg-[#1a1a1a]" />
+              </div>
+              <div className="flex flex-col gap-3">
+                {posts.filter(p => p.author === "you").length > 0 ? (
+                  [...posts].filter(p => p.author === "you").sort((a, b) => b.ts - a.ts).map(post => (
+                    <MyPostCard key={post.id} post={post} />
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-3" style={{ padding: "64px 0" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p className="text-[12px] font-mono text-[#2a2a2a]">You haven't posted anything yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-            onClick={() => setModalOpen(true)}
+          {view === "all" && (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
+                  Recent posts
+                </p>
+                <div className="flex-1 h-px bg-[#1a1a1a]" />
+              </div>
 
-            className="flex items-center gap-2 bg-transparent text-white rounded-lg text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px' }}
+              <div ref={feedRef} className="flex flex-col gap-4">
+                {slice.map((post) => (
+                  <PostCard key={post.id} post={post} onLike={handleLike} />
+                ))}
+              </div><br />
 
-          >
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          )}
 
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-
-            </svg>
-
-            Create post
-
-          </button>
-
-        </div>
-
-
-
-        {/* Quick nav */}
-
-        <div className="flex gap-3 mb-8">
-
-          <Link to="/main/community">
-            <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
-
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-
-            </svg>
-
-            Community
-
-          </button>
-          </Link>
-
-          <Link to="/main/scanner">
-          <button className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '12px', paddingBottom: '12px' }}>
-
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-
-              <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-
-              <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
-
-            </svg>
-
-            Scanner
-
-          </button>
-          </Link>
-
-        </div><br/>
-
-
-
-        {/* Section label */}
-
-        <div className="flex items-center gap-3 mb-4">
-
-          <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
-
-            Recent posts
-
-          </p>
-
-          <div className="flex-1 h-px bg-[#1a1a1a]" />
-
-        </div>
-
-
-
-        {/* Feed */}
-
-        <div ref={feedRef} className="flex flex-col gap-4">
-
-          {slice.map((post) => (
-
-            <PostCard key={post.id} post={post} onLike={handleLike} />
-
-          ))}
-
-        </div><br/>
-
-
-
-        <Pagination
-
-          page={page}
-
-          totalPages={totalPages}
-
-          onPageChange={handlePageChange}
-
-        />
-
-        </div><br/>
+        </div><br />
 
       </div>
 
