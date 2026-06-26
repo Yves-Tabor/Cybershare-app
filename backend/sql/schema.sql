@@ -56,3 +56,89 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_parent_comment_id ON comments(parent_comment_id);
+
+-- Scans Table
+CREATE TABLE IF NOT EXISTS scans (
+  id SERIAL PRIMARY KEY,
+  target_url VARCHAR(500) NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) DEFAULT 'pending',
+  security_score INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_scans_user_id ON scans(user_id);
+CREATE INDEX IF NOT EXISTS idx_scans_status ON scans(status);
+CREATE INDEX IF NOT EXISTS idx_scans_created_at ON scans(created_at DESC);
+
+-- Scan Results Table
+CREATE TABLE IF NOT EXISTS scan_results (
+  id SERIAL PRIMARY KEY,
+  scan_id INTEGER NOT NULL REFERENCES scans(id) ON DELETE CASCADE,
+  category VARCHAR(50) NOT NULL,
+  severity VARCHAR(20) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  recommendation TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_scan_results_scan_id ON scan_results(scan_id);
+CREATE INDEX IF NOT EXISTS idx_scan_results_category ON scan_results(category);
+CREATE INDEX IF NOT EXISTS idx_scan_results_severity ON scan_results(severity);
+
+-- Events Table
+CREATE TABLE IF NOT EXISTS events (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  location VARCHAR(255),
+  start_date TIMESTAMP NOT NULL,
+  end_date TIMESTAMP,
+  image_url VARCHAR(500),
+  category VARCHAR(50) NOT NULL CHECK (category IN ('conference', 'workshop', 'webinar', 'ctf', 'meetup')),
+  created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status VARCHAR(20) DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'ongoing', 'completed'))
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_events_created_by ON events(created_by);
+CREATE INDEX IF NOT EXISTS idx_events_category ON events(category);
+CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
+CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date);
+
+-- Event Attendees Table
+CREATE TABLE IF NOT EXISTS event_attendees (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(event_id, user_id)
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_event_attendees_event_id ON event_attendees(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_attendees_user_id ON event_attendees(user_id);
+
+-- Notifications Table
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL CHECK (type IN ('EVENT', 'SCAN_COMPLETED', 'SCAN_FAILED', 'COMMUNITY', 'SYSTEM', 'SECURITY_ALERT')),
+  title VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  related_id INTEGER,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
