@@ -8,6 +8,8 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
+const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 const app = express();
 
@@ -41,6 +43,8 @@ if (process.env.NODE_ENV === 'development') {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api', commentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
