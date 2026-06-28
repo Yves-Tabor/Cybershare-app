@@ -1,5 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { scansAPI } from "../utils/api";
 
 // ─── BG image placeholder ─────────────────────────────────────────────────────
 // Replace SCANNER_BG_IMAGE with your actual image URL or import.
@@ -99,7 +101,7 @@ export default function Scanner() {
     }
   }
 
-  function startScan() {
+  async function startScan() {
     if (!validateUrl(url)) {
       setUrlError("Enter a valid URL starting with https:// or http://");
       inputRef.current?.focus();
@@ -110,17 +112,29 @@ export default function Scanner() {
     setStepIndex(0);
     setStatusText(SCAN_STEPS[0]);
 
-    let i = 1;
-    timerRef.current = setInterval(() => {
-      if (i < SCAN_STEPS.length) {
-        setStepIndex(i);
-        setStatusText(SCAN_STEPS[i]);
-        i++;
-      } else {
-        clearInterval(timerRef.current);
-        setScanning(false);
+    try {
+      await scansAPI.create(url);
+      // Simulate progress steps for UX
+      let i = 1;
+      timerRef.current = setInterval(() => {
+        if (i < SCAN_STEPS.length) {
+          setStepIndex(i);
+          setStatusText(SCAN_STEPS[i]);
+          i++;
+        } else {
+          clearInterval(timerRef.current);
+          setScanning(false);
+        }
+      }, 900);
+    } catch (error) {
+      console.error('Failed to start scan:', error);
+      setScanning(false);
+      setStepIndex(-1);
+      setStatusText("Scan failed. Please try again.");
+      if (error.message === 'API request failed') {
+        navigate('/#p-auth');
       }
-    }, 900);
+    }
   }
 
   const isDone = stepIndex === SCAN_STEPS.length - 1 && !scanning;

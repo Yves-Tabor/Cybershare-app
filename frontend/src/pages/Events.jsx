@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { eventsAPI } from "../utils/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -44,74 +46,6 @@ function formatTime(t) {
 }
 
 const TODAY = todayISO();
-
-// ─── Seed data ────────────────────────────────────────────────────────────────
-
-const INITIAL_EVENTS = [
-  {
-    id: 1,
-    title: "Sigma Rule Writing Workshop",
-    description: "Hands-on session building detection rules from real adversary simulation logs. Bring your own EDR export or use our sample dataset.",
-    category: "Workshop", categoryColor: "#7F77DD", categoryBg: "#1a1a2e",
-    date: addDays(TODAY, 2), time: "18:00",
-    isOnline: true, location: "Discord — #workshop-stage",
-    host: "patchwatcher", attendees: 64, addedToCalendar: true,
-  },
-  {
-    id: 2,
-    title: "Quarterly CTF Finals",
-    description: "Top 10 teams from the qualifier round face off live. Pwn, crypto, and web categories with a $4,000 prize pool.",
-    category: "CTF", categoryColor: "#639922", categoryBg: "#1a2e1a",
-    date: addDays(TODAY, 5), time: "10:00",
-    isOnline: true, location: "ctftime.org/event/4471",
-    host: "defcon_jay", attendees: 211, addedToCalendar: true,
-  },
-  {
-    id: 3,
-    title: "Red Team Tactics: DCOM Lateral Movement",
-    description: "Deep dive into the DCOM-based lateral movement technique posted in Red Team Operators last week, with a live demo and detection gaps.",
-    category: "Webinar", categoryColor: "#185FA5", categoryBg: "#16222e",
-    date: addDays(TODAY, 5), time: "15:30",
-    isOnline: true, location: "Zoom",
-    host: "cypher_x", attendees: 89, addedToCalendar: false,
-  },
-  {
-    id: 4,
-    title: "Bug Bounty Live Triage",
-    description: "Watch a P1 SSRF chain get triaged end to end, from initial recon to disclosure writeup. Q&A after.",
-    category: "Meetup", categoryColor: "#BA7517", categoryBg: "#2e2a1a",
-    date: addDays(TODAY, 9), time: "17:00",
-    isOnline: true, location: "Twitch — root_kai",
-    host: "root_kai", attendees: 47, addedToCalendar: false,
-  },
-  {
-    id: 5,
-    title: "Blue Team Threat Hunting Meetup",
-    description: "In-person meetup for SOC analysts. Bring a hunt hypothesis, leave with three. Pizza provided.",
-    category: "Meetup", categoryColor: "#BA7517", categoryBg: "#2e2a1a",
-    date: addDays(TODAY, 12), time: "19:00",
-    isOnline: false, location: "414 Industry Ave, Austin TX",
-    host: "alex_hunt", attendees: 22, addedToCalendar: true,
-  },
-  {
-    id: 6,
-    title: "Malware Lab: Unpacking a Custom XOR-Chain",
-    description: "Walkthrough of the 4-layer obfuscation scheme from last week's infostealer post, in a debugger, line by line.",
-    category: "Workshop", categoryColor: "#7F77DD", categoryBg: "#1a1a2e",
-    date: addDays(TODAY, -3), time: "16:00",
-    isOnline: true, location: "Discord — #workshop-stage",
-    host: "nullbyte", attendees: 73, addedToCalendar: false,
-  },
-  {
-    id: 7,
-    title: "DEF CON Prep Night",
-    description: "Coordinating talks, villages, and meetup spots for DEF CON. Open floor for anyone presenting this year.",
-    category: "Conference", categoryColor: "#1D9E75", categoryBg: "#1a2a2e",
-    date: addDays(TODAY, 21), time: "20:00",
-    isOnline: true, location: "Discord — #defcon-2026",
-    host: "0xmira", attendees: 134, addedToCalendar: true,
-  },
-];
 
 // ─── Small shared bits ────────────────────────────────────────────────────────
 
@@ -659,7 +593,9 @@ function CalendarView({ events, onToggleCalendar }) {
 
 
 export default function Events() {
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState("events"); // "events" | "calendar"
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all"); // "all" | "added"
@@ -667,28 +603,132 @@ export default function Events() {
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
+  // Fetch events on mount
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const data = await eventsAPI.getAll();
+        const categoryMap = {
+          "Conference": { color: "#1D9E75", bg: "#1a2a2e" },
+          "Workshop": { color: "#7F77DD", bg: "#1a1a2e" },
+          "CTF": { color: "#639922", bg: "#1a2e1a" },
+          "Meetup": { color: "#BA7517", bg: "#2e2a1a" },
+          "Webinar": { color: "#185FA5", bg: "#16222e" },
+        };
+        const transformedEvents = data.events.map(e => {
+          const cat = categoryMap[e.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+          return {
+            id: e.id,
+            title: e.title,
+            description: e.description,
+            category: e.category,
+            categoryColor: cat.color,
+            categoryBg: cat.bg,
+            date: e.start_date.split('T')[0],
+            time: e.start_date.split('T')[1]?.slice(0, 5) || "00:00",
+            isOnline: e.location?.toLowerCase().includes('http') || e.location?.toLowerCase().includes('discord') || e.location?.toLowerCase().includes('zoom'),
+            location: e.location || "TBD",
+            host: e.username || "Unknown",
+            attendees: e.attendee_count || 0,
+            addedToCalendar: e.registered || false,
+          };
+        });
+        setEvents(transformedEvents);
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+        if (error.message === 'API request failed') {
+          navigate('/#p-auth');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEvents();
+  }, [navigate]);
+
   function showToast(msg) {
     clearTimeout(toastTimer.current);
     setToast({ visible: true, message: msg });
     toastTimer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2800);
   }
 
-  function handleToggleCalendar(id) {
-    setEvents((prev) =>
-      prev.map((e) => {
-        if (e.id !== id) return e;
-        const added = !e.addedToCalendar;
-        showToast(added ? `Added "${e.title}" to your calendar` : `Removed "${e.title}" from your calendar`);
-        return { ...e, addedToCalendar: added };
-      })
-    );
+  async function handleToggleCalendar(id) {
+    const event = events.find(e => e.id === id);
+    if (!event) return;
+    
+    try {
+      if (event.addedToCalendar) {
+        await eventsAPI.unregister(id);
+        setEvents((prev) =>
+          prev.map((e) => {
+            if (e.id !== id) return e;
+            showToast(`Removed "${e.title}" from your calendar`);
+            return { ...e, addedToCalendar: false };
+          })
+        );
+      } else {
+        await eventsAPI.register(id);
+        setEvents((prev) =>
+          prev.map((e) => {
+            if (e.id !== id) return e;
+            showToast(`Added "${e.title}" to your calendar`);
+            return { ...e, addedToCalendar: true };
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Failed to toggle calendar:', error);
+      showToast("Failed to update calendar.");
+    }
   }
 
-  function handleCreate(data) {
-    const newEvent = { id: Date.now(), ...data, host: ME.handle, attendees: 1, addedToCalendar: true };
-    setEvents((prev) => [newEvent, ...prev]);
-    setShowCreate(false);
-    showToast(`"${newEvent.title}" posted and added to your calendar`);
+  async function handleCreate(data) {
+    try {
+      const categoryMap = {
+        "Conference": { color: "#1D9E75", bg: "#1a2a2e" },
+        "Workshop": { color: "#7F77DD", bg: "#1a1a2e" },
+        "CTF": { color: "#639922", bg: "#1a2e1a" },
+        "Meetup": { color: "#BA7517", bg: "#2e2a1a" },
+        "Webinar": { color: "#185FA5", bg: "#16222e" },
+      };
+      const cat = categoryMap[data.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+      await eventsAPI.create(
+        data.title,
+        data.description,
+        data.location,
+        `${data.date}T${data.time}`,
+        `${data.date}T${data.time}`,
+        null,
+        data.category,
+        "upcoming"
+      );
+      // Refresh events
+      const response = await eventsAPI.getAll();
+      const transformedEvents = response.events.map(e => {
+        const cat = categoryMap[e.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+        return {
+          id: e.id,
+          title: e.title,
+          description: e.description,
+          category: e.category,
+          categoryColor: cat.color,
+          categoryBg: cat.bg,
+          date: e.start_date.split('T')[0],
+          time: e.start_date.split('T')[1]?.slice(0, 5) || "00:00",
+          isOnline: e.location?.toLowerCase().includes('http') || e.location?.toLowerCase().includes('discord') || e.location?.toLowerCase().includes('zoom'),
+          location: e.location || "TBD",
+          host: e.username || "Unknown",
+          attendees: e.attendee_count || 0,
+          addedToCalendar: e.registered || false,
+        };
+      });
+      setEvents(transformedEvents);
+      setShowCreate(false);
+      showToast(`"${data.title}" posted and added to your calendar`);
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      showToast("Failed to create event.");
+    }
   }
 
   const addedCount = events.filter((e) => e.addedToCalendar).length;
@@ -707,6 +747,14 @@ export default function Events() {
       );
     })
     .sort((a, b) => (a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-[#e0e0e0]" style={{ fontFamily: "'DM Sans', sans-serif", backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div

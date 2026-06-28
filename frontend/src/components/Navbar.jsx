@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authAPI, notificationsAPI } from "../utils/api";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -126,39 +127,6 @@ const UserIcon = () => (
   </svg>
 );
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_USER = {
-  username: "WALVESTH72",
-  role: "Security Researcher",
-  joined: "March 2025",
-  initials: "WA",
-};
-
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: "comment",
-    message: "nullbyte commented on your Burp Suite post",
-    time: "2m ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    type: "bookmark",
-    message: "sec_raven bookmarked your Volatility3 resource",
-    time: "14m ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    type: "system",
-    message: "Your resource 'git bash exe' was approved",
-    time: "1h ago",
-    unread: false,
-  },
-];
-
 function NotifIcon({ type }) {
   if (type === "comment") return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -181,8 +149,10 @@ function NotifIcon({ type }) {
 
 // ─── User Panel ───────────────────────────────────────────────────────────────
 
-function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
+function UserPanel({ user, notifications, onMarkAllRead, onClose, onSignOut, panelRef }) {
   const unreadCount = notifications.filter((n) => n.unread).length;
+  const initials = user?.username ? user.username.slice(0, 2).toUpperCase() : "??";
+  const joinedDate = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Recently";
 
   return (
     <div
@@ -210,7 +180,7 @@ function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
             fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#ffffff",
             flexShrink: 0,
           }}>
-            {MOCK_USER.initials}
+            {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{
@@ -219,17 +189,17 @@ function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
               background: "#7F77DD", color: "#ffffff",
               borderRadius: "999px", padding: "3px 8px", flexShrink: 0,
             }}>
-              {MOCK_USER.role}
+              {user?.role || "Member"}
             </span>
             <p style={{ margin: "2px 0 0", fontSize: "11px", fontFamily: "monospace", color: "#666" }}>
-              {MOCK_USER.username.toLowerCase()}
+              {user?.username || "user"}
             </p>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px" }}>
           <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1D9E75", flexShrink: 0 }} />
           <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#666" }}>
-            Active · Joined {MOCK_USER.joined}
+            Active · Joined {joinedDate}
           </span>
         </div>
       </div>
@@ -351,6 +321,7 @@ function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
         </Link>
         <div style={{ width: "1px", background: "#e5e5e5", alignSelf: "stretch" }} />
         <button
+          onClick={onSignOut}
           style={{
             flex: 1, fontSize: "11px", fontFamily: "monospace",
             color: "#E24B4A", background: "transparent",
@@ -367,13 +338,52 @@ function UserPanel({ notifications, onMarkAllRead, onClose, panelRef }) {
 }
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const panelRef = useRef(null);
   const toggleRef = useRef(null);
   const userPanelRef = useRef(null);
   const userToggleRef = useRef(null);
+
+  // Fetch user data on mount
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const data = await authAPI.me();
+        setUser(data.user);
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // If not authenticated, redirect to login
+        if (error.message === 'API request failed') {
+          navigate('/#p-auth');
+        }
+      }
+    }
+    fetchUser();
+  }, [navigate]);
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const data = await notificationsAPI.getAll();
+        const transformedNotifications = data.notifications.map(n => ({
+          id: n.id,
+          type: n.type || "system",
+          message: n.message,
+          time: n.created_at ? new Date(n.created_at).toLocaleString() : "Just now",
+          unread: !n.read_at,
+        }));
+        setNotifications(transformedNotifications);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    }
+    fetchNotifications();
+  }, []);
 
   // Close when clicking outside — excluding the toggle button and the panel itself
   useEffect(() => {
@@ -430,8 +440,24 @@ export default function Navbar() {
     if (open) setOpen(false);
   }
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  async function markAllRead() {
+    try {
+      await notificationsAPI.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  }
+
+  async function handleSignOut() {
+    try {
+      await authAPI.logout();
+      setUser(null);
+      setUserOpen(false);
+      navigate('/#p-auth');
+    } catch (error) {
+      console.error('Failed to sign out:', error);
+    }
   }
 
   return (
@@ -506,9 +532,11 @@ export default function Navbar() {
       {/* User panel */}
       {userOpen && (
         <UserPanel
+          user={user}
           notifications={notifications}
           onMarkAllRead={markAllRead}
           onClose={() => setUserOpen(false)}
+          onSignOut={handleSignOut}
           panelRef={userPanelRef}
         />
       )}
