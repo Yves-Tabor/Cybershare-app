@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 
@@ -14,10 +14,13 @@ const register = async (req, res) => {
   try {
     const { username, email, password, bio } = req.body;
 
+    // Normalize username: lowercase and remove spaces
+    const normalizedUsername = username.toLowerCase().replace(/\s+/g, '');
+
     // Check if user already exists
     const existingUser = await pool.query(
       'SELECT id FROM users WHERE email = $1 OR username = $2',
-      [email, username]
+      [email, normalizedUsername]
     );
 
     if (existingUser.rows.length > 0) {
@@ -28,10 +31,10 @@ const register = async (req, res) => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Insert user
+    // Insert user with normalized username
     const result = await pool.query(
       'INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, role, created_at',
-      [username, email, passwordHash, bio || null]
+      [normalizedUsername, email, passwordHash, bio || null]
     );
 
     const user = result.rows[0];

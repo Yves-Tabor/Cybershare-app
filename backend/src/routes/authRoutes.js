@@ -8,9 +8,12 @@ const { registerSchema, loginSchema } = require('../validators/authValidator');
 const validate = (schema) => (req, res, next) => {
   const result = schema.safeParse(req.body);
   if (!result.success) {
+    console.log('Validation failed for body:', req.body);
+    console.log('Full error object:', JSON.stringify(result.error, null, 2));
+    console.log('Error issues:', result.error.issues);
     return res.status(400).json({ 
       error: 'Validation failed', 
-      details: result.error.errors 
+      details: result.error.issues || result.error.errors 
     });
   }
   next();

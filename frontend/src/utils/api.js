@@ -1,0 +1,249 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Helper function to make API requests
+async function apiRequest(endpoint, options = {}) {
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  };
+
+  const mergedOptions = { ...defaultOptions, ...options };
+
+  try {
+    const response = await fetch(url, mergedOptions);
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.error || 'API request failed');
+      if (data.details) {
+        error.details = data.details;
+      }
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('API request error:', error);
+    throw error;
+  }
+}
+
+// Auth API
+export const authAPI = {
+  register: async (username, email, password) => {
+    return apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password }),
+    });
+  },
+
+  login: async (email, password) => {
+    return apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  logout: async () => {
+    return apiRequest('/auth/logout', {
+      method: 'POST',
+    });
+  },
+
+  me: async () => {
+    return apiRequest('/auth/me');
+  },
+};
+
+// Resources API
+export const resourcesAPI = {
+  getAll: async () => {
+    return apiRequest('/resources');
+  },
+
+  getById: async (id) => {
+    return apiRequest(`/resources/${id}`);
+  },
+
+  create: async (title, description, url, category) => {
+    return apiRequest('/resources', {
+      method: 'POST',
+      body: JSON.stringify({ title, description, url, category }),
+    });
+  },
+
+  update: async (id, title, description, url, category) => {
+    return apiRequest(`/resources/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title, description, url, category }),
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/resources/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Posts API
+export const postsAPI = {
+  getAll: async () => {
+    return apiRequest('/posts');
+  },
+
+  getById: async (id) => {
+    return apiRequest(`/posts/${id}`);
+  },
+
+  create: async (content) => {
+    return apiRequest('/posts', {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  update: async (id, content) => {
+    return apiRequest(`/posts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/posts/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Comments API
+export const commentsAPI = {
+  getByPostId: async (postId) => {
+    return apiRequest(`/posts/${postId}/comments`);
+  },
+
+  create: async (postId, content, parentCommentId = null) => {
+    return apiRequest(`/posts/${postId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content, parent_comment_id: parentCommentId }),
+    });
+  },
+};
+
+// Scans API
+export const scansAPI = {
+  checkDependencies: async () => {
+    return apiRequest('/scans/dependencies/check');
+  },
+
+  create: async (targetUrl) => {
+    return apiRequest('/scans', {
+      method: 'POST',
+      body: JSON.stringify({ target_url: targetUrl }),
+    });
+  },
+
+  getAll: async () => {
+    return apiRequest('/scans');
+  },
+
+  getById: async (id) => {
+    return apiRequest(`/scans/${id}`);
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/scans/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Events API
+export const eventsAPI = {
+  getAll: async (category, status) => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (status) params.append('status', status);
+    const queryString = params.toString();
+    return apiRequest(`/events${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getById: async (id) => {
+    return apiRequest(`/events/${id}`);
+  },
+
+  create: async (title, description, location, startDate, endDate, imageUrl, category, status) => {
+    return apiRequest('/events', {
+      method: 'POST',
+      body: JSON.stringify({ title, description, location, start_date: startDate, end_date: endDate, image_url: imageUrl, category, status }),
+    });
+  },
+
+  update: async (id, title, description, location, startDate, endDate, imageUrl, category, status) => {
+    return apiRequest(`/events/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title, description, location, start_date: startDate, end_date: endDate, image_url: imageUrl, category, status }),
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/events/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  register: async (id) => {
+    return apiRequest(`/events/${id}/register`, {
+      method: 'POST',
+    });
+  },
+
+  unregister: async (id) => {
+    return apiRequest(`/events/${id}/register`, {
+      method: 'DELETE',
+    });
+  },
+
+  getAttendees: async (id) => {
+    return apiRequest(`/events/${id}/attendees`);
+  },
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getAll: async (unreadOnly = false) => {
+    const params = new URLSearchParams();
+    if (unreadOnly) params.append('unread_only', 'true');
+    const queryString = params.toString();
+    return apiRequest(`/notifications${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getUnreadCount: async () => {
+    return apiRequest('/notifications/unread-count');
+  },
+
+  markAsRead: async (id) => {
+    return apiRequest(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  markAllAsRead: async () => {
+    return apiRequest('/notifications/read-all', {
+      method: 'PATCH',
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/notifications/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+export default apiRequest;
