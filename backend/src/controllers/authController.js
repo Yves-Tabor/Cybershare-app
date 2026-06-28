@@ -170,6 +170,13 @@ const googleCallback = async (req, res) => {
   try {
     const user = req.user;
     
+    // Check if user has completed profile setup
+    const userResult = await pool.query(
+      'SELECT username, password_hash FROM users WHERE id = $1',
+      [user.id]
+    );
+    const userData = userResult.rows[0];
+    
     // Generate token
     const token = generateToken(user.id);
 
@@ -181,11 +188,67 @@ const googleCallback = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Redirect to frontend
-    res.redirect(`${process.env.CLIENT_URL}/main`);
+    // Check if user needs to complete profile (has default username from email)
+    const needsProfileCompletion = userData.username.includes('@') || !userData.password_hash;
+    
+    // Redirect to frontend with profile completion flag
+    if (needsProfileCompletion) {
+      res.redirect(`${process.env.CLIENT_URL}/main?complete_profile=true`);
+    } else {
+      res.redirect(`${process.env.CLIENT_URL}/main`);
+    }
   } catch (error) {
     console.error('Google callback error:', error);
     res.redirect(`${process.env.CLIENT_URL}/#p-auth?error=google_auth_failed`);
+  }
+};
+
+// Complete profile for Google OAuth users
+const completeProfile = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { username, password } = req.body;
+
+    // Normalize username
+    const normalizedUsername = username.toLowerCase().replace(/\s+/g, '');
+
+    // Check if username is already taken
+    const existingUser = await pool.query(
+      'SELECT id FROM users WHERE username = $1 AND id != $2',
+      [normalizedUsername, userId]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // Update user
+    const result = await pool.query(
+      'UPDATE users SET username = $1, password_hash = $2 WHERE id = $3 RETURNING id, username, email, bio, avatar, role, created_at',
+      [normalizedUsername, passwordHash, userId]
+    );
+
+    const user = result.rows[0];
+
+    res.status(200).json({
+      message: 'Profile completed successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        avatar: user.avatar,
+        role: user.role,
+        createdAt: user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error('Complete profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -195,4 +258,5 @@ module.exports = {
   me,
   logout,
   googleCallback,
+  completeProfile,
 };

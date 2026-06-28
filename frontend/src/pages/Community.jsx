@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { postsAPI } from "../utils/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -7,136 +9,6 @@ const ME = { handle: "you", initials: "YO", color: "#534AB7" };
 
 const AVATAR_COLORS = [
   "#534AB7", "#0F6E56", "#993C1D", "#185FA5", "#854F0B", "#993556", "#2a6b6b", "#6b2a55",
-];
-
-const INITIAL_GROUPS = [
-  {
-    id: 1,
-    name: "Red Team Operators",
-    slug: "red-team-ops",
-    description: "Offensive security practitioners sharing TTPs, tooling, and field notes from real engagements.",
-    category: "Offensive",
-    categoryColor: "#E24B4A",
-    categoryBg: "#2e1a1a",
-    memberCount: 312,
-    joined: false,
-    owner: "cypher_x",
-    members: ["cypher_x", "0xmira", "defcon_jay", "vxresearch"],
-    posts: [
-      {
-        id: 101, author: "cypher_x", initials: "CY", color: "#534AB7",
-        body: "New lateral movement technique using DCOM — avoids Sysmon event 3 entirely. Full write-up in thread.",
-        ts: Date.now() - 1000 * 60 * 34, likes: 41, liked: false,
-        comments: [
-          { id: 1001, author: "0xmira", initials: "0X", color: "#993556", body: "Tested this in lab, works perfectly on Win11 22H2. Nice find.", ts: Date.now() - 1000 * 60 * 20 },
-          { id: 1002, author: "defcon_jay", initials: "DJ", color: "#0F6E56", body: "Any bypass for CrowdStrike Falcon in this setup?", ts: Date.now() - 1000 * 60 * 10 },
-        ],
-      },
-      {
-        id: 102, author: "vxresearch", initials: "VX", color: "#854F0B",
-        body: "Compiled a list of 23 living-off-the-land binaries that most EDRs still miss in 2026. DM for the list.",
-        ts: Date.now() - 1000 * 60 * 60 * 3, likes: 88, liked: false,
-        comments: [],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Blue Team Collective",
-    slug: "blue-team",
-    description: "Detection engineers, SOC analysts, and incident responders. Share sigma rules, playbooks, and threat hunts.",
-    category: "Defensive",
-    categoryColor: "#1D9E75",
-    categoryBg: "#1a2a2e",
-    memberCount: 478,
-    joined: true,
-    owner: "patchwatcher",
-    members: ["patchwatcher", "alex_hunt", "sec_raven", "threat_ly"],
-    posts: [
-      {
-        id: 201, author: "patchwatcher", initials: "PA", color: "#185FA5",
-        body: "New sigma rule drop: detects PrintNightmare-style abuse via Event ID 316. Tested against 14 adversary simulations.",
-        ts: Date.now() - 1000 * 60 * 12, likes: 67, liked: true,
-        comments: [
-          { id: 2001, author: "alex_hunt", initials: "AL", color: "#534AB7", body: "Great rule. I added a condition for non-system printers, cut false positives by ~40%.", ts: Date.now() - 1000 * 60 * 5 },
-        ],
-      },
-      {
-        id: 202, author: "sec_raven", initials: "SE", color: "#993C1D",
-        body: "Anyone else correlation mapping MITRE T1548.002 to Windows EID 4688? Sharing my KQL query below.",
-        ts: Date.now() - 1000 * 60 * 60 * 2, likes: 29, liked: false,
-        comments: [],
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Malware Analysis Lab",
-    slug: "malware-lab",
-    description: "Static and dynamic analysis, sandbox reports, YARA rules, and reverse engineering discussions.",
-    category: "Research",
-    categoryColor: "#7F77DD",
-    categoryBg: "#1a1a2e",
-    memberCount: 193,
-    joined: false,
-    owner: "nullbyte",
-    members: ["nullbyte", "root_kai", "vxresearch"],
-    posts: [
-      {
-        id: 301, author: "nullbyte", initials: "NU", color: "#0F6E56",
-        body: "Decompiled a new infostealer variant. It's using a custom XOR-chain obfuscation over 4 layers. Sharing IOCs.",
-        ts: Date.now() - 1000 * 60 * 90, likes: 54, liked: false,
-        comments: [],
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "Bug Bounty Hunters",
-    slug: "bug-bounty",
-    description: "Share write-ups, methodology tips, and scope discussions for HackerOne, Bugcrowd, and private programs.",
-    category: "Bounty",
-    categoryColor: "#BA7517",
-    categoryBg: "#2e2a1a",
-    memberCount: 541,
-    joined: false,
-    owner: "root_kai",
-    members: ["root_kai", "0xmira", "sec_raven", "threat_ly", "defcon_jay"],
-    posts: [
-      {
-        id: 401, author: "root_kai", initials: "RO", color: "#854F0B",
-        body: "Just got a P1 SSRF on a major fintech — $18k payout. The trick was chaining it with an open redirect nobody had noticed.",
-        ts: Date.now() - 1000 * 60 * 60 * 5, likes: 112, liked: false,
-        comments: [
-          { id: 4001, author: "0xmira", initials: "0X", color: "#993556", body: "Absolute beast. Did you escalate to RCE or stay at SSRF?", ts: Date.now() - 1000 * 60 * 60 * 4 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 5,
-    name: "CTF Squad",
-    slug: "ctf-squad",
-    description: "Team up for capture-the-flag competitions, share write-ups, and practice challenges together.",
-    category: "Learning",
-    categoryColor: "#639922",
-    categoryBg: "#1a2e1a",
-    memberCount: 267,
-    joined: true,
-    owner: "defcon_jay",
-    members: ["defcon_jay", "nullbyte", "0xmira", "vxresearch", "root_kai"],
-    posts: [
-      {
-        id: 501, author: "defcon_jay", initials: "DJ", color: "#993556",
-        body: "PicoCTF qualifier this weekend — anyone want to team up? We need a crypto and a pwn player.",
-        ts: Date.now() - 1000 * 60 * 60 * 1, likes: 33, liked: false,
-        comments: [
-          { id: 5001, author: "nullbyte", initials: "NU", color: "#0F6E56", body: "I'm in for pwn. DM me the team link.", ts: Date.now() - 1000 * 60 * 45 },
-          { id: 5002, author: "vxresearch", initials: "VX", color: "#854F0B", body: "I can cover crypto. Count me in.", ts: Date.now() - 1000 * 60 * 30 },
-        ],
-      },
-    ],
-  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -849,27 +721,36 @@ export default function Community() {
     }));
   }
 
-  function handleComment(groupId, postId, body) {
-    setGroups((prev) => prev.map((g) => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        posts: g.posts.map((p) => {
-          if (p.id !== postId) return p;
-          return {
-            ...p,
-            comments: [...p.comments, {
-              id: Date.now(),
-              author: ME.handle,
-              initials: ME.initials,
-              color: ME.color,
-              body,
-              ts: Date.now(),
-            }],
-          };
-        }),
-      };
-    }));
+  async function handleComment(groupId, postId, body) {
+    try {
+      await postsAPI.createComment(postId, body);
+      // Refresh groups/posts after commenting
+      // For now, just update local state optimistically
+      setGroups((prev) => prev.map((g) => {
+        if (g.id !== groupId) return g;
+        return {
+          ...g,
+          posts: g.posts.map((p) => {
+            if (p.id !== postId) return p;
+            return {
+              ...p,
+              comments: [...p.comments, {
+                id: Date.now(),
+                author: ME.handle,
+                initials: ME.initials,
+                color: ME.color,
+                body,
+                ts: Date.now(),
+              }],
+            };
+          }),
+        };
+      }));
+      showToast("Comment added.");
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      showToast("Failed to add comment.");
+    }
   }
 
   function handlePublish(groupId, body) {

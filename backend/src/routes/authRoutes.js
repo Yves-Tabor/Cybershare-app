@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, me, logout, googleCallback } = require('../controllers/authController');
+const { register, login, me, logout, googleCallback, completeProfile } = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { registerSchema, loginSchema } = require('../validators/authValidator');
 const passport = require('../config/passport');
@@ -29,5 +29,6 @@ router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.get('/me', authMiddleware, me);
 router.post('/logout', logout);
+router.post('/complete-profile', authMiddleware, completeProfile);
 
 module.exports = router;

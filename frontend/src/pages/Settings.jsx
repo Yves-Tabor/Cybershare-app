@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { authAPI } from "../utils/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -664,7 +666,9 @@ const SECTIONS = [
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Settings() {
+  const navigate = useNavigate();
   const [section, setSection] = useState("profile");
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({ handle: ME.handle, displayName: "you", initials: ME.initials, color: ME.color, bio: "" });
   const [security, setSecurity] = useState({ twoFactorEnabled: false });
   const [sessions, setSessions] = useState(INITIAL_SESSIONS);
@@ -672,10 +676,44 @@ export default function Settings() {
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
+  // Fetch user data on mount
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const data = await authAPI.me();
+        const user = data.user;
+        setProfile({
+          handle: user.username,
+          displayName: user.username,
+          initials: user.username.slice(0, 2).toUpperCase(),
+          color: ME.color,
+          bio: user.bio || "",
+          email: user.email,
+          avatar: user.avatar,
+        });
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Redirect to login if not authenticated
+        navigate('/#p-auth');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUser();
+  }, [navigate]);
+
   function showToast(msg) {
     clearTimeout(toastTimer.current);
     setToast({ visible: true, message: msg });
     toastTimer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2800);
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white" style={{ fontFamily: "'DM Sans', sans-serif", backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return (

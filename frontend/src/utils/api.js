@@ -57,6 +57,13 @@ export const authAPI = {
   me: async () => {
     return apiRequest('/auth/me');
   },
+
+  completeProfile: async (username, password) => {
+    return apiRequest('/auth/complete-profile', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+  },
 };
 
 // Resources API

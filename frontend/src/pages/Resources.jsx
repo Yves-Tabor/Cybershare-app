@@ -1,59 +1,11 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { resourcesAPI } from "../utils/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SAMPLE_RESOURCES = [
-  {
-    id: 1,
-    author: "WALVESTH72",
-    handle: "@walvesth72",
-    date: "4/14/2026",
-    initials: "WA",
-    title: "git",
-    content: "git bash exe",
-    tags: ["#Resource", "#Knowledge"],
-    files: [{ name: "Git-2.49.0-64-bit.exe", size: "67.03 MB", type: "application/x-msdownload" }],
-  },
-  {
-    id: 2,
-    author: "WALVESTH72",
-    handle: "@walvesth72",
-    date: "4/14/2026",
-    initials: "WA",
-    title: "Proteus",
-    content: "proteus execution file",
-    tags: ["#Resource", "#Knowledge"],
-    files: [{ name: "proteus9.0.SP2.exe", size: "773.93 MB", type: "application/x-msdownload" }],
-  },
-  {
-    id: 3,
-    author: "nullbyte",
-    handle: "@nullbyte",
-    date: "4/13/2026",
-    initials: "NU",
-    title: "Burp Suite Community",
-    content: "Latest community edition installer for web app testing",
-    tags: ["#Tool", "#Resource"],
-    files: [{ name: "burpsuite_community_v2025.jar", size: "112.4 MB", type: "application/java-archive" }],
-  },
-  {
-    id: 4,
-    author: "sec_raven",
-    handle: "@sec_raven",
-    date: "4/12/2026",
-    initials: "SE",
-    title: "Volatility3 Cheatsheet",
-    content: "Quick reference for memory forensics commands using Volatility 3",
-    tags: ["#Knowledge", "#Tool"],
-    files: [{ name: "volatility3_cheatsheet.pdf", size: "1.2 MB", type: "application/pdf" }],
-  },
-];
-
 const AVATAR_COLORS = {
-  WA: "#3a3a4a",
-  NU: "#2a3a2a",
-  SE: "#3a2a2a",
   default: "#2a2a3a",
 };
 
@@ -339,13 +291,46 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Resources() {
-  const [resources, setResources] = useState(SAMPLE_RESOURCES);
+  const navigate = useNavigate();
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [bookmarked, setBookmarked] = useState(new Set());
   const [view, setView] = useState("feed"); // "feed" | "upload"
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
   const searchRef = useRef(null);
+
+  // Fetch resources on mount
+  useEffect(() => {
+    async function fetchResources() {
+      try {
+        const data = await resourcesAPI.getAll();
+        // Transform backend data to match frontend format
+        const transformedResources = data.resources.map(r => ({
+          id: r.id,
+          author: r.username,
+          handle: `@${r.username}`,
+          date: new Date(r.created_at).toLocaleDateString(),
+          initials: r.username.slice(0, 2).toUpperCase(),
+          title: r.title,
+          content: r.description,
+          tags: r.tags || ["#Resource"],
+          files: r.files || [],
+        }));
+        setResources(transformedResources);
+      } catch (error) {
+        console.error('Failed to fetch resources:', error);
+        // Redirect to login if not authenticated
+        if (error.message === 'API request failed') {
+          navigate('/#p-auth');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchResources();
+  }, [navigate]);
 
   const filteredResources = query.trim()
     ? resources.filter((r) => {
@@ -380,25 +365,37 @@ export default function Resources() {
     });
   }
 
-  function handlePublish({ title, content, files }) {
-    const now = new Date();
-    const dateStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
-    setResources((prev) => [
-      {
-        id: Date.now(),
-        author: "YOU",
-        handle: "@you",
-        date: dateStr,
-        initials: "YO",
-        title,
-        content,
-        tags: ["#Resource"],
-        files,
-      },
-      ...prev,
-    ]);
-    setView("feed");
-    showToast("Resource published.");
+  async function handlePublish({ title, content, files }) {
+    try {
+      await resourcesAPI.create(title, content, files);
+      // Refresh resources after publishing
+      const data = await resourcesAPI.getAll();
+      const transformedResources = data.resources.map(r => ({
+        id: r.id,
+        author: r.username,
+        handle: `@${r.username}`,
+        date: new Date(r.created_at).toLocaleDateString(),
+        initials: r.username.slice(0, 2).toUpperCase(),
+        title: r.title,
+        content: r.description,
+        tags: r.tags || ["#Resource"],
+        files: r.files || [],
+      }));
+      setResources(transformedResources);
+      setView("feed");
+      showToast("Resource published.");
+    } catch (error) {
+      console.error('Failed to publish resource:', error);
+      showToast("Failed to publish resource.");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-[#e0e0e0]" style={{ fontFamily: "'DM Sans', sans-serif", backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return (

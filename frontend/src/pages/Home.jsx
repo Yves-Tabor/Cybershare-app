@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
+import { postsAPI, authAPI } from "../utils/api";
 
 
 
@@ -26,54 +27,6 @@ const AVATAR_COLORS = [
   "#534AB7", "#0F6E56", "#993C1D",
 
   "#185FA5", "#854F0B", "#993556",
-
-];
-
-
-
-const SAMPLE_AUTHORS = [
-
-  "alex_hunt", "sec_raven", "nullbyte", "cypher_x",
-
-  "root_kai", "patchwatcher", "0xmira", "defcon_jay",
-
-  "vxresearch", "threat_ly",
-
-];
-
-
-
-const SAMPLE_BODIES = [
-  "New CVE dropped affecting OpenSSL 3.x — patch immediately if you're running it in prod. PoC is already circulating on underground forums.",
-  "Interesting lateral movement technique observed in the wild: attackers are abusing WMI subscriptions to maintain persistence without touching disk.",
-  "Just pushed v2.3 of my network recon tool — now supports passive fingerprinting and outputs to JSON/CSV. Feedback welcome.",
-  "Anyone else seeing a spike in Cobalt Strike beacon traffic this week? Our sensors lit up Tuesday night across multiple clients.",
-  "Deep dive on the recent supply chain attack — the threat actor embedded a backdoor in a widely-used npm package with 2M weekly downloads.",
-  "Reminder: if you're still using SHA-1 anywhere, stop. It's 2026. Here's a migration guide I put together for legacy codebases.",
-  "Built a YARA rule set for the new ransomware family targeting healthcare. Sharing it here — community testing appreciated.",
-  "Writeup on my CTF win this weekend: exploited a use-after-free in a custom memory allocator. Full chain including privesc.",
-  "Spotted a phishing campaign impersonating major cloud providers. The kit is surprisingly polished — includes real-time OTP relay.",
-  "Quick tip: set up canary tokens in your S3 buckets. Caught an unauthorized access attempt last night that our SIEM missed.",
-  "Research paper on LLM-assisted malware obfuscation is out — raises some serious questions about AI-generated evasion techniques.",
-  "New DNS tunneling variant bypasses most corporate proxies. Technical breakdown with packet captures in the comments.",
-  "Heads up: a popular VPN provider was silently logging traffic despite their no-log policy — confirmed by independent audit.",
-  "Anyone built integrations between their SOAR and Shodan? Looking to automate asset exposure checks into incident response playbooks.",
-  "Kernel exploit for the scheduler bug from last month now has a stable PoC. Privilege escalation on unpatched Linux 6.x kernels.",
-  "Released a free threat intel feed aggregator that normalises IOCs from 15 sources into a single STIX 2.1 bundle.",
-  "Monthly red team debrief: we got domain admin in 4 hours via a printer driver vulnerability most blue teams don't monitor.",
-  "PSA: the Tor browser had a deanonymisation bug for 3 months before it was patched. Update if you haven't already.",
-  "Wrote a short guide on hardening SSH configs — covers ciphers, host key algorithms and jump host setups. Happy to share.",
-  "Memory forensics challenge: can you find the injected shellcode in this dump? Posting the answer next Friday.",
-  "Log4Shell is still being actively exploited in 2026 — unbelievable but our honeypots confirm it. Patch your legacy Java apps.",
-  "New malware family uses DNS-over-HTTPS for C2 — makes traditional network detection nearly useless. Details in thread.",
-  "Our blue team blocked a BEC attempt that would have cost $340k — the attacker compromised an email account via an unpatched Outlook bug.",
-  "Fuzzing methodology series part 3: coverage-guided fuzzing with libFuzzer on a closed-source binary using emulation.",
-  "If you're not testing for SSRF in your bug bounty scope you're leaving money on the table. Here's my checklist.",
-  "APT group attributed to nation-state actor now using legitimate cloud storage for payload staging — harder to block without user impact.",
-  "Tool release: passive subdomain discovery via certificate transparency logs — no active scanning, stays under the radar.",
-  "Malware analysis stream recap: reverse engineered a banking trojan live, covering string decryption, config extraction and C2 comms.",
-  "CVE triage tip: not all criticals are equal — focus on exploitability, asset exposure and blast radius, not just CVSS score.",
-  "Blue team win: detected a living-off-the-land attack using only Windows Event Log correlation. No EDR needed. Sharing the sigma rules.",
 
 ];
 
@@ -106,42 +59,6 @@ function timeAgo(ts) {
   if (m > 0) return `${m}m ago`;
 
   return "just now";
-
-}
-
-
-
-function buildSamplePosts() {
-
-  return SAMPLE_BODIES.map((body, i) => {
-
-    const author = SAMPLE_AUTHORS[i % SAMPLE_AUTHORS.length];
-
-    return {
-
-      id: i,
-
-      author,
-
-      avatarColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
-
-      initials: author.slice(0, 2).toUpperCase(),
-
-      cat: CATS[i % CATS.length],
-
-      body,
-
-      likes: Math.floor(Math.random() * 80) + 1,
-
-      comments: Math.floor(Math.random() * 20),
-
-      liked: false,
-
-      ts: Date.now() - (i * 1000 * 60 * 17 + Math.random() * 60000 * 60),
-
-    };
-
-  });
 
 }
 
@@ -578,6 +495,184 @@ function CreatePostModal({ onClose, onSubmit }) {
   );
 }
 
+function CompleteProfileModal({ onClose, onSubmit }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const usernameRef = useRef(null);
+
+  useEffect(() => {
+    usernameRef.current?.focus();
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  function handleSubmit() {
+    setError("");
+    if (!username.trim()) {
+      setError("Username is required.");
+      return;
+    }
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters.");
+      return;
+    }
+    if (!password) {
+      setError("Password is required.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError("Password must contain at least one lowercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      setError("Password must contain at least one special character.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    onSubmit({ username: username.trim(), password });
+  }
+
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center" style={{ padding: '16px' }} onClick={handleBackdrop}>
+      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <div className="flex items-center bg-white gap-2.5 rounded-md" style={{ padding: '10px' }}>
+            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7F77DD" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <span className="text-[13px] font-semibold text-[#080808]">Complete your profile</span>
+          </div>
+          <button onClick={onClose} className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-5 max-h-[75vh] overflow-y-auto" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
+          {/* Username */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Username</label>
+            <input
+              ref={usernameRef}
+              type="text"
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setError(""); }}
+              placeholder="Choose a username…"
+              maxLength={30}
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'transparent' }}
+            />
+          </div><br />
+
+          {/* Password */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                placeholder="Create a password…"
+                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver pr-10" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'transparent' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-silver hover:text-white bg-transparent border-none cursor-pointer"
+              >
+                {showPassword ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div><br />
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Confirm Password</label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }}
+                placeholder="Confirm your password…"
+                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver pr-10" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'transparent' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-silver hover:text-white bg-transparent border-none cursor-pointer"
+              >
+                {showConfirmPassword ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="text-[11px] text-[#E24B4A] font-mono">{error}</p>}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2.5 border-t border-white bg-white/10" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '16px', paddingBottom: '16px' }}>
+          <button onClick={onClose} className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+            Skip for now
+          </button>
+          <button onClick={handleSubmit} className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Complete Profile
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 
 function Toast({ message, visible }) {
@@ -606,19 +701,56 @@ function Toast({ message, visible }) {
 
 
 export default function Home() {
-
-  const [posts, setPosts] = useState(() => buildSamplePosts());
-
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-
   const [modalOpen, setModalOpen] = useState(false);
+  const [completeProfileOpen, setCompleteProfileOpen] = useState(false);
   const [view, setView] = useState("all");
-
   const [toast, setToast] = useState({ message: "", visible: false });
-
   const feedRef = useRef(null);
-
   const toastTimer = useRef(null);
+
+  // Check for profile completion flag on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('complete_profile') === 'true') {
+      setCompleteProfileOpen(true);
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Fetch posts on mount
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const data = await postsAPI.getAll();
+        const transformedPosts = data.posts.map(p => ({
+          id: p.id,
+          author: p.username,
+          avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
+          initials: p.username.slice(0, 2).toUpperCase(),
+          cat: p.category || "Discussion",
+          body: p.content,
+          likes: p.likes || 0,
+          comments: p.comment_count || 0,
+          liked: false,
+          ts: new Date(p.created_at).getTime(),
+        }));
+        setPosts(transformedPosts);
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+        if (error.message === 'API request failed') {
+          navigate('/#p-auth');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPosts();
+  }, [navigate]);
 
 
 
@@ -672,40 +804,54 @@ export default function Home() {
 
 
 
-  function handleCreatePost({ title, body, cat }) {
+  async function handleCreatePost({ title, body, cat }) {
+    try {
+      await postsAPI.create(title, body, cat);
+      const data = await postsAPI.getAll();
+      const transformedPosts = data.posts.map(p => ({
+        id: p.id,
+        author: p.username,
+        avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
+        initials: p.username.slice(0, 2).toUpperCase(),
+        cat: p.category || "Discussion",
+        body: p.content,
+        likes: p.likes || 0,
+        comments: p.comment_count || 0,
+        liked: false,
+        ts: new Date(p.created_at).getTime(),
+      }));
+      setPosts(transformedPosts);
+      setPage(1);
+      setModalOpen(false);
+      showToast("Post published!");
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      showToast("Failed to publish post.");
+    }
+  }
 
-    const newPost = {
+  async function handleCompleteProfile({ username, password }) {
+    try {
+      await authAPI.completeProfile(username, password);
+      setCompleteProfileOpen(false);
+      showToast("Profile completed successfully!");
+    } catch (error) {
+      console.error('Failed to complete profile:', error);
+      if (error.details) {
+        const detail = error.details[0];
+        showToast(`${detail.path}: ${detail.message}`);
+      } else {
+        showToast(error.message || "Failed to complete profile.");
+      }
+    }
+  }
 
-      id: Date.now(),
-
-      author: "you",
-
-      avatarColor: "#534AB7",
-
-      initials: "YO",
-
-      cat,
-
-      body: `${title} — ${body}`,
-
-      likes: 0,
-
-      comments: 0,
-
-      liked: false,
-
-      ts: Date.now(),
-
-    };
-
-    setPosts((prev) => [newPost, ...prev]);
-
-    setPage(1);
-
-    setModalOpen(false);
-
-    showToast("Post published!");
-
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-[#e0e0e0]" style={{ fontFamily: "'DM Sans', sans-serif", backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
 
@@ -884,6 +1030,13 @@ export default function Home() {
       )}
 
 
+
+      {completeProfileOpen && (
+        <CompleteProfileModal
+          onClose={() => setCompleteProfileOpen(false)}
+          onSubmit={handleCompleteProfile}
+        />
+      )}
 
       <Toast message={toast.message} visible={toast.visible} />
 
