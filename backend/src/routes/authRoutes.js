@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, me, logout } = require('../controllers/authController');
+const { register, login, me, logout, googleCallback } = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { registerSchema, loginSchema } = require('../validators/authValidator');
+const passport = require('../config/passport');
 
 // Validation middleware
 const validate = (schema) => (req, res, next) => {
@@ -18,6 +19,10 @@ const validate = (schema) => (req, res, next) => {
   }
   next();
 };
+
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google/callback', passport.authenticate('google', { session: false }), googleCallback);
 
 // Routes
 router.post('/register', validate(registerSchema), register);

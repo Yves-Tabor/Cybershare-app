@@ -165,9 +165,34 @@ const logout = async (req, res) => {
   }
 };
 
+// Google OAuth callback
+const googleCallback = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    // Generate token
+    const token = generateToken(user.id);
+
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Redirect to frontend
+    res.redirect(`${process.env.CLIENT_URL}/main`);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    res.redirect(`${process.env.CLIENT_URL}/#p-auth?error=google_auth_failed`);
+  }
+};
+
 module.exports = {
   register,
   login,
   me,
   logout,
+  googleCallback,
 };
