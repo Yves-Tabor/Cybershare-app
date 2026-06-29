@@ -1,4 +1,5 @@
 const pool = require('../../config/database');
+const { emitToUser } = require('../socket/socketService');
 
 /**
  * Notification Service
@@ -33,7 +34,20 @@ async function createNotification(userId, type, title, message, relatedId = null
       [userId, type, title, message, relatedId]
     );
 
-    return result.rows[0];
+    const notification = result.rows[0];
+
+    emitToUser(userId, 'notification:new', {
+      id: notification.id,
+      userId: notification.user_id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      relatedId: notification.related_id,
+      isRead: notification.is_read,
+      createdAt: notification.created_at,
+    });
+
+    return notification;
   } catch (error) {
     console.error('Failed to create notification:', error);
     // Don't throw - notifications shouldn't break the main flow

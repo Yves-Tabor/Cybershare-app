@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import { authAPI, notificationsAPI } from "../utils/api";
 
 const SITE_CONFIG = {
@@ -386,6 +387,20 @@ export default function Navbar() {
   const userPanelRef = useRef(null);
   const userToggleRef = useRef(null);
 
+  function transformNotification(notification) {
+    return {
+      id: notification.id,
+      type: notification.type || "system",
+      message: notification.message,
+      time: notification.createdAt
+        ? new Date(notification.createdAt).toLocaleString()
+        : notification.created_at
+          ? new Date(notification.created_at).toLocaleString()
+          : "Just now",
+      unread: notification.isRead !== undefined ? !notification.isRead : !notification.read_at,
+    };
+  }
+
   // Fetch user data on mount
   useEffect(() => {
     async function fetchUser() {
@@ -408,13 +423,7 @@ export default function Navbar() {
     async function fetchNotifications() {
       try {
         const data = await notificationsAPI.getAll();
-        const transformedNotifications = data.notifications.map(n => ({
-          id: n.id,
-          type: n.type || "system",
-          message: n.message,
-          time: n.created_at ? new Date(n.created_at).toLocaleString() : "Just now",
-          unread: !n.read_at,
-        }));
+        const transformedNotifications = data.notifications.map(transformNotification);
         setNotifications(transformedNotifications);
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
@@ -476,13 +485,7 @@ export default function Navbar() {
     const pollInterval = setInterval(async () => {
       try {
         const data = await notificationsAPI.getAll();
-        const transformedNotifications = data.notifications.map((n) => ({
-          id: n.id,
-          type: n.type,
-          message: n.message,
-          unread: !n.isRead,
-          time: formatTime(n.createdAt),
-        }));
+        const transformedNotifications = data.notifications.map(transformNotification);
         setNotifications(transformedNotifications);
       } catch (error) {
         console.error('Failed to poll notifications:', error);
@@ -490,6 +493,36 @@ export default function Navbar() {
     }, 30000); // 30 seconds
 
     return () => clearInterval(pollInterval);
+  }, [user]);
+
+  // Realtime notifications via socket.io
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const socketServerUrl = apiBaseUrl.replace(/\/api\/?$/, "");
+    const socket = io(socketServerUrl, {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("connect", () => {
+      socket.emit("register-user", user.id);
+    });
+
+    socket.on("notification:new", (notification) => {
+      const transformed = transformNotification(notification);
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === transformed.id)) {
+          return prev;
+        }
+        return [transformed, ...prev];
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [user]);
 
   function toggle() {
