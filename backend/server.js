@@ -27,7 +27,9 @@ io.on('connection', (socket) => {
 
   socket.on('register-user', (userId) => {
     if (!userId) return;
-    socket.join(`user:${userId}`);
+    const room = `user:${userId}`;
+    socket.join(room);
+    console.log(`[socket] register-user: userId=${userId} joined room=${room} socketId=${socket.id}`);
   });
 
   socket.on('disconnect', () => {

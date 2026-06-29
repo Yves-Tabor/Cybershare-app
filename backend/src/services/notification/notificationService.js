@@ -46,6 +46,7 @@ async function createNotification(userId, type, title, message, relatedId = null
       isRead: notification.is_read,
       createdAt: notification.created_at,
     });
+    console.log(`[socket] emit notification:new userId=${userId} notificationId=${notification.id}`);
 
     return notification;
   } catch (error) {

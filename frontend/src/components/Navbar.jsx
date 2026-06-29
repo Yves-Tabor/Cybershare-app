@@ -478,32 +478,21 @@ export default function Navbar() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, userOpen]);
 
-  // Poll for notifications every 30 seconds
-  useEffect(() => {
-    if (!user) return;
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const data = await notificationsAPI.getAll();
-        const transformedNotifications = data.notifications.map(transformNotification);
-        setNotifications(transformedNotifications);
-      } catch (error) {
-        console.error('Failed to poll notifications:', error);
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(pollInterval);
-  }, [user]);
-
   // Realtime notifications via socket.io
   useEffect(() => {
     if (!user?.id) return;
 
-    const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const socketServerUrl = apiBaseUrl.replace(/\/api\/?$/, "");
+    const socketServerUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(
+      /\/api\/?$/,
+      ""
+    );
+
     const socket = io(socketServerUrl, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
 
     socket.on("connect", () => {
