@@ -251,6 +251,81 @@ export const notificationsAPI = {
       method: 'DELETE',
     });
   },
+
+  deleteAll: async () => {
+    return apiRequest('/notifications', {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Groups API
+export const groupsAPI = {
+  getAll: async () => {
+    return apiRequest('/groups');
+  },
+
+  getById: async (id) => {
+    return apiRequest(`/groups/${id}`);
+  },
+
+  create: async (name, description, category) => {
+    return apiRequest('/groups', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, category }),
+    });
+  },
+
+  join: async (id) => {
+    return apiRequest(`/groups/${id}/join`, {
+      method: 'POST',
+    });
+  },
+
+  leave: async (id) => {
+    return apiRequest(`/groups/${id}/leave`, {
+      method: 'POST',
+    });
+  },
+
+  createPost: async (groupId, content) => {
+    return apiRequest(`/groups/${groupId}/posts`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  likePost: async (groupId, postId) => {
+    return apiRequest(`/groups/${groupId}/posts/${postId}/like`, {
+      method: 'POST',
+    });
+  },
+
+  unlikePost: async (groupId, postId) => {
+    return apiRequest(`/groups/${groupId}/posts/${postId}/like`, {
+      method: 'DELETE',
+    });
+  },
+
+  createComment: async (groupId, postId, content, parent_comment_id) => {
+    return apiRequest(`/groups/${groupId}/posts/${postId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content, parent_comment_id }),
+    });
+  },
+
+  removeMember: async (groupId, userId) => {
+    return apiRequest(`/groups/${groupId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  invite: async (groupId, email) => {
+    return apiRequest(`/groups/${groupId}/invite`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
 };
 
 export default apiRequest;

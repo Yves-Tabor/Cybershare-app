@@ -149,10 +149,33 @@ function NotifIcon({ type }) {
 
 // ─── User Panel ───────────────────────────────────────────────────────────────
 
-function UserPanel({ user, notifications, onMarkAllRead, onClose, onSignOut, panelRef }) {
+function UserPanel({ user, notifications, onMarkAllRead, onClearAll, onClose, onSignOut, panelRef }) {
+  const [showClearAll, setShowClearAll] = useState(false);
+  const clearAllTimer = useRef(null);
+
   const unreadCount = notifications.filter((n) => n.unread).length;
   const initials = user?.username ? user.username.slice(0, 2).toUpperCase() : "??";
   const joinedDate = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Recently";
+
+  useEffect(() => {
+    // Clear timer on unmount
+    return () => {
+      if (clearAllTimer.current) {
+        clearTimeout(clearAllTimer.current);
+      }
+    };
+  }, []);
+
+  function handleMarkAllRead() {
+    onMarkAllRead();
+    // Show clear all button after 2 seconds
+    if (clearAllTimer.current) {
+      clearTimeout(clearAllTimer.current);
+    }
+    clearAllTimer.current = setTimeout(() => {
+      setShowClearAll(true);
+    }, 2000);
+  }
 
   return (
     <div
@@ -227,23 +250,38 @@ function UserPanel({ user, notifications, onMarkAllRead, onClose, onSignOut, pan
             </span>
           )}
         </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={onMarkAllRead}
-            style={{
-              fontSize: "10px", fontFamily: "monospace", color: "#666",
-              background: "transparent", border: "none", cursor: "pointer",
-            }}
-            onMouseEnter={e => e.target.style.color = "#111"}
-            onMouseLeave={e => e.target.style.color = "#666"}
-          >
-            mark all read
-          </button>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              style={{
+                fontSize: "10px", fontFamily: "monospace", color: "#666",
+                background: "transparent", border: "none", cursor: "pointer",
+              }}
+              onMouseEnter={e => e.target.style.color = "#111"}
+              onMouseLeave={e => e.target.style.color = "#666"}
+            >
+              mark all read
+            </button>
+          )}
+          {showClearAll && notifications.length > 0 && (
+            <button
+              onClick={onClearAll}
+              style={{
+                fontSize: "10px", fontFamily: "monospace", color: "#E24B4A",
+                background: "transparent", border: "none", cursor: "pointer",
+              }}
+              onMouseEnter={e => e.target.style.color = "#c0392b"}
+              onMouseLeave={e => e.target.style.color = "#E24B4A"}
+            >
+              clear all
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Notification list */}
-      <div>
+      <div style={{ maxHeight: "300px", overflowY: "auto" }}>
         {notifications.length === 0 ? (
           <div style={{
             display: "flex", flexDirection: "column", alignItems: "center",
@@ -431,6 +469,29 @@ export default function Navbar() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, userOpen]);
 
+  // Poll for notifications every 30 seconds
+  useEffect(() => {
+    if (!user) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const data = await notificationsAPI.getAll();
+        const transformedNotifications = data.notifications.map((n) => ({
+          id: n.id,
+          type: n.type,
+          message: n.message,
+          unread: !n.isRead,
+          time: formatTime(n.createdAt),
+        }));
+        setNotifications(transformedNotifications);
+      } catch (error) {
+        console.error('Failed to poll notifications:', error);
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [user]);
+
   function toggle() {
     setOpen((prev) => !prev);
   }
@@ -446,6 +507,15 @@ export default function Navbar() {
       setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
+    }
+  }
+
+  async function handleClearAll() {
+    try {
+      await notificationsAPI.deleteAll();
+      setNotifications([]);
+    } catch (error) {
+      console.error('Failed to clear all notifications:', error);
     }
   }
 
@@ -535,6 +605,7 @@ export default function Navbar() {
           user={user}
           notifications={notifications}
           onMarkAllRead={markAllRead}
+          onClearAll={handleClearAll}
           onClose={() => setUserOpen(false)}
           onSignOut={handleSignOut}
           panelRef={userPanelRef}

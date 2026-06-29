@@ -143,3 +143,75 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+
+-- Groups Table
+CREATE TABLE IF NOT EXISTS groups (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  category VARCHAR(50) NOT NULL CHECK (category IN ('Offensive', 'Defensive', 'Research', 'Bounty', 'Learning')),
+  owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_groups_owner_id ON groups(owner_id);
+CREATE INDEX IF NOT EXISTS idx_groups_category ON groups(category);
+CREATE INDEX IF NOT EXISTS idx_groups_created_at ON groups(created_at DESC);
+
+-- Group Members Table
+CREATE TABLE IF NOT EXISTS group_members (
+  id SERIAL PRIMARY KEY,
+  group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(group_id, user_id)
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON group_members(user_id);
+
+-- Group Posts Table
+CREATE TABLE IF NOT EXISTS group_posts (
+  id SERIAL PRIMARY KEY,
+  group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_group_posts_group_id ON group_posts(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_posts_user_id ON group_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_group_posts_created_at ON group_posts(created_at DESC);
+
+-- Group Post Comments Table
+CREATE TABLE IF NOT EXISTS group_post_comments (
+  id SERIAL PRIMARY KEY,
+  group_post_id INTEGER NOT NULL REFERENCES group_posts(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  parent_comment_id INTEGER REFERENCES group_post_comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_group_post_comments_group_post_id ON group_post_comments(group_post_id);
+CREATE INDEX IF NOT EXISTS idx_group_post_comments_user_id ON group_post_comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_group_post_comments_parent_comment_id ON group_post_comments(parent_comment_id);
+
+-- Group Post Likes Table
+CREATE TABLE IF NOT EXISTS group_post_likes (
+  id SERIAL PRIMARY KEY,
+  group_post_id INTEGER NOT NULL REFERENCES group_posts(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(group_post_id, user_id)
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_group_post_likes_group_post_id ON group_post_likes(group_post_id);
+CREATE INDEX IF NOT EXISTS idx_group_post_likes_user_id ON group_post_likes(user_id);

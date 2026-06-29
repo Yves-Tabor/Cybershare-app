@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { postsAPI } from "../utils/api";
+import { postsAPI, groupsAPI, authAPI } from "../utils/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -665,7 +665,10 @@ function GroupDetail({ group, onBack, onLike, onComment, onPublish, onInvite, on
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Community() {
-  const [groups, setGroups] = useState(INITIAL_GROUPS);
+  const navigate = useNavigate();
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState("directory"); // "directory" | "group"
   const [activeGroupId, setActiveGroupId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -677,8 +680,52 @@ export default function Community() {
   const searchInputRef = useRef(null);
   const searchPopupRef = useRef(null);
 
+  // Fetch current user and groups on mount
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const userResponse = await authAPI.me();
+        setCurrentUser(userResponse.user);
+
+        const groupsResponse = await groupsAPI.getAll();
+        const categoryMap = {
+          "Offensive": { color: "#E24B4A", bg: "#2e1a1a" },
+          "Defensive": { color: "#1D9E75", bg: "#1a2a2e" },
+          "Research": { color: "#7F77DD", bg: "#1a1a2e" },
+          "Bounty": { color: "#BA7517", bg: "#2e2a1a" },
+          "Learning": { color: "#639922", bg: "#1a2e1a" },
+        };
+        const transformedGroups = groupsResponse.groups.map(g => {
+          const cat = categoryMap[g.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+          return {
+            id: g.id,
+            name: g.name,
+            description: g.description,
+            category: g.category,
+            categoryColor: cat.color,
+            categoryBg: cat.bg,
+            owner: g.owner_username,
+            ownerId: g.owner_id,
+            memberCount: parseInt(g.member_count) || 0,
+            joined: g.joined,
+            posts: [],
+          };
+        });
+        setGroups(transformedGroups);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        if (error.message === 'API request failed') {
+          navigate('/#p-auth');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [navigate]);
+
   const activeGroup = groups.find((g) => g.id === activeGroupId);
-  const isOwner = activeGroup?.owner === ME.handle;
+  const isOwner = activeGroup?.ownerId === currentUser?.id;
 
   // Close search popup on outside click
   useEffect(() => {
@@ -699,52 +746,94 @@ export default function Community() {
     toastTimer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2800);
   }
 
-  function handleJoin(id) {
-    setGroups((prev) => prev.map((g) => {
-      if (g.id !== id) return g;
-      const joining = !g.joined;
-      showToast(joining ? `Joined ${g.name}` : `Left ${g.name}`);
-      return { ...g, joined: joining, memberCount: joining ? g.memberCount + 1 : g.memberCount - 1 };
-    }));
+  async function handleJoin(id) {
+    try {
+      const group = groups.find(g => g.id === id);
+      if (group.joined) {
+        await groupsAPI.leave(id);
+        setGroups((prev) => prev.map((g) => {
+          if (g.id !== id) return g;
+          return { ...g, joined: false, memberCount: g.memberCount - 1 };
+        }));
+        showToast(`Left ${group.name}`);
+      } else {
+        await groupsAPI.join(id);
+        setGroups((prev) => prev.map((g) => {
+          if (g.id !== id) return g;
+          return { ...g, joined: true, memberCount: g.memberCount + 1 };
+        }));
+        showToast(`Joined ${group.name}`);
+      }
+    } catch (error) {
+      console.error('Failed to join/leave group:', error);
+      showToast("Failed to update group membership.");
+    }
   }
 
-  function handleLike(groupId, postId) {
-    setGroups((prev) => prev.map((g) => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        posts: g.posts.map((p) => {
-          if (p.id !== postId) return p;
-          return { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 };
-        }),
-      };
-    }));
+  async function handleLike(groupId, postId) {
+    try {
+      const group = groups.find(g => g.id === groupId);
+      const post = group?.posts.find(p => p.id === postId);
+      
+      if (post.liked) {
+        await groupsAPI.unlikePost(groupId, postId);
+        setGroups((prev) => prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            posts: g.posts.map((p) => {
+              if (p.id !== postId) return p;
+              return { ...p, liked: false, likes: p.likes - 1 };
+            }),
+          };
+        }));
+      } else {
+        await groupsAPI.likePost(groupId, postId);
+        setGroups((prev) => prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            posts: g.posts.map((p) => {
+              if (p.id !== postId) return p;
+              return { ...p, liked: true, likes: p.likes + 1 };
+            }),
+          };
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike post:', error);
+      showToast("Failed to update like.");
+    }
   }
 
   async function handleComment(groupId, postId, body) {
     try {
-      await postsAPI.createComment(postId, body);
-      // Refresh groups/posts after commenting
-      // For now, just update local state optimistically
+      await groupsAPI.createComment(groupId, postId, body);
+      // Refresh the group to get updated posts with comments
+      const groupResponse = await groupsAPI.getById(groupId);
+      const categoryMap = {
+        "Offensive": { color: "#E24B4A", bg: "#2e1a1a" },
+        "Defensive": { color: "#1D9E75", bg: "#1a2a2e" },
+        "Research": { color: "#7F77DD", bg: "#1a1a2e" },
+        "Bounty": { color: "#BA7517", bg: "#2e2a1a" },
+        "Learning": { color: "#639922", bg: "#1a2e1a" },
+      };
+      const cat = categoryMap[groupResponse.group.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+      const transformedPosts = groupResponse.posts.map(p => ({
+        id: p.id,
+        author: p.username,
+        avatarColor: avatarColor(p.username),
+        initials: p.username.slice(0, 2).toUpperCase(),
+        body: p.content,
+        likes: parseInt(p.likes) || 0,
+        comments: parseInt(p.comments) || 0,
+        liked: p.liked,
+        ts: new Date(p.created_at).getTime(),
+        commentList: p.comments || [],
+      }));
       setGroups((prev) => prev.map((g) => {
         if (g.id !== groupId) return g;
-        return {
-          ...g,
-          posts: g.posts.map((p) => {
-            if (p.id !== postId) return p;
-            return {
-              ...p,
-              comments: [...p.comments, {
-                id: Date.now(),
-                author: ME.handle,
-                initials: ME.initials,
-                color: ME.color,
-                body,
-                ts: Date.now(),
-              }],
-            };
-          }),
-        };
+        return { ...g, posts: transformedPosts };
       }));
       showToast("Comment added.");
     } catch (error) {
@@ -753,49 +842,132 @@ export default function Community() {
     }
   }
 
-  function handlePublish(groupId, body) {
-    setGroups((prev) => prev.map((g) => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        posts: [{
-          id: Date.now(),
-          author: ME.handle,
-          initials: ME.initials,
-          color: ME.color,
-          body,
-          ts: Date.now(),
-          likes: 0,
-          liked: false,
-          comments: [],
-        }, ...g.posts],
+  async function handlePublish(groupId, body) {
+    try {
+      await groupsAPI.createPost(groupId, body);
+      // Refresh the group to get updated posts
+      const groupResponse = await groupsAPI.getById(groupId);
+      const categoryMap = {
+        "Offensive": { color: "#E24B4A", bg: "#2e1a1a" },
+        "Defensive": { color: "#1D9E75", bg: "#1a2a2e" },
+        "Research": { color: "#7F77DD", bg: "#1a1a2e" },
+        "Bounty": { color: "#BA7517", bg: "#2e2a1a" },
+        "Learning": { color: "#639922", bg: "#1a2e1a" },
       };
-    }));
-    showToast("Post published.");
+      const cat = categoryMap[groupResponse.group.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+      const transformedPosts = groupResponse.posts.map(p => ({
+        id: p.id,
+        author: p.username,
+        avatarColor: avatarColor(p.username),
+        initials: p.username.slice(0, 2).toUpperCase(),
+        body: p.content,
+        likes: parseInt(p.likes) || 0,
+        comments: parseInt(p.comments) || 0,
+        liked: p.liked,
+        ts: new Date(p.created_at).getTime(),
+        commentList: p.comments || [],
+      }));
+      setGroups((prev) => prev.map((g) => {
+        if (g.id !== groupId) return g;
+        return { ...g, posts: transformedPosts };
+      }));
+      showToast("Post published.");
+    } catch (error) {
+      console.error('Failed to publish post:', error);
+      showToast("Failed to publish post.");
+    }
   }
 
-  function handleCreate({ name, description, category, categoryColor, categoryBg, invites }) {
-    const newGroup = {
-      id: Date.now(),
-      name,
-      slug: name.toLowerCase().replace(/\s+/g, "-"),
-      description,
-      category,
-      categoryColor,
-      categoryBg,
-      memberCount: 1 + invites.length,
-      joined: true,
-      owner: ME.handle,
-      members: [ME.handle],
-      posts: [],
-    };
-    setGroups((prev) => [newGroup, ...prev]);
-    setShowCreate(false);
-    showToast(`"${name}" created${invites.length ? ` · ${invites.length} invite${invites.length > 1 ? "s" : ""} sent` : ""}.`);
+  async function handleCreate({ name, description, category, categoryColor, categoryBg, invites }) {
+    try {
+      await groupsAPI.create(name, description, category);
+      // Refresh groups
+      const groupsResponse = await groupsAPI.getAll();
+      const categoryMap = {
+        "Offensive": { color: "#E24B4A", bg: "#2e1a1a" },
+        "Defensive": { color: "#1D9E75", bg: "#1a2a2e" },
+        "Research": { color: "#7F77DD", bg: "#1a1a2e" },
+        "Bounty": { color: "#BA7517", bg: "#2e2a1a" },
+        "Learning": { color: "#639922", bg: "#1a2e1a" },
+      };
+      const transformedGroups = groupsResponse.groups.map(g => {
+        const cat = categoryMap[g.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+        return {
+          id: g.id,
+          name: g.name,
+          description: g.description,
+          category: g.category,
+          categoryColor: cat.color,
+          categoryBg: cat.bg,
+          owner: g.owner_username,
+          ownerId: g.owner_id,
+          memberCount: parseInt(g.member_count) || 0,
+          joined: g.joined,
+          posts: [],
+        };
+      });
+      setGroups(transformedGroups);
+      setShowCreate(false);
+      showToast(`"${name}" created${invites.length ? ` · ${invites.length} invite${invites.length > 1 ? "s" : ""} sent` : ""}.`);
+    } catch (error) {
+      console.error('Failed to create group:', error);
+      showToast("Failed to create group.");
+    }
   }
 
-  function handleInvite(groupId, email) {
-    showToast(`Invite sent to ${email}`);
+  async function handleInvite(groupId, email) {
+    try {
+      await groupsAPI.invite(groupId, email);
+      showToast(`Invite sent to ${email}`);
+    } catch (error) {
+      console.error('Failed to invite user:', error);
+      showToast("Failed to invite user.");
+    }
+  }
+
+  async function handleRemoveMember(groupId, userId) {
+    try {
+      await groupsAPI.removeMember(groupId, userId);
+      showToast("Member removed");
+    } catch (error) {
+      console.error('Failed to remove member:', error);
+      showToast("Failed to remove member.");
+    }
+  }
+
+  async function handleGroupClick(groupId) {
+    try {
+      setActiveGroupId(groupId);
+      const groupResponse = await groupsAPI.getById(groupId);
+      const categoryMap = {
+        "Offensive": { color: "#E24B4A", bg: "#2e1a1a" },
+        "Defensive": { color: "#1D9E75", bg: "#1a2a2e" },
+        "Research": { color: "#7F77DD", bg: "#1a1a2e" },
+        "Bounty": { color: "#BA7517", bg: "#2e2a1a" },
+        "Learning": { color: "#639922", bg: "#1a2e1a" },
+      };
+      const cat = categoryMap[groupResponse.group.category] || { color: "#7F77DD", bg: "#1a1a2e" };
+      const transformedPosts = groupResponse.posts.map(p => ({
+        id: p.id,
+        author: p.username,
+        avatarColor: avatarColor(p.username),
+        initials: p.username.slice(0, 2).toUpperCase(),
+        body: p.content,
+        likes: parseInt(p.likes) || 0,
+        comments: parseInt(p.comments) || 0,
+        liked: p.liked,
+        ts: new Date(p.created_at).getTime(),
+        commentList: p.comments || [],
+      }));
+      setGroups((prev) => prev.map((g) => {
+        if (g.id !== groupId) return g;
+        return { ...g, posts: transformedPosts };
+      }));
+      setView("group");
+    } catch (error) {
+      console.error('Failed to fetch group:', error);
+      showToast("Failed to load group.");
+    }
   }
 
   const filteredGroups = groups
@@ -808,6 +980,14 @@ export default function Community() {
     );
 
   const joinedCount = groups.filter((g) => g.joined).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-[#e0e0e0]" style={{ fontFamily: "'DM Sans', sans-serif", backgroundImage: `url(${mainBg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -910,7 +1090,7 @@ export default function Community() {
                       key={g.id}
                       group={g}
                       onJoin={handleJoin}
-                      onOpen={(g) => { setActiveGroupId(g.id); setView("group"); }}
+                      onOpen={() => handleGroupClick(g.id)}
                     />
                   ))}
                 </div>

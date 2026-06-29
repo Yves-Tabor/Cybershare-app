@@ -109,10 +109,26 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+// Delete all notifications for current user
+const deleteAllNotifications = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const query = 'DELETE FROM notifications WHERE user_id = $1';
+    const result = await pool.query(query, [userId]);
+
+    res.status(200).json({ message: `Deleted ${result.rowCount} notifications` });
+  } catch (error) {
+    console.error('Delete all notifications error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getUserNotifications,
   getUnreadNotificationsCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
+  deleteAllNotifications,
 };

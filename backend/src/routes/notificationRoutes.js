@@ -6,6 +6,7 @@ const {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
+  deleteAllNotifications,
 } = require('../controllers/notificationController');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -18,5 +19,6 @@ router.get('/unread-count', getUnreadNotificationsCount);
 router.patch('/:id/read', markNotificationAsRead);
 router.patch('/read-all', markAllNotificationsAsRead);
 router.delete('/:id', deleteNotification);
+router.delete('/', deleteAllNotifications);
 
 module.exports = router;

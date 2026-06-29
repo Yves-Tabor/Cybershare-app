@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -13,6 +14,7 @@ const commentRoutes = require('./routes/commentRoutes');
 const scanRoutes = require('./routes/scanRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const groupRoutes = require('./routes/groupRoutes');
 
 const app = express();
 
@@ -51,6 +53,7 @@ app.use('/api', commentRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
