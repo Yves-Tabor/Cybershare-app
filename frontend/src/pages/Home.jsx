@@ -62,6 +62,36 @@ function timeAgo(ts) {
 
 }
 
+function formatPostContent({ title, body, cat }) {
+  return `[${cat}] ${title} — ${body}`;
+}
+
+function transformPost(p) {
+  const username = p.user?.username || p.username || "User";
+  const rawContent = p.content || "";
+
+  let cat = p.category || "Discussion";
+  let body = rawContent;
+  const catMatch = rawContent.match(/^\[([^\]]+)\]\s*(.+)$/s);
+  if (catMatch) {
+    cat = catMatch[1];
+    body = catMatch[2];
+  }
+
+  return {
+    id: p.id,
+    author: username,
+    avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
+    initials: username.slice(0, 2).toUpperCase(),
+    cat,
+    body,
+    likes: p.likes || 0,
+    comments: p.comment_count || 0,
+    liked: false,
+    ts: new Date(p.createdAt || p.created_at).getTime(),
+  };
+}
+
 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -727,18 +757,7 @@ export default function Home() {
     async function fetchPosts() {
       try {
         const data = await postsAPI.getAll();
-        const transformedPosts = data.posts.map(p => ({
-          id: p.id,
-          author: p.username,
-          avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
-          initials: p.username.slice(0, 2).toUpperCase(),
-          cat: p.category || "Discussion",
-          body: p.content,
-          likes: p.likes || 0,
-          comments: p.comment_count || 0,
-          liked: false,
-          ts: new Date(p.created_at).getTime(),
-        }));
+        const transformedPosts = data.posts.map(transformPost);
         setPosts(transformedPosts);
       } catch (error) {
         console.error('Failed to fetch posts:', error);
@@ -806,20 +825,9 @@ export default function Home() {
 
   async function handleCreatePost({ title, body, cat }) {
     try {
-      await postsAPI.create(title, body, cat);
+      await postsAPI.create(formatPostContent({ title, body, cat }));
       const data = await postsAPI.getAll();
-      const transformedPosts = data.posts.map(p => ({
-        id: p.id,
-        author: p.username,
-        avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
-        initials: p.username.slice(0, 2).toUpperCase(),
-        cat: p.category || "Discussion",
-        body: p.content,
-        likes: p.likes || 0,
-        comments: p.comment_count || 0,
-        liked: false,
-        ts: new Date(p.created_at).getTime(),
-      }));
+      const transformedPosts = data.posts.map(transformPost);
       setPosts(transformedPosts);
       setPage(1);
       setModalOpen(false);

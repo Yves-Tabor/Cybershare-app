@@ -10,6 +10,36 @@ const { scanNuclei } = require('../services/scanner/nucleiScanner');
 const { calculateSecurityScore } = require('../services/scanner/scoreCalculator');
 const { checkDependencies } = require('../services/scanner/dependencyChecker');
 const { notifyScanCompleted, notifyScanFailed, notifySecurityAlert } = require('../services/notification/notificationService');
+const { emitToUser } = require('../services/socket/socketService');
+
+async function storeScanResults(scanId, allResults) {
+  if (allResults.length === 0) return;
+
+  const values = [];
+  const params = [];
+  let paramIndex = 1;
+
+  for (const result of allResults) {
+    values.push(
+      `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5})`
+    );
+    params.push(
+      scanId,
+      result.category,
+      result.severity,
+      result.title,
+      result.description,
+      result.recommendation
+    );
+    paramIndex += 6;
+  }
+
+  await pool.query(
+    `INSERT INTO scan_results (scan_id, category, severity, title, description, recommendation)
+     VALUES ${values.join(', ')}`,
+    params
+  );
+}
 
 // Create new scan
 const createScan = async (req, res) => {
@@ -71,8 +101,9 @@ async function runScans(scanId, targetUrl, userId) {
 
     // Calculate security score
     const scoreData = calculateSecurityScore(allResults);
+    const criticalIssues = allResults.filter((r) => r.severity === 'critical').length;
 
-    // Update scan with results
+    // Mark scan complete before persisting individual findings
     await pool.query(
       `UPDATE scans
        SET status = 'completed', security_score = $1, completed_at = CURRENT_TIMESTAMP
@@ -80,30 +111,23 @@ async function runScans(scanId, targetUrl, userId) {
       [scoreData.score, scanId]
     );
 
-    // Store individual results
-    for (const result of allResults) {
-      await pool.query(
-        `INSERT INTO scan_results (scan_id, category, severity, title, description, recommendation)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          scanId,
-          result.category,
-          result.severity,
-          result.title,
-          result.description,
-          result.recommendation,
-        ]
-      );
-    }
+    // Notify immediately — don't wait for result rows to be stored
+    await Promise.all([
+      notifyScanCompleted(userId, scanId, scoreData.score, targetUrl),
+      criticalIssues > 0
+        ? notifySecurityAlert(userId, scanId, targetUrl, criticalIssues)
+        : Promise.resolve(),
+    ]);
 
-    // Notify user of scan completion
-    await notifyScanCompleted(userId, scanId, scoreData.score, targetUrl);
+    emitToUser(userId, 'scan:completed', {
+      scanId,
+      status: 'completed',
+      securityScore: scoreData.score,
+      targetUrl,
+    });
 
-    // Check for critical security issues and alert user
-    const criticalIssues = allResults.filter(r => r.severity === 'critical').length;
-    if (criticalIssues > 0) {
-      await notifySecurityAlert(userId, scanId, targetUrl, criticalIssues);
-    }
+    // Persist findings after notifications are sent
+    await storeScanResults(scanId, allResults);
 
   } catch (error) {
     console.error('Run scans error:', error);
@@ -115,6 +139,12 @@ async function runScans(scanId, targetUrl, userId) {
     
     // Notify user of scan failure
     await notifyScanFailed(userId, scanId, targetUrl);
+
+    emitToUser(userId, 'scan:completed', {
+      scanId,
+      status: 'failed',
+      targetUrl,
+    });
   }
 }
 

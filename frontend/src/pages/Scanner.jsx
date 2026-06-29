@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { scansAPI } from "../utils/api";
 
+const SCAN_POLL_INTERVAL_MS = 2000;
+
 // ─── BG image placeholder ─────────────────────────────────────────────────────
 // Replace SCANNER_BG_IMAGE with your actual image URL or import.
 // e.g. import scannerBg from "./assets/scanner-bg.jpg";
@@ -80,6 +82,7 @@ function DisclosureModal({ onClose }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Scanner() {
+  const navigate = useNavigate();
   const [url, setUrl] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -89,6 +92,14 @@ export default function Scanner() {
   const [urlError, setUrlError] = useState("");
   const inputRef = useRef(null);
   const timerRef = useRef(null);
+  const pollRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
 
   const canScan = url.trim().length > 0 && accepted && !scanning;
 
@@ -113,20 +124,39 @@ export default function Scanner() {
     setStatusText(SCAN_STEPS[0]);
 
     try {
-      await scansAPI.create(url);
-      // Simulate progress steps for UX
+      const { scan } = await scansAPI.create(url);
+
+      // Visual progress while the real scan runs in the background
       let i = 1;
       timerRef.current = setInterval(() => {
-        if (i < SCAN_STEPS.length) {
+        if (i < SCAN_STEPS.length - 1) {
           setStepIndex(i);
           setStatusText(SCAN_STEPS[i]);
           i++;
-        } else {
-          clearInterval(timerRef.current);
-          setScanning(false);
         }
       }, 900);
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const { scan: latestScan } = await scansAPI.getById(scan.id);
+          if (latestScan.status === "completed" || latestScan.status === "failed") {
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (pollRef.current) clearInterval(pollRef.current);
+
+            setStepIndex(SCAN_STEPS.length - 1);
+            setStatusText(
+              latestScan.status === "completed" ? SCAN_STEPS[SCAN_STEPS.length - 1] : "Scan failed. Please try again."
+            );
+            setScanning(false);
+            window.dispatchEvent(new CustomEvent("cybershare:notifications-refresh"));
+          }
+        } catch (error) {
+          console.error("Failed to poll scan status:", error);
+        }
+      }, SCAN_POLL_INTERVAL_MS);
     } catch (error) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (pollRef.current) clearInterval(pollRef.current);
       console.error('Failed to start scan:', error);
       setScanning(false);
       setStepIndex(-1);

@@ -429,7 +429,11 @@ export default function Navbar() {
         console.error('Failed to fetch notifications:', error);
       }
     }
+
     fetchNotifications();
+
+    window.addEventListener("cybershare:notifications-refresh", fetchNotifications);
+    return () => window.removeEventListener("cybershare:notifications-refresh", fetchNotifications);
   }, []);
 
   // Close when clicking outside — excluding the toggle button and the panel itself
@@ -507,6 +511,15 @@ export default function Navbar() {
         }
         return [transformed, ...prev];
       });
+    });
+
+    socket.on("scan:completed", async () => {
+      try {
+        const data = await notificationsAPI.getAll();
+        setNotifications(data.notifications.map(transformNotification));
+      } catch (error) {
+        console.error("Failed to refresh notifications after scan:", error);
+      }
     });
 
     return () => {
