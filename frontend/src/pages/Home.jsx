@@ -105,11 +105,20 @@ function PostCard({
 
   function normalizeComments(items = []) {
     return [...items]
-      .map((comment) => ({
-        ...comment,
-        ts: new Date(comment.createdAt || comment.created_at).getTime(),
-      }))
-      .sort((a, b) => a.ts - b.ts);
+      .map((comment) => {
+        const fallbackTs = new Date(
+          comment.createdAt || comment.created_at,
+        ).getTime();
+
+        return {
+          ...comment,
+          ts:
+            typeof comment.ts === "number" && !Number.isNaN(comment.ts)
+              ? comment.ts
+              : fallbackTs,
+        };
+      })
+      .sort((a, b) => b.ts - a.ts);
   }
 
   useEffect(() => {
@@ -137,13 +146,31 @@ function PostCard({
   }, [showComments, post.id]);
 
   async function handleAddComment() {
-    if (!commentInput.trim()) return;
+    const content = commentInput.trim();
+    if (!content) return;
+
     try {
-      await commentsAPI.create(post.id, commentInput);
-      const data = await commentsAPI.getByPostId(post.id);
-      setComments(normalizeComments(data.comments || []));
+      const response = await commentsAPI.create(post.id, content);
+      const createdComment = response.comment;
+      const now = Date.now();
+
+      setComments((prev) =>
+        normalizeComments([
+          ...prev,
+          {
+            ...createdComment,
+            content: createdComment?.content || content,
+            createdAt: createdComment?.createdAt || new Date(now).toISOString(),
+            ts: now,
+            user: createdComment?.user || {
+              id: currentUser?.id,
+              username: currentUser?.username || "You",
+              avatar: currentUser?.avatar || null,
+            },
+          },
+        ]),
+      );
       setCommentInput("");
-      // Update the comment count in the parent so the button reflects the change
       if (onCommentAdd) onCommentAdd(post.id);
     } catch (error) {
       console.error("Failed to add comment:", error);
@@ -305,26 +332,6 @@ function PostCard({
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
               <span className="tabular-nums">{post.comments}</span>
-            </button>
-
-            <button className="flex items-center gap-1.5 text-[12px] text-[#555] hover:text-[#888] bg-transparent border-none cursor-pointer transition-colors ml-auto">
-              <svg
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-              </svg>
-              Share
             </button>
           </div>
 
