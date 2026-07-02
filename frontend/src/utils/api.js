@@ -1,14 +1,15 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Helper function to make API requests
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const defaultOptions = {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
   };
 
   const mergedOptions = { ...defaultOptions, ...options };
@@ -18,7 +19,7 @@ async function apiRequest(endpoint, options = {}) {
     const data = await response.json();
 
     if (!response.ok) {
-      const error = new Error(data.error || 'API request failed');
+      const error = new Error(data.error || "API request failed");
       if (data.details) {
         error.details = data.details;
       }
@@ -27,7 +28,7 @@ async function apiRequest(endpoint, options = {}) {
 
     return data;
   } catch (error) {
-    console.error('API request error:', error);
+    console.error("API request error:", error);
     throw error;
   }
 }
@@ -35,32 +36,32 @@ async function apiRequest(endpoint, options = {}) {
 // Auth API
 export const authAPI = {
   register: async (username, email, password) => {
-    return apiRequest('/auth/register', {
-      method: 'POST',
+    return apiRequest("/auth/register", {
+      method: "POST",
       body: JSON.stringify({ username, email, password }),
     });
   },
 
   login: async (email, password) => {
-    return apiRequest('/auth/login', {
-      method: 'POST',
+    return apiRequest("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
   },
 
   logout: async () => {
-    return apiRequest('/auth/logout', {
-      method: 'POST',
+    return apiRequest("/auth/logout", {
+      method: "POST",
     });
   },
 
   me: async () => {
-    return apiRequest('/auth/me');
+    return apiRequest("/auth/me");
   },
 
   completeProfile: async (username, password) => {
-    return apiRequest('/auth/complete-profile', {
-      method: 'POST',
+    return apiRequest("/auth/complete-profile", {
+      method: "POST",
       body: JSON.stringify({ username, password }),
     });
   },
@@ -69,7 +70,7 @@ export const authAPI = {
 // Resources API
 export const resourcesAPI = {
   getAll: async () => {
-    return apiRequest('/resources');
+    return apiRequest("/resources");
   },
 
   getById: async (id) => {
@@ -77,22 +78,22 @@ export const resourcesAPI = {
   },
 
   create: async (title, description, url, category) => {
-    return apiRequest('/resources', {
-      method: 'POST',
+    return apiRequest("/resources", {
+      method: "POST",
       body: JSON.stringify({ title, description, url, category }),
     });
   },
 
   update: async (id, title, description, url, category) => {
     return apiRequest(`/resources/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ title, description, url, category }),
     });
   },
 
   delete: async (id) => {
     return apiRequest(`/resources/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
@@ -100,7 +101,7 @@ export const resourcesAPI = {
 // Posts API
 export const postsAPI = {
   getAll: async () => {
-    return apiRequest('/posts');
+    return apiRequest("/posts");
   },
 
   getById: async (id) => {
@@ -108,34 +109,34 @@ export const postsAPI = {
   },
 
   create: async (content) => {
-    return apiRequest('/posts', {
-      method: 'POST',
+    return apiRequest("/posts", {
+      method: "POST",
       body: JSON.stringify({ content }),
     });
   },
 
   update: async (id, content) => {
     return apiRequest(`/posts/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ content }),
     });
   },
 
   delete: async (id) => {
     return apiRequest(`/posts/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   like: async (id) => {
     return apiRequest(`/posts/${id}/like`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   unlike: async (id) => {
     return apiRequest(`/posts/${id}/like`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
@@ -146,10 +147,14 @@ export const commentsAPI = {
     return apiRequest(`/posts/${postId}/comments`);
   },
 
-  create: async (postId, content, parentCommentId = null) => {
+  create: async (postId, content, parentCommentId) => {
+    const body = { content };
+    if (parentCommentId != null) {
+      body.parent_comment_id = parentCommentId;
+    }
     return apiRequest(`/posts/${postId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify({ content, parent_comment_id: parentCommentId }),
+      method: "POST",
+      body: JSON.stringify(body),
     });
   },
 };
@@ -157,18 +162,18 @@ export const commentsAPI = {
 // Scans API
 export const scansAPI = {
   checkDependencies: async () => {
-    return apiRequest('/scans/dependencies/check');
+    return apiRequest("/scans/dependencies/check");
   },
 
   create: async (targetUrl) => {
-    return apiRequest('/scans', {
-      method: 'POST',
+    return apiRequest("/scans", {
+      method: "POST",
       body: JSON.stringify({ target_url: targetUrl }),
     });
   },
 
   getAll: async () => {
-    return apiRequest('/scans');
+    return apiRequest("/scans");
   },
 
   getById: async (id) => {
@@ -177,13 +182,13 @@ export const scansAPI = {
 
   delete: async (id) => {
     return apiRequest(`/scans/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   deleteAll: async () => {
-    return apiRequest('/scans', {
-      method: 'DELETE',
+    return apiRequest("/scans", {
+      method: "DELETE",
     });
   },
 };
@@ -192,45 +197,82 @@ export const scansAPI = {
 export const eventsAPI = {
   getAll: async (category, status) => {
     const params = new URLSearchParams();
-    if (category) params.append('category', category);
-    if (status) params.append('status', status);
+    if (category) params.append("category", category);
+    if (status) params.append("status", status);
     const queryString = params.toString();
-    return apiRequest(`/events${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/events${queryString ? `?${queryString}` : ""}`);
   },
 
   getById: async (id) => {
     return apiRequest(`/events/${id}`);
   },
 
-  create: async (title, description, location, startDate, endDate, imageUrl, category, status) => {
-    return apiRequest('/events', {
-      method: 'POST',
-      body: JSON.stringify({ title, description, location, start_date: startDate, end_date: endDate, image_url: imageUrl, category, status }),
+  create: async (
+    title,
+    description,
+    location,
+    startDate,
+    endDate,
+    imageUrl,
+    category,
+    status,
+  ) => {
+    return apiRequest("/events", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        description,
+        location,
+        start_date: startDate,
+        end_date: endDate,
+        image_url: imageUrl,
+        category,
+        status,
+      }),
     });
   },
 
-  update: async (id, title, description, location, startDate, endDate, imageUrl, category, status) => {
+  update: async (
+    id,
+    title,
+    description,
+    location,
+    startDate,
+    endDate,
+    imageUrl,
+    category,
+    status,
+  ) => {
     return apiRequest(`/events/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ title, description, location, start_date: startDate, end_date: endDate, image_url: imageUrl, category, status }),
+      method: "PATCH",
+      body: JSON.stringify({
+        title,
+        description,
+        location,
+        start_date: startDate,
+        end_date: endDate,
+        image_url: imageUrl,
+        category,
+        status,
+      }),
     });
   },
 
   delete: async (id) => {
     return apiRequest(`/events/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   register: async (id) => {
     return apiRequest(`/events/${id}/register`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   unregister: async (id) => {
     return apiRequest(`/events/${id}/register`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
@@ -243,36 +285,36 @@ export const eventsAPI = {
 export const notificationsAPI = {
   getAll: async (unreadOnly = false) => {
     const params = new URLSearchParams();
-    if (unreadOnly) params.append('unread_only', 'true');
+    if (unreadOnly) params.append("unread_only", "true");
     const queryString = params.toString();
-    return apiRequest(`/notifications${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/notifications${queryString ? `?${queryString}` : ""}`);
   },
 
   getUnreadCount: async () => {
-    return apiRequest('/notifications/unread-count');
+    return apiRequest("/notifications/unread-count");
   },
 
   markAsRead: async (id) => {
     return apiRequest(`/notifications/${id}/read`, {
-      method: 'PATCH',
+      method: "PATCH",
     });
   },
 
   markAllAsRead: async () => {
-    return apiRequest('/notifications/read-all', {
-      method: 'PATCH',
+    return apiRequest("/notifications/read-all", {
+      method: "PATCH",
     });
   },
 
   delete: async (id) => {
     return apiRequest(`/notifications/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   deleteAll: async () => {
-    return apiRequest('/notifications', {
-      method: 'DELETE',
+    return apiRequest("/notifications", {
+      method: "DELETE",
     });
   },
 };
@@ -280,7 +322,7 @@ export const notificationsAPI = {
 // Groups API
 export const groupsAPI = {
   getAll: async () => {
-    return apiRequest('/groups');
+    return apiRequest("/groups");
   },
 
   getById: async (id) => {
@@ -288,59 +330,59 @@ export const groupsAPI = {
   },
 
   create: async (name, description, category) => {
-    return apiRequest('/groups', {
-      method: 'POST',
+    return apiRequest("/groups", {
+      method: "POST",
       body: JSON.stringify({ name, description, category }),
     });
   },
 
   join: async (id) => {
     return apiRequest(`/groups/${id}/join`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   leave: async (id) => {
     return apiRequest(`/groups/${id}/leave`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   createPost: async (groupId, content) => {
     return apiRequest(`/groups/${groupId}/posts`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ content }),
     });
   },
 
   likePost: async (groupId, postId) => {
     return apiRequest(`/groups/${groupId}/posts/${postId}/like`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   unlikePost: async (groupId, postId) => {
     return apiRequest(`/groups/${groupId}/posts/${postId}/like`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   createComment: async (groupId, postId, content, parent_comment_id) => {
     return apiRequest(`/groups/${groupId}/posts/${postId}/comments`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ content, parent_comment_id }),
     });
   },
 
   removeMember: async (groupId, userId) => {
     return apiRequest(`/groups/${groupId}/members/${userId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   invite: async (groupId, email) => {
     return apiRequest(`/groups/${groupId}/invite`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ email }),
     });
   },
