@@ -180,6 +180,12 @@ export const scansAPI = {
       method: 'DELETE',
     });
   },
+
+  deleteAll: async () => {
+    return apiRequest('/scans', {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Events API

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createScan, getUserScans, getScanById, deleteScan, checkScanDependencies } = require('../controllers/scanController');
+const { createScan, getUserScans, getScanById, deleteScan, deleteAllScans, checkScanDependencies } = require('../controllers/scanController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { createScanSchema } = require('../validators/scanValidator');
 
@@ -25,6 +25,7 @@ router.use(authMiddleware);
 // Routes
 router.post('/', validate(createScanSchema), createScan);
 router.get('/', getUserScans);
+router.delete('/', deleteAllScans);
 router.get('/:id', getScanById);
 router.delete('/:id', deleteScan);
 

@@ -562,7 +562,15 @@ export default function Scanner() {
                 </div>
                 {scanHistory.length > 0 && (
                   <button
-                    onClick={() => setScanHistory([])}
+                    onClick={async () => {
+                      try {
+                        await scansAPI.deleteAll();
+                        setScanHistory([]);
+                        if (selectedScan) setSelectedScan(null);
+                      } catch (err) {
+                        console.error('Failed to clear scan history:', err);
+                      }
+                    }}
                     className="text-[10px] font-mono uppercase text-[#E24B4A] hover:text-[#ff6b6b] bg-transparent border-none cursor-pointer transition-colors"
                   >
                     Clear History
