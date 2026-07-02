@@ -1,11 +1,11 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const pool = require('../config/database');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const pool = require("../config/database");
 
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
+    expiresIn: "7d",
   });
 };
 
@@ -15,16 +15,18 @@ const register = async (req, res) => {
     const { username, email, password, bio } = req.body;
 
     // Normalize username: lowercase and remove spaces
-    const normalizedUsername = username.toLowerCase().replace(/\s+/g, '');
+    const normalizedUsername = username.toLowerCase().replace(/\s+/g, "");
 
     // Check if user already exists
     const existingUser = await pool.query(
-      'SELECT id FROM users WHERE email = $1 OR username = $2',
-      [email, normalizedUsername]
+      "SELECT id FROM users WHERE email = $1 OR username = $2",
+      [email, normalizedUsername],
     );
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'User with this email or username already exists' });
+      return res
+        .status(400)
+        .json({ error: "User with this email or username already exists" });
     }
 
     // Hash password
@@ -33,8 +35,8 @@ const register = async (req, res) => {
 
     // Insert user with normalized username
     const result = await pool.query(
-      'INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, role, created_at',
-      [normalizedUsername, email, passwordHash, bio || null]
+      "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, role, created_at",
+      [normalizedUsername, email, passwordHash, bio || null],
     );
 
     const user = result.rows[0];
@@ -43,15 +45,15 @@ const register = async (req, res) => {
     const token = generateToken(user.id);
 
     // Set cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user: {
         id: user.id,
         username: user.username,
@@ -63,8 +65,8 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -75,12 +77,12 @@ const login = async (req, res) => {
 
     // Find user
     const result = await pool.query(
-      'SELECT id, username, email, password_hash, bio, avatar, role, created_at FROM users WHERE email = $1',
-      [email]
+      "SELECT id, username, email, password_hash, bio, avatar, role, created_at FROM users WHERE email = $1",
+      [email],
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const user = result.rows[0];
@@ -89,22 +91,22 @@ const login = async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     // Generate token
     const token = generateToken(user.id);
 
     // Set cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.status(200).json({
-      message: 'Login successful',
+      message: "Login successful",
       user: {
         id: user.id,
         username: user.username,
@@ -116,8 +118,8 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -127,12 +129,12 @@ const me = async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      'SELECT id, username, email, bio, avatar, role, created_at FROM users WHERE id = $1',
-      [userId]
+      "SELECT id, username, email, bio, avatar, role, created_at FROM users WHERE id = $1",
+      [userId],
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const user = result.rows[0];
@@ -149,19 +151,19 @@ const me = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Logout user
 const logout = async (req, res) => {
   try {
-    res.clearCookie('token');
-    res.status(200).json({ message: 'Logout successful' });
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Logout error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -169,28 +171,29 @@ const logout = async (req, res) => {
 const googleCallback = async (req, res) => {
   try {
     const user = req.user;
-    
+
     // Check if user has completed profile setup
     const userResult = await pool.query(
-      'SELECT username, password_hash FROM users WHERE id = $1',
-      [user.id]
+      "SELECT username, password_hash FROM users WHERE id = $1",
+      [user.id],
     );
     const userData = userResult.rows[0];
-    
+
     // Generate token
     const token = generateToken(user.id);
 
     // Set cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     // Check if user needs to complete profile (has default username from email)
-    const needsProfileCompletion = userData.username.includes('@') || !userData.password_hash;
-    
+    const needsProfileCompletion =
+      userData.username.includes("@") || !userData.password_hash;
+
     // Redirect to frontend with profile completion flag
     if (needsProfileCompletion) {
       res.redirect(`${process.env.CLIENT_URL}/main?complete_profile=true`);
@@ -198,7 +201,7 @@ const googleCallback = async (req, res) => {
       res.redirect(`${process.env.CLIENT_URL}/main`);
     }
   } catch (error) {
-    console.error('Google callback error:', error);
+    console.error("Google callback error:", error);
     res.redirect(`${process.env.CLIENT_URL}/#p-auth?error=google_auth_failed`);
   }
 };
@@ -210,16 +213,16 @@ const completeProfile = async (req, res) => {
     const { username, password } = req.body;
 
     // Normalize username
-    const normalizedUsername = username.toLowerCase().replace(/\s+/g, '');
+    const normalizedUsername = username.toLowerCase().replace(/\s+/g, "");
 
     // Check if username is already taken
     const existingUser = await pool.query(
-      'SELECT id FROM users WHERE username = $1 AND id != $2',
-      [normalizedUsername, userId]
+      "SELECT id FROM users WHERE username = $1 AND id != $2",
+      [normalizedUsername, userId],
     );
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'Username already taken' });
+      return res.status(400).json({ error: "Username already taken" });
     }
 
     // Hash new password
@@ -228,14 +231,14 @@ const completeProfile = async (req, res) => {
 
     // Update user
     const result = await pool.query(
-      'UPDATE users SET username = $1, password_hash = $2 WHERE id = $3 RETURNING id, username, email, bio, avatar, role, created_at',
-      [normalizedUsername, passwordHash, userId]
+      "UPDATE users SET username = $1, password_hash = $2 WHERE id = $3 RETURNING id, username, email, bio, avatar, role, created_at",
+      [normalizedUsername, passwordHash, userId],
     );
 
     const user = result.rows[0];
 
     res.status(200).json({
-      message: 'Profile completed successfully',
+      message: "Profile completed successfully",
       user: {
         id: user.id,
         username: user.username,
@@ -247,8 +250,8 @@ const completeProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Complete profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Complete profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 

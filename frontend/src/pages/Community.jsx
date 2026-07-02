@@ -1348,41 +1348,55 @@ export default function Community() {
   }
 
   async function handleLike(groupId, postId) {
-    try {
-      const group = groups.find((g) => g.id === groupId);
-      const post = group?.posts.find((p) => p.id === postId);
+    const group = groups.find((g) => g.id === groupId);
+    const post = group?.posts.find((p) => p.id === postId);
+    if (!group || !post) return;
 
-      if (post.liked) {
-        await groupsAPI.unlikePost(groupId, postId);
-        setGroups((prev) =>
-          prev.map((g) => {
-            if (g.id !== groupId) return g;
+    const wasLiked = post.liked;
+
+    // Optimistic UI update — update immediately
+    setGroups((prev) =>
+      prev.map((g) => {
+        if (g.id !== groupId) return g;
+        return {
+          ...g,
+          posts: g.posts.map((p) => {
+            if (p.id !== postId) return p;
             return {
-              ...g,
-              posts: g.posts.map((p) => {
-                if (p.id !== postId) return p;
-                return { ...p, liked: false, likes: p.likes - 1 };
-              }),
+              ...p,
+              liked: !p.liked,
+              likes: p.liked ? p.likes - 1 : p.likes + 1,
             };
           }),
-        );
+        };
+      }),
+    );
+
+    try {
+      if (wasLiked) {
+        await groupsAPI.unlikePost(groupId, postId);
       } else {
         await groupsAPI.likePost(groupId, postId);
-        setGroups((prev) =>
-          prev.map((g) => {
-            if (g.id !== groupId) return g;
-            return {
-              ...g,
-              posts: g.posts.map((p) => {
-                if (p.id !== postId) return p;
-                return { ...p, liked: true, likes: p.likes + 1 };
-              }),
-            };
-          }),
-        );
       }
     } catch (error) {
       console.error("Failed to like/unlike post:", error);
+      // Revert on failure
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            posts: g.posts.map((p) => {
+              if (p.id !== postId) return p;
+              return {
+                ...p,
+                liked: wasLiked,
+                likes: wasLiked ? p.likes + 1 : p.likes - 1,
+              };
+            }),
+          };
+        }),
+      );
       showToast("Failed to update like.");
     }
   }
