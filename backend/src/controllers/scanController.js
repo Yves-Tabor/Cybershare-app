@@ -103,7 +103,10 @@ async function runScans(scanId, targetUrl, userId) {
     const scoreData = calculateSecurityScore(allResults);
     const criticalIssues = allResults.filter((r) => r.severity === 'critical').length;
 
-    // Mark scan complete before persisting individual findings
+    // Persist findings before marking scan complete
+    await storeScanResults(scanId, allResults);
+
+    // Mark scan complete
     await pool.query(
       `UPDATE scans
        SET status = 'completed', security_score = $1, completed_at = CURRENT_TIMESTAMP
@@ -111,7 +114,7 @@ async function runScans(scanId, targetUrl, userId) {
       [scoreData.score, scanId]
     );
 
-    // Notify immediately — don't wait for result rows to be stored
+    // Notify immediately
     await Promise.all([
       notifyScanCompleted(userId, scanId, scoreData.score, targetUrl),
       criticalIssues > 0
@@ -125,9 +128,6 @@ async function runScans(scanId, targetUrl, userId) {
       securityScore: scoreData.score,
       targetUrl,
     });
-
-    // Persist findings after notifications are sent
-    await storeScanResults(scanId, allResults);
 
   } catch (error) {
     console.error('Run scans error:', error);
@@ -283,6 +283,18 @@ const deleteScan = async (req, res) => {
   }
 };
 
+// Delete all scans for user
+const deleteAllScans = async (req, res) => {
+  try {
+    const userId = req.userId;
+    await pool.query('DELETE FROM scans WHERE user_id = $1', [userId]);
+    res.status(200).json({ message: 'All scans deleted successfully' });
+  } catch (error) {
+    console.error('Delete all scans error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Check scanner dependencies
 const checkScanDependencies = async (req, res) => {
   try {
@@ -299,5 +311,6 @@ module.exports = {
   getUserScans,
   getScanById,
   deleteScan,
+  deleteAllScans,
   checkScanDependencies,
 };

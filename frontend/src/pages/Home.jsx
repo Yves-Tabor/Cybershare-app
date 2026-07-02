@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
-import { postsAPI, authAPI } from "../utils/api";
+import { postsAPI, authAPI, commentsAPI } from "../utils/api";
 
 
 
@@ -86,8 +86,8 @@ function transformPost(p) {
     cat,
     body,
     likes: p.likes || 0,
-    comments: p.comment_count || 0,
-    liked: false,
+    comments: p.comments || 0,
+    liked: p.liked || false,
     ts: new Date(p.createdAt || p.created_at).getTime(),
   };
 }
@@ -98,138 +98,210 @@ function transformPost(p) {
 
 
 
-function PostCard({ post, onLike }) {
+function PostCard({ post, onLike, currentUser, onReport, onSave, onDelete }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentInput, setCommentInput] = useState("");
+  const menuRef = useRef(null);
+  const commentInputRef = useRef(null);
 
   const tag = TAGS[post.cat] || TAGS["Discussion"];
+  const isCreator = currentUser?.username === post.author;
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    async function fetchComments() {
+      if (showComments) {
+        try {
+          const data = await commentsAPI.getByPostId(post.id);
+          setComments(data.comments || []);
+        } catch (error) {
+          console.error('Failed to fetch comments:', error);
+        }
+      }
+    }
+    fetchComments();
+  }, [showComments, post.id]);
+
+  async function handleAddComment() {
+    if (!commentInput.trim()) return;
+    try {
+      await commentsAPI.create(post.id, commentInput);
+      const data = await commentsAPI.getByPostId(post.id);
+      setComments(data.comments || []);
+      setCommentInput("");
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
+  }
 
   return (
-
     <div className="rounded-2xl p-4 border-b-1 border-t-1 border-[#222] transition-colors" style={{ padding: '10px' }}>
-
       <div className="flex gap-3">
-
         {/* Avatar */}
-
         <div
-
           className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0"
-
           style={{ background: post.avatarColor }}
-
         >
-
           {post.initials}
-
         </div>
-
-
 
         {/* Content */}
-
         <div className="flex-1 min-w-0">
-
           {/* Header */}
-
           <div className="flex items-center gap-3 mb-2">
-
             <div className="flex-1 min-w-0">
-
               <div className="text-[13px] font-semibold text-white leading-tight">{post.author}</div>
-
               <div className="text-[11px] text-[#555] mt-0.5">{timeAgo(post.ts)}</div>
-
             </div>
-
             <span
-
               className="text-[11px] rounded-md font-medium flex-shrink-0 tracking-wide"
-
               style={{ paddingLeft: '10px', paddingRight: '10px', paddingTop: '4px', paddingBottom: '4px', background: tag.bg, color: tag.color }}
-
             >
-
               {post.cat}
-
             </span>
-
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="text-[#555] hover:text-white bg-transparent border-none cursor-pointer transition-colors p-1"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                  <circle cx="12" cy="19" r="1" />
+                </svg>
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-8 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-xl z-10 min-w-[140px]">
+                  {!isCreator && (
+                    <>
+                      <button
+                        onClick={() => { onReport(post.id); setMenuOpen(false); }}
+                        className="w-full text-left text-[12px] text-[#e0e0e0] hover:bg-[#2a2a2a] transition-colors cursor-pointer border-none px-3 py-2"
+                      >
+                        Report post
+                      </button>
+                      <button
+                        onClick={() => { onSave(post.id); setMenuOpen(false); }}
+                        className="w-full text-left text-[12px] text-[#e0e0e0] hover:bg-[#2a2a2a] transition-colors cursor-pointer border-none px-3 py-2"
+                      >
+                        Save post
+                      </button>
+                    </>
+                  )}
+                  {isCreator && (
+                    <button
+                      onClick={() => { onDelete(post.id); setMenuOpen(false); }}
+                      className="w-full text-left text-[12px] text-[#E24B4A] hover:bg-[#2a2a2a] transition-colors cursor-pointer border-none px-3 py-2"
+                    >
+                      Delete post
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-
-
 
           {/* Body */}
-
-          <p className="text-[13.5px] text-[#b0b3b8] leading-[1.65] mb-4">
-
+          <p className="text-[13.5px] text-[#b0b3b8] leading-[1.65] mb-4 text-center">
             {post.body}
-
           </p>
 
-
-
           {/* Actions */}
-
           <div className="flex items-center gap-5">
+            <button
+              onClick={() => onLike(post.id)}
+              className="flex items-center gap-1.5 text-[12px] bg-transparent border-none cursor-pointer transition-colors"
+              style={{ color: post.liked ? "#E24B4A" : "#555" }}
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill={post.liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              <span className="tabular-nums">{post.likes}</span>
+            </button>
 
             <button
-
-              onClick={() => onLike(post.id)}
-
+              onClick={() => setShowComments(!showComments)}
               className="flex items-center gap-1.5 text-[12px] bg-transparent border-none cursor-pointer transition-colors"
-
-              style={{ color: post.liked ? "#E24B4A" : "#555" }}
-
+              style={{ color: showComments ? "#E24B4A" : "#555" }}
             >
-
-              <svg viewBox="0 0 24 24" width="14" height="14" fill={post.liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-
-              </svg>
-
-              <span className="tabular-nums">{post.likes}</span>
-
-            </button>
-
-
-
-            <button className="flex items-center gap-1.5 text-[12px] text-[#555] hover:text-[#888] bg-transparent border-none cursor-pointer transition-colors">
-
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-
               </svg>
-
               <span className="tabular-nums">{post.comments}</span>
-
             </button>
-
-
 
             <button className="flex items-center gap-1.5 text-[12px] text-[#555] hover:text-[#888] bg-transparent border-none cursor-pointer transition-colors ml-auto">
-
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-
                 <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-
               </svg>
-
               Share
-
             </button>
-
           </div>
 
+          {/* Comments Section */}
+          {showComments && (
+            <div className="mt-4 pt-4 border-t border-[#222]">
+              {/* Comment Input */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  ref={commentInputRef}
+                  type="text"
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-[12px] text-white outline-none focus:border-[#444] transition-colors px-3 py-2"
+                />
+                <button
+                  onClick={handleAddComment}
+                  disabled={!commentInput.trim()}
+                  className="bg-[#E24B4A] text-white text-[12px] font-semibold rounded-lg px-4 py-2 border-none cursor-pointer hover:bg-[#c43d3c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Post
+                </button>
+              </div>
+
+              {/* Comments List */}
+              <div className="flex flex-col gap-3">
+                {comments.length === 0 ? (
+                  <p className="text-[12px] text-[#555] text-center py-2">No comments yet</p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-2">
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
+                        style={{ background: AVATAR_COLORS[comment.user.id % AVATAR_COLORS.length] }}
+                      >
+                        {comment.user.username.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-semibold text-white">{comment.user.username}</span>
+                          <span className="text-[10px] text-[#555]">{timeAgo(new Date(comment.createdAt).getTime())}</span>
+                        </div>
+                        <p className="text-[12px] text-[#b0b3b8]">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
-
       </div>
-
     </div>
-
   );
-
 }
 
 
@@ -391,25 +463,24 @@ function Pagination({ page, totalPages, onPageChange }) {
 
 
 function CreatePostModal({ onClose, onSubmit }) {
-  const [title, setTitle] = useState("");
   const [cat, setCat] = useState("Threat Intel");
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
-  const titleRef = useRef(null);
+  const bodyRef = useRef(null);
 
   useEffect(() => {
-    titleRef.current?.focus();
+    bodyRef.current?.focus();
     function onKey(e) { if (e.key === "Escape") onClose(); }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   function handleSubmit() {
-    if (!title.trim() || !body.trim()) {
-      setError("Please fill in both title and content.");
+    if (!body.trim()) {
+      setError("Please fill in the content.");
       return;
     }
-    onSubmit({ title: title.trim(), body: body.trim(), cat });
+    onSubmit({ body: body.trim(), cat });
   }
 
   function handleBackdrop(e) {
@@ -439,20 +510,6 @@ function CreatePostModal({ onClose, onSubmit }) {
         </div>
 
         <div className="space-y-5 max-h-[75vh] overflow-y-auto" style={{ paddingLeft: '24px', paddingRight: '24px', paddingTop: '24px', paddingBottom: '24px' }}>
-          {/* Title */}
-          <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Title</label>
-            <input
-              ref={titleRef}
-              type="text"
-              value={title}
-              onChange={(e) => { setTitle(e.target.value); setError(""); }}
-              placeholder="Give your post a title…"
-              maxLength={120}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'transparent' }}
-            />
-          </div><br />
-
           {/* Category */}
           <div>
             <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">Category</label>
@@ -480,6 +537,7 @@ function CreatePostModal({ onClose, onSubmit }) {
           <div>
             <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Content</label>
             <textarea
+              ref={bodyRef}
               value={body}
               onChange={(e) => { setBody(e.target.value); setError(""); }}
               placeholder="Share something with the community…"
@@ -497,7 +555,6 @@ function CreatePostModal({ onClose, onSubmit }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[13px] font-semibold text-white truncate">{title || "Post title"}</p>
                   <span className="text-[10px] font-mono rounded-md flex-shrink-0" style={{ background: selectedTag.bg, color: selectedTag.color, paddingLeft: '8px', paddingRight: '8px', paddingTop: '2px', paddingBottom: '2px' }}>{cat}</span>
                 </div>
                 <p className="text-[12px] text-silver leading-relaxed line-clamp-2">{body || "Your post content will appear here."}</p>
@@ -733,6 +790,7 @@ function Toast({ message, visible }) {
 export default function Home() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
@@ -752,15 +810,18 @@ export default function Home() {
     }
   }, []);
 
-  // Fetch posts on mount
+  // Fetch current user and posts on mount
   useEffect(() => {
-    async function fetchPosts() {
+    async function fetchData() {
       try {
+        const userResponse = await authAPI.me();
+        setCurrentUser(userResponse.user);
+
         const data = await postsAPI.getAll();
-        const transformedPosts = data.posts.map(transformPost);
+        const transformedPosts = data.posts.map(transformPost).sort((a, b) => b.ts - a.ts);
         setPosts(transformedPosts);
       } catch (error) {
-        console.error('Failed to fetch posts:', error);
+        console.error('Failed to fetch data:', error);
         if (error.message === 'API request failed') {
           navigate('/#p-auth');
         }
@@ -768,7 +829,7 @@ export default function Home() {
         setLoading(false);
       }
     }
-    fetchPosts();
+    fetchData();
   }, [navigate]);
 
 
@@ -791,22 +852,46 @@ export default function Home() {
 
 
 
-  function handleLike(id) {
+  async function handleLike(id) {
+    try {
+      const post = posts.find(p => p.id === id);
+      if (post.liked) {
+        await postsAPI.unlike(id);
+      } else {
+        await postsAPI.like(id);
+      }
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
+            : p
+        )
+      );
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+      showToast("Failed to update like");
+    }
+  }
 
-    setPosts((prev) =>
+  function handleReport(postId) {
+    showToast("Post reported");
+  }
 
-      prev.map((p) =>
+  function handleSave(postId) {
+    showToast("Post saved");
+  }
 
-        p.id === id
-
-          ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
-
-          : p
-
-      )
-
-    );
-
+  async function handleDelete(postId) {
+    try {
+      await postsAPI.delete(postId);
+      const data = await postsAPI.getAll();
+      const transformedPosts = data.posts.map(transformPost).sort((a, b) => b.ts - a.ts);
+      setPosts(transformedPosts);
+      showToast("Post deleted");
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      showToast("Failed to delete post");
+    }
   }
 
 
@@ -823,12 +908,12 @@ export default function Home() {
 
 
 
-  async function handleCreatePost({ title, body, cat }) {
+  async function handleCreatePost({ body, cat }) {
     try {
-      await postsAPI.create(formatPostContent({ title, body, cat }));
+      await postsAPI.create(`[${cat}] ${body}`);
       const data = await postsAPI.getAll();
       const transformedPosts = data.posts.map(transformPost);
-      setPosts(transformedPosts);
+      setPosts(transformedPosts.sort((a, b) => b.ts - a.ts));
       setPage(1);
       setModalOpen(false);
       showToast("Post published!");
@@ -980,8 +1065,8 @@ export default function Home() {
                 <div className="flex-1 h-px bg-[#1a1a1a]" />
               </div>
               <div className="flex flex-col gap-3">
-                {posts.filter(p => p.author === "you").length > 0 ? (
-                  [...posts].filter(p => p.author === "you").sort((a, b) => b.ts - a.ts).map(post => (
+                {currentUser && posts.filter(p => p.author === currentUser.username).length > 0 ? (
+                  [...posts].filter(p => p.author === currentUser.username).sort((a, b) => b.ts - a.ts).map(post => (
                     <MyPostCard key={post.id} post={post} />
                   ))
                 ) : (
@@ -1007,7 +1092,15 @@ export default function Home() {
 
               <div ref={feedRef} className="flex flex-col gap-4">
                 {slice.map((post) => (
-                  <PostCard key={post.id} post={post} onLike={handleLike} />
+                  <PostCard 
+                    key={post.id} 
+                    post={post} 
+                    onLike={handleLike} 
+                    currentUser={currentUser}
+                    onReport={handleReport}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div><br />
 

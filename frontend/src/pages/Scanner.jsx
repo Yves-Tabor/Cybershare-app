@@ -2,8 +2,26 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { scansAPI } from "../utils/api";
+import "./Scanner.css";
 
 const SCAN_POLL_INTERVAL_MS = 2000;
+
+const VIEWS = [
+  { key: "scanner", label: "Scanner" },
+  { key: "history", label: "History" },
+  { key: "result", label: "Results" },
+];
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d}d ago`;
+  if (h > 0) return `${h}h ago`;
+  if (m > 0) return `${m}m ago`;
+  return "just now";
+}
 
 // ─── BG image placeholder ─────────────────────────────────────────────────────
 // Replace SCANNER_BG_IMAGE with your actual image URL or import.
@@ -58,10 +76,10 @@ function IconLoader({ size = 14 }) {
 function DisclosureModal({ onClose }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85" style={{ padding: '24px' }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 scanner-modal-overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[500px] bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl" style={{ padding: '28px' }}>
+      <div className="w-full max-w-[500px] bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl scanner-modal-content">
         <div className="flex items-center gap-2.5 mb-5">
           <IconShield size={15} className="text-[#7F77DD]" />
           <span className="text-[10.5px] font-mono font-bold tracking-[0.18em] uppercase text-[#7F77DD]">
@@ -71,7 +89,7 @@ function DisclosureModal({ onClose }) {
         <p className="text-[13px] text-[#888] leading-relaxed mb-7">{DISCLOSURE_TEXT}</p>
         <button
           onClick={onClose}
-          className="w-full bg-[#141414] border border-[#2a2a2a] rounded-lg text-[12px] font-mono tracking-widest uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white transition-colors" style={{ paddingTop: '10px', paddingBottom: '10px' }}
+          className="w-full bg-[#141414] border border-[#2a2a2a] rounded-lg text-[12px] font-mono tracking-widest uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white transition-colors scanner-modal-button"
         >
           Understood
         </button>
@@ -80,9 +98,132 @@ function DisclosureModal({ onClose }) {
   );
 }
 
+// ─── Scan Result Component ───────────────────────────────────────────────────────
+function ScanResult({ scan }) {
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchResults() {
+      try {
+        const data = await scansAPI.getById(scan.id);
+        setResults(data);
+      } catch (error) {
+        console.error('Failed to fetch scan results:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchResults();
+  }, [scan.id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <IconLoader size={16} className="text-[#555]" />
+        <span className="text-[12px] text-[#555] ml-2">Loading results...</span>
+      </div>
+    );
+  }
+
+  if (!results) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-[12px] font-mono text-[#2a2a2a]">Failed to load results</p>
+      </div>
+    );
+  }
+
+  const severityColors = {
+    critical: '#E24B4A',
+    high: '#E24B4A',
+    medium: '#BA7517',
+    low: '#639922',
+    informational: '#7F77DD',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Scan Summary */}
+      <div className="border border-[#1a1a1a] rounded-xl p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-[13px] font-semibold text-white">{results.scan.targetUrl}</p>
+            <p className="text-[11px] text-[#555] mt-1">{new Date(results.scan.createdAt).toLocaleString()}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[24px] font-bold" style={{ color: results.scan.securityScore >= 70 ? '#639922' : results.scan.securityScore >= 40 ? '#BA7517' : '#E24B4A' }}>
+              {results.scan.securityScore}
+            </p>
+            <p className="text-[10px] text-[#555]">Security Score</p>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
+            <p className="text-[10px] text-[#555] mb-1">Critical</p>
+            <p className="text-[18px] font-semibold" style={{ color: severityColors.critical }}>{results.severityCounts.critical}</p>
+          </div>
+          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
+            <p className="text-[10px] text-[#555] mb-1">High</p>
+            <p className="text-[18px] font-semibold" style={{ color: severityColors.high }}>{results.severityCounts.high}</p>
+          </div>
+          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
+            <p className="text-[10px] text-[#555] mb-1">Medium</p>
+            <p className="text-[18px] font-semibold" style={{ color: severityColors.medium }}>{results.severityCounts.medium}</p>
+          </div>
+          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
+            <p className="text-[10px] text-[#555] mb-1">Low</p>
+            <p className="text-[18px] font-semibold" style={{ color: severityColors.low }}>{results.severityCounts.low}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Findings */}
+      <div>
+        <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase mb-4">
+          Findings ({results.totalFindings})
+        </p>
+        {results.results.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <p className="text-[12px] text-[#555]">No findings detected</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {results.results.map((result) => (
+              <div key={result.id} className="border border-[#1a1a1a] rounded-xl p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-mono rounded-md px-2 py-1" style={{ background: severityColors[result.severity] + '20', color: severityColors[result.severity] }}>
+                        {result.severity.toUpperCase()}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#555]">{result.category}</span>
+                    </div>
+                    <p className="text-[13px] font-semibold text-white mb-2">{result.title}</p>
+                    {result.description && (
+                      <p className="text-[12px] text-[#b0b3b8] mb-3">{result.description}</p>
+                    )}
+                    {result.recommendation && (
+                      <div className="bg-[#1a2e1a] rounded-lg p-3">
+                        <p className="text-[10px] font-semibold text-[#639922] mb-1">Recommendation</p>
+                        <p className="text-[11px] text-[#b0b3b8]">{result.recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Scanner() {
   const navigate = useNavigate();
+  const [view, setView] = useState("scanner");
   const [url, setUrl] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -90,6 +231,9 @@ export default function Scanner() {
   const [statusText, setStatusText] = useState("Waiting for command...");
   const [modalOpen, setModalOpen] = useState(false);
   const [urlError, setUrlError] = useState("");
+  const [scanHistory, setScanHistory] = useState([]);
+  const [selectedScan, setSelectedScan] = useState(null);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
@@ -100,6 +244,27 @@ export default function Scanner() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
+
+  // Fetch scan history when switching to history view
+  useEffect(() => {
+    async function fetchHistory() {
+      if (view === "history" || view === "result") {
+        try {
+          setLoading(true);
+          const data = await scansAPI.getAll();
+          setScanHistory(data.scans || []);
+        } catch (error) {
+          console.error('Failed to fetch scan history:', error);
+          if (error.message === 'API request failed') {
+            navigate('/#p-auth');
+          }
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+    fetchHistory();
+  }, [view, navigate]);
 
   const canScan = url.trim().length > 0 && accepted && !scanning;
 
@@ -149,6 +314,11 @@ export default function Scanner() {
             );
             setScanning(false);
             window.dispatchEvent(new CustomEvent("cybershare:notifications-refresh"));
+
+            if (latestScan.status === "completed") {
+              setSelectedScan(latestScan);
+              setView("result");
+            }
           }
         } catch (error) {
           console.error("Failed to poll scan status:", error);
@@ -191,7 +361,7 @@ export default function Scanner() {
       />
 
       {/* ── Content ── */}
-      <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[900px] mx-auto" style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '48px', paddingBottom: '80px' }}>
+      <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[900px] mx-auto scanner-content">
 
         {/* Header */}
         <header className="flex items-center justify-between mb-14">
@@ -207,19 +377,35 @@ export default function Scanner() {
           </div>
         </header>
 
+        {/* Toggle Bar */}
+        <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 mb-8 scanner-toggle-bar">
+          {VIEWS.map((v) => (
+            <button
+              key={v.key}
+              onClick={() => setView(v.key)}
+              className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none scanner-toggle-button ${
+                view === v.key ? "bg-white text-black" : "bg-transparent text-[#aaa] hover:text-[#fff]"
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+
         {/* Main card */}
         <main className="flex-1">
-          <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
+          {view === "scanner" && (
+            <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
 
-            {/* Card top strip */}
-            <div className="border-b border-[#141414] flex items-center gap-3" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '16px', paddingBottom: '16px' }}>
-              <IconScan size={14} className="text-[#555]" />
-              <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
-                Target Configuration
-              </span>
-            </div>
+              {/* Card top strip */}
+              <div className="border-b border-[#141414] flex items-center gap-3 scanner-card-header">
+                <IconScan size={14} className="text-[#555]" />
+                <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
+                  Target Configuration
+                </span>
+              </div>
 
-            <div className="space-y-7" style={{ paddingLeft: '28px', paddingRight: '28px', paddingTop: '32px', paddingBottom: '32px' }}>
+            <div className="space-y-7 scanner-card-body">
 
               {/* URL input group */}
               <div>
@@ -239,17 +425,16 @@ export default function Scanner() {
                     onKeyDown={(e) => e.key === "Enter" && canScan && startScan()}
                     placeholder="https://example.com"
                     disabled={scanning}
-                    className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-silver outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 ${
+                    className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-silver outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 scanner-input ${
                       urlError
                         ? "border-[#E24B4A]/60 focus:border-[#E24B4A]"
                         : "border-[#1e1e1e] focus:border-[#2e2e2e]"
                     }`}
-                    style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}
                   />
                   {url && !scanning && (
                     <button
                       onClick={() => { setUrl(""); setUrlError(""); inputRef.current?.focus(); }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer" style={{ padding: '4px' }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer scanner-clear-button"
                       aria-label="Clear URL"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -269,8 +454,7 @@ export default function Scanner() {
                   accepted
                     ? "border-[#7F77DD]/30 bg-[#7F77DD]/5"
                     : "border-dashed border-[#222] hover:border-[#2e2e2e]"
-                }`}
-                style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '16px', paddingBottom: '16px' }}
+                } scanner-checkbox`}
                 onClick={() => !scanning && setAccepted((v) => !v)}
               >
                 <div className="flex items-start gap-4">
@@ -292,7 +476,7 @@ export default function Scanner() {
                     I acknowledge I have authorization to conduct a security scan including header analysis, fingerprinting, and disclosure checks.{" "}
                     <button
                       onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}
-                      className="text-[#7F77DD] underline underline-offset-2 bg-transparent border-none cursor-pointer font-mono text-[12px] hover:text-[#9f99e8] transition-colors" style={{ padding: '0' }}
+                      className="text-[#7F77DD] underline underline-offset-2 bg-transparent border-none cursor-pointer font-mono text-[12px] hover:text-[#9f99e8] transition-colors scanner-read-more"
                     >
                       Read more
                     </button>
@@ -304,14 +488,13 @@ export default function Scanner() {
               <button
                 onClick={startScan}
                 disabled={!canScan}
-                className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 ${
+                className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 scanner-scan-button ${
                   scanning
                     ? "bg-transparent border-[#1e1e1e] text-[#444] cursor-not-allowed"
                     : canScan
                     ? "bg-[#0f0f0f] border-[#7F77DD]/50 text-[#7F77DD] hover:bg-[#7F77DD]/8 hover:border-[#7F77DD] cursor-pointer active:scale-[0.99]"
                     : "bg-transparent border-[#181818] text-[#333] cursor-not-allowed"
                 }`}
-                style={{ paddingTop: '16px', paddingBottom: '16px' }}
               >
                 {scanning ? (
                   <>
@@ -335,7 +518,7 @@ export default function Scanner() {
 
               {/* Progress steps — only visible once scan starts */}
               {stepIndex >= 0 && (
-                <div className="border border-[#141414] rounded-xl space-y-2.5" style={{ paddingLeft: '20px', paddingRight: '20px', paddingTop: '5px', paddingBottom: '5px' }}>
+                <div className="border border-[#141414] rounded-xl space-y-2.5 scanner-progress">
                   <p className="text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#333] mb-3.5">
                     Scan Progress
                   </p>
@@ -366,6 +549,98 @@ export default function Scanner() {
 
             </div>
           </div>
+          )}
+
+          {view === "history" && (
+            <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
+              <div className="border-b border-[#141414] flex items-center justify-between scanner-card-header">
+                <div className="flex items-center gap-3">
+                  <IconScan size={14} className="text-[#555]" />
+                  <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
+                    Scan History
+                  </span>
+                </div>
+                {scanHistory.length > 0 && (
+                  <button
+                    onClick={() => setScanHistory([])}
+                    className="text-[10px] font-mono uppercase text-[#E24B4A] hover:text-[#ff6b6b] bg-transparent border-none cursor-pointer transition-colors"
+                  >
+                    Clear History
+                  </button>
+                )}
+              </div>
+
+              <div className="scanner-card-body">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <IconLoader size={16} className="text-[#555]" />
+                    <span className="text-[12px] text-[#555] ml-2">Loading history...</span>
+                  </div>
+                ) : scanHistory.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p className="text-[12px] font-mono text-[#2a2a2a] mt-3">No scan history yet</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {scanHistory.map((scan) => (
+                      <div
+                        key={scan.id}
+                        onClick={() => { setSelectedScan(scan); setView("result"); }}
+                        className="border border-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:border-[#2a2a2a] transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[12px] font-semibold text-white truncate">{scan.targetUrl}</span>
+                          <span className={`text-[10px] font-mono rounded-md px-2 py-1 ${
+                            scan.status === 'completed' ? 'bg-[#1a2e1a] text-[#639922]' :
+                            scan.status === 'failed' ? 'bg-[#2e1a1a] text-[#E24B4A]' :
+                            'bg-[#1a1a2e] text-[#7F77DD]'
+                          }`}>
+                            {scan.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-[11px] text-[#555]">
+                          <span>{new Date(scan.createdAt).toLocaleString()}</span>
+                          {scan.securityScore && (
+                            <span>Score: {scan.securityScore}/100</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {view === "result" && (
+            <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
+              <div className="border-b border-[#141414] flex items-center gap-3 scanner-card-header">
+                <IconScan size={14} className="text-[#555]" />
+                <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
+                  Scan Results
+                </span>
+              </div>
+
+              <div className="scanner-card-body">
+                {!selectedScan ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <p className="text-[12px] font-mono text-[#2a2a2a]">Select a scan from history to view results</p>
+                    <button
+                      onClick={() => setView("history")}
+                      className="mt-4 text-[#7F77DD] text-[12px] font-mono bg-transparent border-none cursor-pointer hover:underline"
+                    >
+                      Go to History
+                    </button>
+                  </div>
+                ) : (
+                  <ScanResult scan={selectedScan} />
+                )}
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Footer status line */}

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllPosts, getPostById, createPost, updatePost, deletePost } = require('../controllers/postController');
+const { getAllPosts, getPostById, createPost, updatePost, deletePost, likePost, unlikePost } = require('../controllers/postController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { createPostSchema, updatePostSchema } = require('../validators/postValidator');
 
@@ -24,5 +24,7 @@ router.get('/:id', getPostById);
 router.post('/', authMiddleware, validate(createPostSchema), createPost);
 router.patch('/:id', authMiddleware, validate(updatePostSchema), updatePost);
 router.delete('/:id', authMiddleware, deletePost);
+router.post('/:id/like', authMiddleware, likePost);
+router.delete('/:id/like', authMiddleware, unlikePost);
 
 module.exports = router;

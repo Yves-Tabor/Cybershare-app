@@ -126,6 +126,18 @@ export const postsAPI = {
       method: 'DELETE',
     });
   },
+
+  like: async (id) => {
+    return apiRequest(`/posts/${id}/like`, {
+      method: 'POST',
+    });
+  },
+
+  unlike: async (id) => {
+    return apiRequest(`/posts/${id}/like`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Comments API
