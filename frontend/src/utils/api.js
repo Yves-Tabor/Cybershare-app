@@ -157,6 +157,12 @@ export const commentsAPI = {
       body: JSON.stringify(body),
     });
   },
+
+  delete: async (postId, commentId) => {
+    return apiRequest(`/posts/${postId}/comments/${commentId}`, {
+      method: "DELETE",
+    });
+  },
 };
 
 // Scans API

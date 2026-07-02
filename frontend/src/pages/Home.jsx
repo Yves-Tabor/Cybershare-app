@@ -91,6 +91,7 @@ function PostCard({
   onSave,
   onDelete,
   onCommentAdd,
+  onCommentRemove,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -101,6 +102,15 @@ function PostCard({
 
   const tag = TAGS[post.cat] || TAGS["Discussion"];
   const isCreator = currentUser?.username === post.author;
+
+  function normalizeComments(items = []) {
+    return [...items]
+      .map((comment) => ({
+        ...comment,
+        ts: new Date(comment.createdAt || comment.created_at).getTime(),
+      }))
+      .sort((a, b) => a.ts - b.ts);
+  }
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -117,7 +127,7 @@ function PostCard({
       if (showComments) {
         try {
           const data = await commentsAPI.getByPostId(post.id);
-          setComments(data.comments || []);
+          setComments(normalizeComments(data.comments || []));
         } catch (error) {
           console.error("Failed to fetch comments:", error);
         }
@@ -131,12 +141,22 @@ function PostCard({
     try {
       await commentsAPI.create(post.id, commentInput);
       const data = await commentsAPI.getByPostId(post.id);
-      setComments(data.comments || []);
+      setComments(normalizeComments(data.comments || []));
       setCommentInput("");
       // Update the comment count in the parent so the button reflects the change
       if (onCommentAdd) onCommentAdd(post.id);
     } catch (error) {
       console.error("Failed to add comment:", error);
+    }
+  }
+
+  async function handleDeleteComment(commentId) {
+    try {
+      await commentsAPI.delete(post.id, commentId);
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      if (onCommentRemove) onCommentRemove(post.id);
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
     }
   }
 
@@ -356,8 +376,16 @@ function PostCard({
                             {comment.user.username}
                           </span>
                           <span className="text-[10px] text-[#555]">
-                            {timeAgo(new Date(comment.createdAt).getTime())}
+                            {timeAgo(comment.ts)}
                           </span>
+                          {currentUser?.id === comment.user.id && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-[10px] text-[#E24B4A] hover:text-[#ff6b6b] bg-transparent border-none cursor-pointer transition-colors ml-auto"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                         <p className="text-[12px] text-[#b0b3b8]">
                           {comment.content}
@@ -1306,6 +1334,14 @@ export default function Home() {
     );
   }
 
+  function handleCommentRemove(postId) {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, comments: Math.max(0, p.comments - 1) } : p,
+      ),
+    );
+  }
+
   function handleReport(postId) {
     showToast("Post reported");
   }
@@ -1621,6 +1657,7 @@ export default function Home() {
                     onSave={handleSave}
                     onDelete={handleDelete}
                     onCommentAdd={handleCommentAdd}
+                    onCommentRemove={handleCommentRemove}
                   />
                 ))}
               </div>
