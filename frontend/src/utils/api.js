@@ -16,19 +16,40 @@ async function apiRequest(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, mergedOptions);
-    const data = await response.json();
+
+    const contentType = response.headers.get("content-type") || "";
+    let data = null;
+
+    if (contentType.includes("application/json")) {
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+    } else {
+      const text = await response.text();
+      data = text ? { message: text } : null;
+    }
 
     if (!response.ok) {
-      const error = new Error(data.error || "API request failed");
-      if (data.details) {
+      const error = new Error(
+        data?.error ||
+          data?.message ||
+          response.statusText ||
+          "API request failed",
+      );
+      error.status = response.status;
+      if (data?.details) {
         error.details = data.details;
       }
       throw error;
     }
 
-    return data;
+    return data ?? {};
   } catch (error) {
-    console.error("API request error:", error);
+    if (error?.status !== 429) {
+      console.error("API request error:", error);
+    }
     throw error;
   }
 }
