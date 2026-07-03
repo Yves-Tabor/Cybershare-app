@@ -1,0 +1,77 @@
+/* Scanner Page Styles */
+
+.scanner-modal-overlay {
+  padding: 24px;
+}
+
+.scanner-modal-content {
+  padding: 28px;
+}
+
+.scanner-modal-button {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.scanner-content {
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-top: 48px;
+  padding-bottom: 80px;
+}
+
+.scanner-toggle-bar {
+  padding: 4px;
+}
+
+.scanner-toggle-button {
+  padding: 10px 16px;
+}
+
+.scanner-card-header {
+  padding-left: 28px;
+  padding-right: 28px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.scanner-card-body {
+  padding-left: 28px;
+  padding-right: 28px;
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+
+.scanner-input {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.scanner-clear-button {
+  padding: 4px;
+}
+
+.scanner-checkbox {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.scanner-read-more {
+  padding: 0;
+}
+
+.scanner-scan-button {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.scanner-progress {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
