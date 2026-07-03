@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { authAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1255,7 +1256,7 @@ export default function Settings() {
       } catch (error) {
         console.error("Failed to fetch user data:", error);
         // Redirect to login if not authenticated
-        navigate("/#p-auth");
+        redirectToWelcomeAuth(navigate);
       } finally {
         setLoading(false);
       }

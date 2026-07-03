@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import worldMap from "../assets/worldMap.png";
 import welcomeOwasp from "../assets/welcomeOwasp.png";
 import { authAPI } from "../utils/api";
+import { consumeAuthNotice } from "../utils/authRedirect";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -629,6 +630,7 @@ function Marquee({ items, dark = false, speed = 28 }) {
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     document.body.classList.add("welcome-page");
@@ -648,6 +650,22 @@ export default function Welcome() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
+  const noticeTimerRef = useRef(null);
+
+  useEffect(() => {
+    const notice = consumeAuthNotice();
+    if (!notice) return;
+
+    setActiveTab("register");
+    setAuthNotice(notice);
+    clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => {
+      setAuthNotice("");
+    }, 3000);
+
+    return () => clearTimeout(noticeTimerRef.current);
+  }, [location.key]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -712,526 +730,558 @@ export default function Welcome() {
   };
 
   return (
-    <div className="scroll-root">
-      <section
-        className="panel"
-        id="p-hero"
-        style={{
-          backgroundImage: `url(${mainBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <Starfield />
-        <div className="glow" />
-        <div className="grid-ov" />
-
-        <nav>
-          <a href="#" className="logo">
-            <div className="logo-mark">{SITE_CONFIG.logoMark}</div>
-            {SITE_CONFIG.name}
-          </a>
-          <ul className="nav-links">
-            {SITE_CONFIG.navLinks.map((l) => (
-              <li key={l}>
-                <a href="#">{l}</a>
-              </li>
-            ))}
-          </ul>
-          <a href="#p-auth">
-            <button className="nav-btn">
-              <div className="nav-btn-dot" />
-              {SITE_CONFIG.ctaText}
-            </button>
-          </a>
-        </nav>
-
-        <div className="hero-body">
-          <div>
-            <div className="hero-pills">
-              <span className="pill anim-right d100">{HERO_CONTENT.pill1}</span>
-              <span className="pill anim-right d200">{HERO_CONTENT.pill2}</span>
-            </div>
-            <h1 className="hero-h1">
-              <span className="anim-up d200" style={{ display: "block" }}>
-                {HERO_CONTENT.headline[0]}
-              </span>
-              <em
-                className="anim-up d350"
-                style={{ display: "block", animationDelay: ".35s" }}
-              >
-                {HERO_CONTENT.headline[1]}
-              </em>
-              <span
-                className="anim-up"
-                style={{ display: "block", animationDelay: ".5s", opacity: 0 }}
-              >
-                {HERO_CONTENT.headline[2]}
-              </span>
-            </h1>
-          </div>
-
-          <div className="hero-right">
-            <p className="hero-sub anim-left d300">{HERO_CONTENT.subtext}</p>
-            <button className="hero-cta anim-scale d500">
-              {HERO_CONTENT.ctaLabel}
-            </button>
-          </div>
+    <>
+      {authNotice && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] whitespace-nowrap z-[300] transition-all duration-200"
+          style={{
+            top: "20px",
+            paddingLeft: "20px",
+            paddingRight: "20px",
+            paddingTop: "10px",
+            paddingBottom: "10px",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+          }}
+        >
+          {authNotice}
         </div>
-      </section>
+      )}
+      <div className="scroll-root">
+        <section
+          className="panel"
+          id="p-hero"
+          style={{
+            backgroundImage: `url(${mainBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <Starfield />
+          <div className="glow" />
+          <div className="grid-ov" />
 
-      <section className="panel bg-black/70" id="p-features">
-        <div className="feat-wrap flex items-center">
-          <div className="sec-head bg-black md:w-[50%]">
-            <h2 className="anim-up">Features &amp; Benefits</h2>
-            <p className="anim-up d200">
-              Everything you need to stay ahead of attackers — built for teams
-              of all sizes.
-            </p>
-          </div>
+          <nav>
+            <a href="#" className="logo">
+              <div className="logo-mark">{SITE_CONFIG.logoMark}</div>
+              {SITE_CONFIG.name}
+            </a>
+            <ul className="nav-links">
+              {SITE_CONFIG.navLinks.map((l) => (
+                <li key={l}>
+                  <a href="#">{l}</a>
+                </li>
+              ))}
+            </ul>
+            <a href="#p-auth">
+              <button className="nav-btn">
+                <div className="nav-btn-dot" />
+                {SITE_CONFIG.ctaText}
+              </button>
+            </a>
+          </nav>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 dash-grid">
-            <div className="fc anim-up d100">
-              <div className="icon-row">
-                {FEATURES[0].icons.map((ic, i) => (
-                  <div className="ic" key={i}>
-                    {ic}
-                  </div>
-                ))}
+          <div className="hero-body">
+            <div>
+              <div className="hero-pills">
+                <span className="pill anim-right d100">
+                  {HERO_CONTENT.pill1}
+                </span>
+                <span className="pill anim-right d200">
+                  {HERO_CONTENT.pill2}
+                </span>
               </div>
-              <h3>{FEATURES[0].title}</h3>
-              <p>{FEATURES[0].body}</p>
-            </div>
-
-            <div
-              className="fc md:fc-owasp anim-up d200"
-              style={{ position: "relative", overflow: "hidden" }}
-            >
-              <h3>{FEATURES[1].title}</h3>
-              <p>{FEATURES[1].body}</p>
-              <div
-                className="big-stat"
-                style={{ marginTop: "auto", position: "relative", zIndex: 1 }}
-              >
-                {FEATURES[1].stat.value}
-                <small>{FEATURES[1].stat.label}</small>
-              </div>
-              <div
-                className="world-map-bg"
-                style={{
-                  backgroundImage: `url(${worldMap})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: "150px",
-                  height: "100px",
-                  borderRadius: "12px",
-                  opacity: 0.3,
-                  zIndex: 0,
-                }}
-              ></div>
-            </div>
-
-            <div
-              className="fc md:fc-owasp anim-up d300"
-              style={{ position: "relative", overflow: "hidden" }}
-            >
-              <h3>{FEATURES[2].title}</h3>
-              <p>{FEATURES[2].body}</p>
-              <div
-                className="big-stat"
-                style={{ marginTop: "auto", position: "relative", zIndex: 1 }}
-              >
-                {FEATURES[2]?.stat?.value}
-                <small>{FEATURES[2]?.stat.label}</small>
-              </div>
-            </div>
-
-            <div className="fc anim-right d400">
-              <span className="bdg crit" style={{ alignSelf: "flex-start" }}>
-                {FEATURES[3].badge}
-              </span>
-              <h3>{FEATURES[3].title}</h3>
-              <p>{FEATURES[3].body}</p>
-              <div className="icon-row" style={{ marginTop: "auto" }}>
-                {FEATURES[3].icons.map((ic, i) => (
-                  <div className="ic" key={i}>
-                    {ic}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel min-h-[100vh] bg-black/40" id="p-how-it-works">
-        <div className="threats-wrap flex items-center">
-          <div className="sec-head w-full md:w-[50%]">
-            <div className="bg-black rounded-lg p-4">
-              <h2 className="anim-up">How it works</h2>
-              <p className="anim-up d200 text-transparent">
-                Get the scan just in 5 steps
-              </p>
-            </div>
-          </div>
-
-          <div className="flex grid-cols-1 gap-4 dash-grid">
-            {HOW_IT_WORKS.map((step, i) => (
-              <div
-                className="dc anim-scale"
-                style={{ animationDelay: `${(i + 1) * 100}ms` }}
-                key={i}
-              >
-                <div
-                  className="dc-lbl"
+              <h1 className="hero-h1">
+                <span className="anim-up d200" style={{ display: "block" }}>
+                  {HERO_CONTENT.headline[0]}
+                </span>
+                <em
+                  className="anim-up d350"
+                  style={{ display: "block", animationDelay: ".35s" }}
+                >
+                  {HERO_CONTENT.headline[1]}
+                </em>
+                <span
+                  className="anim-up"
                   style={{
-                    fontSize: "32px",
-                    fontWeight: 900,
-                    color: "var(--amber)",
+                    display: "block",
+                    animationDelay: ".5s",
+                    opacity: 0,
                   }}
                 >
-                  {step.step}
+                  {HERO_CONTENT.headline[2]}
+                </span>
+              </h1>
+            </div>
+
+            <div className="hero-right">
+              <p className="hero-sub anim-left d300">{HERO_CONTENT.subtext}</p>
+              <button className="hero-cta anim-scale d500">
+                {HERO_CONTENT.ctaLabel}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel bg-black/70" id="p-features">
+          <div className="feat-wrap flex items-center">
+            <div className="sec-head bg-black md:w-[50%]">
+              <h2 className="anim-up">Features &amp; Benefits</h2>
+              <p className="anim-up d200">
+                Everything you need to stay ahead of attackers — built for teams
+                of all sizes.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 dash-grid">
+              <div className="fc anim-up d100">
+                <div className="icon-row">
+                  {FEATURES[0].icons.map((ic, i) => (
+                    <div className="ic" key={i}>
+                      {ic}
+                    </div>
+                  ))}
                 </div>
-                <h3
-                  className="dc-val"
-                  style={{ fontSize: "16px", marginTop: "12px" }}
+                <h3>{FEATURES[0].title}</h3>
+                <p>{FEATURES[0].body}</p>
+              </div>
+
+              <div
+                className="fc md:fc-owasp anim-up d200"
+                style={{ position: "relative", overflow: "hidden" }}
+              >
+                <h3>{FEATURES[1].title}</h3>
+                <p>{FEATURES[1].body}</p>
+                <div
+                  className="big-stat"
+                  style={{ marginTop: "auto", position: "relative", zIndex: 1 }}
                 >
-                  {step.title}
-                </h3>
-                <p
-                  className="dc-sub"
-                  style={{ fontSize: "12px", lineHeight: 1.6 }}
+                  {FEATURES[1].stat.value}
+                  <small>{FEATURES[1].stat.label}</small>
+                </div>
+                <div
+                  className="world-map-bg"
+                  style={{
+                    backgroundImage: `url(${worldMap})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: "150px",
+                    height: "100px",
+                    borderRadius: "12px",
+                    opacity: 0.3,
+                    zIndex: 0,
+                  }}
+                ></div>
+              </div>
+
+              <div
+                className="fc md:fc-owasp anim-up d300"
+                style={{ position: "relative", overflow: "hidden" }}
+              >
+                <h3>{FEATURES[2].title}</h3>
+                <p>{FEATURES[2].body}</p>
+                <div
+                  className="big-stat"
+                  style={{ marginTop: "auto", position: "relative", zIndex: 1 }}
                 >
-                  {step.description}
+                  {FEATURES[2]?.stat?.value}
+                  <small>{FEATURES[2]?.stat.label}</small>
+                </div>
+              </div>
+
+              <div className="fc anim-right d400">
+                <span className="bdg crit" style={{ alignSelf: "flex-start" }}>
+                  {FEATURES[3].badge}
+                </span>
+                <h3>{FEATURES[3].title}</h3>
+                <p>{FEATURES[3].body}</p>
+                <div className="icon-row" style={{ marginTop: "auto" }}>
+                  {FEATURES[3].icons.map((ic, i) => (
+                    <div className="ic" key={i}>
+                      {ic}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="panel min-h-[100vh] bg-black/40"
+          id="p-how-it-works"
+        >
+          <div className="threats-wrap flex items-center">
+            <div className="sec-head w-full md:w-[50%]">
+              <div className="bg-black rounded-lg p-4">
+                <h2 className="anim-up">How it works</h2>
+                <p className="anim-up d200 text-transparent">
+                  Get the scan just in 5 steps
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
 
-      <section className="panel" id="p-auth">
-        <div className="auth-wrap">
-          <div className="auth-float anim-left">
-            <span className="auth-star">★</span> {AUTH_CONTENT.floatBadge}
+            <div className="flex grid-cols-1 gap-4 dash-grid">
+              {HOW_IT_WORKS.map((step, i) => (
+                <div
+                  className="dc anim-scale"
+                  style={{ animationDelay: `${(i + 1) * 100}ms` }}
+                  key={i}
+                >
+                  <div
+                    className="dc-lbl"
+                    style={{
+                      fontSize: "32px",
+                      fontWeight: 900,
+                      color: "var(--amber)",
+                    }}
+                  >
+                    {step.step}
+                  </div>
+                  <h3
+                    className="dc-val"
+                    style={{ fontSize: "16px", marginTop: "12px" }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    className="dc-sub"
+                    style={{ fontSize: "12px", lineHeight: 1.6 }}
+                  >
+                    {step.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="auth-hd anim-up">
-            <h2>
-              {AUTH_CONTENT.headline} <strong>{AUTH_CONTENT.accentWord}</strong>
-            </h2>
-            <p>{AUTH_CONTENT.subtext}</p>
-          </div>
+        <section className="panel" id="p-auth">
+          <div className="auth-wrap">
+            <div className="auth-float anim-left">
+              <span className="auth-star">★</span> {AUTH_CONTENT.floatBadge}
+            </div>
 
-          <div className="auth-tabs anim-scale d200">
-            <button
-              className={`at ${activeTab === "login" ? "active" : ""}`}
-              onClick={() => setActiveTab("login")}
-            >
-              Log In
-            </button>
-            <button
-              className={`at ${activeTab === "register" ? "active" : ""}`}
-              onClick={() => setActiveTab("register")}
-            >
-              Register
-            </button>
-          </div>
+            <div className="auth-hd anim-up">
+              <h2>
+                {AUTH_CONTENT.headline}{" "}
+                <strong>{AUTH_CONTENT.accentWord}</strong>
+              </h2>
+              <p>{AUTH_CONTENT.subtext}</p>
+            </div>
 
-          {activeTab === "login" ? (
-            <div className="auth-card anim-up d300">
-              <form className="af" onSubmit={handleLogin}>
-                {error && (
-                  <div className="text-red-500 text-sm mb-4">{error}</div>
-                )}
-                <input
-                  className="ai"
-                  type="email"
-                  placeholder="Email address"
-                  value={loginForm.email}
-                  onChange={(e) =>
-                    setLoginForm({ ...loginForm, email: e.target.value })
-                  }
-                  required
-                />
-                <div className="relative">
+            <div className="auth-tabs anim-scale d200">
+              <button
+                className={`at ${activeTab === "login" ? "active" : ""}`}
+                onClick={() => setActiveTab("login")}
+              >
+                Log In
+              </button>
+              <button
+                className={`at ${activeTab === "register" ? "active" : ""}`}
+                onClick={() => setActiveTab("register")}
+              >
+                Register
+              </button>
+            </div>
+
+            {activeTab === "login" ? (
+              <div className="auth-card anim-up d300">
+                <form className="af" onSubmit={handleLogin}>
+                  {error && (
+                    <div className="text-red-500 text-sm mb-4">{error}</div>
+                  )}
                   <input
                     className="ai"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={loginForm.password}
+                    type="email"
+                    placeholder="Email address"
+                    value={loginForm.email}
                     onChange={(e) =>
-                      setLoginForm({ ...loginForm, password: e.target.value })
+                      setLoginForm({ ...loginForm, email: e.target.value })
                     }
                     required
                   />
+                  <div className="relative">
+                    <input
+                      className="ai"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={loginForm.password}
+                      onChange={(e) =>
+                        setLoginForm({ ...loginForm, password: e.target.value })
+                      }
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.418 0 8 3.582 8 8 0 .354-.022.704-.064 1.051m-2.288 2.716A7.948 7.948 0 0 1 12 20c-4.418 0-8-3.582-8-8 0-.354.022-.704.064-1.051" />
+                          <line x1="2" x2="22" y1="2" y2="22" />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="a-btn primary"
+                    type="submit"
+                    disabled={loading}
                   >
-                    {showPassword ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.418 0 8 3.582 8 8 0 .354-.022.704-.064 1.051m-2.288 2.716A7.948 7.948 0 0 1 12 20c-4.418 0-8-3.582-8-8 0-.354.022-.704.064-1.051" />
-                        <line x1="2" x2="22" y1="2" y2="22" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
+                    {loading ? "Logging in..." : "Log In →"}
                   </button>
-                </div>
-                <button
-                  className="a-btn primary"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Log In →"}
-                </button>
-                <div className="a-divider">or continue with</div>
-                <button
-                  className="a-btn ghost flex items-center justify-center gap-2"
-                  type="button"
-                  onClick={() =>
-                    (window.location.href =
-                      "http://localhost:5000/api/auth/google")
-                  }
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    className="main-grid-item-icon"
-                    fill="none"
+                  <div className="a-divider">or continue with</div>
+                  <button
+                    className="a-btn ghost flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={() =>
+                      (window.location.href =
+                        "http://localhost:5000/api/auth/google")
+                    }
                   >
-                    <path
-                      d="M24 12.276c0-.816-.067-1.636-.211-2.438H12.242v4.62h6.612a5.549 5.549 0 0 1-2.447 3.647v2.998h3.945C22.669 19.013 24 15.927 24 12.276Z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12.241 24c3.302 0 6.086-1.063 8.115-2.897l-3.945-2.998c-1.097.732-2.514 1.146-4.165 1.146-3.194 0-5.902-2.112-6.873-4.951H1.302v3.09C3.38 21.444 7.612 24 12.242 24Z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.369 14.3a7.053 7.053 0 0 1 0-4.595v-3.09H1.302a11.798 11.798 0 0 0 0 10.776L5.369 14.3Z"
-                      fill="#FBBC04"
-                    />
-                    <path
-                      d="M12.241 4.75a6.727 6.727 0 0 1 4.696 1.798l3.495-3.425A11.898 11.898 0 0 0 12.243 0C7.611 0 3.38 2.558 1.301 6.615l4.067 3.09C6.336 6.862 9.048 4.75 12.24 4.75Z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  <p>&nbsp;Continue with Google</p>
-                </button>
-                <p className="a-link">
-                  No account?{" "}
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab("register");
-                    }}
-                  >
-                    Register free
-                  </a>
-                </p>
-              </form>
-            </div>
-          ) : (
-            <div className="auth-card anim-scale">
-              <form className="af" onSubmit={handleRegister}>
-                {error && (
-                  <div className="text-red-500 text-sm mb-4">{error}</div>
-                )}
-                <input
-                  className="ai"
-                  type="text"
-                  placeholder="Username"
-                  value={registerForm.username}
-                  onChange={(e) =>
-                    setRegisterForm({
-                      ...registerForm,
-                      username: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <input
-                  className="ai"
-                  type="email"
-                  placeholder="Work email"
-                  value={registerForm.email}
-                  onChange={(e) =>
-                    setRegisterForm({ ...registerForm, email: e.target.value })
-                  }
-                  required
-                />
-                <div className="relative">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="main-grid-item-icon"
+                      fill="none"
+                    >
+                      <path
+                        d="M24 12.276c0-.816-.067-1.636-.211-2.438H12.242v4.62h6.612a5.549 5.549 0 0 1-2.447 3.647v2.998h3.945C22.669 19.013 24 15.927 24 12.276Z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12.241 24c3.302 0 6.086-1.063 8.115-2.897l-3.945-2.998c-1.097.732-2.514 1.146-4.165 1.146-3.194 0-5.902-2.112-6.873-4.951H1.302v3.09C3.38 21.444 7.612 24 12.242 24Z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.369 14.3a7.053 7.053 0 0 1 0-4.595v-3.09H1.302a11.798 11.798 0 0 0 0 10.776L5.369 14.3Z"
+                        fill="#FBBC04"
+                      />
+                      <path
+                        d="M12.241 4.75a6.727 6.727 0 0 1 4.696 1.798l3.495-3.425A11.898 11.898 0 0 0 12.243 0C7.611 0 3.38 2.558 1.301 6.615l4.067 3.09C6.336 6.862 9.048 4.75 12.24 4.75Z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                    <p>&nbsp;Continue with Google</p>
+                  </button>
+                  <p className="a-link">
+                    No account?{" "}
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab("register");
+                      }}
+                    >
+                      Register free
+                    </a>
+                  </p>
+                </form>
+              </div>
+            ) : (
+              <div className="auth-card anim-scale">
+                <form className="af" onSubmit={handleRegister}>
+                  {error && (
+                    <div className="text-red-500 text-sm mb-4">{error}</div>
+                  )}
                   <input
                     className="ai"
-                    type={showRegisterPassword ? "text" : "password"}
-                    placeholder="Create a password"
-                    value={registerForm.password}
+                    type="text"
+                    placeholder="Username"
+                    value={registerForm.username}
                     onChange={(e) =>
                       setRegisterForm({
                         ...registerForm,
-                        password: e.target.value,
+                        username: e.target.value,
                       })
                     }
                     required
                   />
+                  <input
+                    className="ai"
+                    type="email"
+                    placeholder="Work email"
+                    value={registerForm.email}
+                    onChange={(e) =>
+                      setRegisterForm({
+                        ...registerForm,
+                        email: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                  <div className="relative">
+                    <input
+                      className="ai"
+                      type={showRegisterPassword ? "text" : "password"}
+                      placeholder="Create a password"
+                      value={registerForm.password}
+                      onChange={(e) =>
+                        setRegisterForm({
+                          ...registerForm,
+                          password: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowRegisterPassword(!showRegisterPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showRegisterPassword ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.418 0 8 3.582 8 8 0 .354-.022.704-.064 1.051m-2.288 2.716A7.948 7.948 0 0 1 12 20c-4.418 0-8-3.582-8-8 0-.354.022-.704.064-1.051" />
+                          <line x1="2" x2="22" y1="2" y2="22" />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   <button
+                    className="a-btn primary"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? "Creating account..." : "Create Account →"}
+                  </button>
+                  <div className="a-divider">or</div>
+                  <button
+                    className="a-btn ghost flex items-center justify-center gap-2"
                     type="button"
                     onClick={() =>
-                      setShowRegisterPassword(!showRegisterPassword)
+                      (window.location.href =
+                        "http://localhost:5000/api/auth/google")
                     }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showRegisterPassword ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.418 0 8 3.582 8 8 0 .354-.022.704-.064 1.051m-2.288 2.716A7.948 7.948 0 0 1 12 20c-4.418 0-8-3.582-8-8 0-.354.022-.704.064-1.051" />
-                        <line x1="2" x2="22" y1="2" y2="22" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="main-grid-item-icon"
+                      fill="none"
+                    >
+                      <path
+                        d="M24 12.276c0-.816-.067-1.636-.211-2.438H12.242v4.62h6.612a5.549 5.549 0 0 1-2.447 3.647v2.998h3.945C22.669 19.013 24 15.927 24 12.276Z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12.241 24c3.302 0 6.086-1.063 8.115-2.897l-3.945-2.998c-1.097.732-2.514 1.146-4.165 1.146-3.194 0-5.902-2.112-6.873-4.951H1.302v3.09C3.38 21.444 7.612 24 12.242 24Z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.369 14.3a7.053 7.053 0 0 1 0-4.595v-3.09H1.302a11.798 11.798 0 0 0 0 10.776L5.369 14.3Z"
+                        fill="#FBBC04"
+                      />
+                      <path
+                        d="M12.241 4.75a6.727 6.727 0 0 1 4.696 1.798l3.495-3.425A11.898 11.898 0 0 0 12.243 0C7.611 0 3.38 2.558 1.301 6.615l4.067 3.09C6.336 6.862 9.048 4.75 12.24 4.75Z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                    <p>&nbsp;Continue with Google</p>
                   </button>
-                </div>
-                <button
-                  className="a-btn primary"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Creating account..." : "Create Account →"}
-                </button>
-                <div className="a-divider">or</div>
-                <button
-                  className="a-btn ghost flex items-center justify-center gap-2"
-                  type="button"
-                  onClick={() =>
-                    (window.location.href =
-                      "http://localhost:5000/api/auth/google")
-                  }
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    className="main-grid-item-icon"
-                    fill="none"
-                  >
-                    <path
-                      d="M24 12.276c0-.816-.067-1.636-.211-2.438H12.242v4.62h6.612a5.549 5.549 0 0 1-2.447 3.647v2.998h3.945C22.669 19.013 24 15.927 24 12.276Z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12.241 24c3.302 0 6.086-1.063 8.115-2.897l-3.945-2.998c-1.097.732-2.514 1.146-4.165 1.146-3.194 0-5.902-2.112-6.873-4.951H1.302v3.09C3.38 21.444 7.612 24 12.242 24Z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.369 14.3a7.053 7.053 0 0 1 0-4.595v-3.09H1.302a11.798 11.798 0 0 0 0 10.776L5.369 14.3Z"
-                      fill="#FBBC04"
-                    />
-                    <path
-                      d="M12.241 4.75a6.727 6.727 0 0 1 4.696 1.798l3.495-3.425A11.898 11.898 0 0 0 12.243 0C7.611 0 3.38 2.558 1.301 6.615l4.067 3.09C6.336 6.862 9.048 4.75 12.24 4.75Z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  <p>&nbsp;Continue with Google</p>
-                </button>
-                <p className="a-link">
-                  Already have an account?{" "}
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab("login");
-                    }}
-                  >
-                    Log in
-                  </a>
-                </p>
-              </form>
-            </div>
-          )}
+                  <p className="a-link">
+                    Already have an account?{" "}
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab("login");
+                      }}
+                    >
+                      Log in
+                    </a>
+                  </p>
+                </form>
+              </div>
+            )}
 
-          <div className="preview-stack anim-up d500">
-            <div className="pv">
-              <div className="pv-line" style={{ width: "65%" }} />
-              <div className="pv-line a" style={{ width: "40%" }} />
-              <div className="pv-line" style={{ width: "80%" }} />
-              <div className="pv-line" style={{ width: "50%" }} />
-              <div className="pv-line a" style={{ width: "30%" }} />
-            </div>
-            <div className="pv">
-              <div className="pv-line a" style={{ width: "75%" }} />
-              <div className="pv-line" style={{ width: "55%" }} />
-              <div className="pv-line" style={{ width: "90%" }} />
-              <div className="pv-line a" style={{ width: "60%" }} />
-              <div className="pv-line" style={{ width: "45%" }} />
-            </div>
-            <div className="pv">
-              <div className="pv-line" style={{ width: "55%" }} />
-              <div className="pv-line" style={{ width: "75%" }} />
-              <div className="pv-line a" style={{ width: "38%" }} />
-              <div className="pv-line" style={{ width: "68%" }} />
-              <div className="pv-line a" style={{ width: "28%" }} />
+            <div className="preview-stack anim-up d500">
+              <div className="pv">
+                <div className="pv-line" style={{ width: "65%" }} />
+                <div className="pv-line a" style={{ width: "40%" }} />
+                <div className="pv-line" style={{ width: "80%" }} />
+                <div className="pv-line" style={{ width: "50%" }} />
+                <div className="pv-line a" style={{ width: "30%" }} />
+              </div>
+              <div className="pv">
+                <div className="pv-line a" style={{ width: "75%" }} />
+                <div className="pv-line" style={{ width: "55%" }} />
+                <div className="pv-line" style={{ width: "90%" }} />
+                <div className="pv-line a" style={{ width: "60%" }} />
+                <div className="pv-line" style={{ width: "45%" }} />
+              </div>
+              <div className="pv">
+                <div className="pv-line" style={{ width: "55%" }} />
+                <div className="pv-line" style={{ width: "75%" }} />
+                <div className="pv-line a" style={{ width: "38%" }} />
+                <div className="pv-line" style={{ width: "68%" }} />
+                <div className="pv-line a" style={{ width: "28%" }} />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
 import { postsAPI, authAPI, commentsAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const TAGS = {
   "Threat Intel": { bg: "#1a1a2e", color: "#7F77DD" },
@@ -1248,8 +1249,8 @@ export default function Home() {
         setPosts(transformedPosts);
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        if (error.message === "API request failed") {
-          navigate("/#p-auth");
+        if (error.status === 401 || error.message === "API request failed") {
+          redirectToWelcomeAuth(navigate);
         }
       } finally {
         setLoading(false);

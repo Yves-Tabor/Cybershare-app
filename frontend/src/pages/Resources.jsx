@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { resourcesAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -469,8 +470,8 @@ export default function Resources() {
       } catch (error) {
         console.error("Failed to fetch resources:", error);
         // Redirect to login if not authenticated
-        if (error.message === "API request failed") {
-          navigate("/#p-auth");
+        if (error.status === 401 || error.message === "API request failed") {
+          redirectToWelcomeAuth(navigate);
         }
       } finally {
         setLoading(false);

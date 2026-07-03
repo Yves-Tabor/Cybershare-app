@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { authAPI, notificationsAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -655,8 +656,8 @@ export default function Navbar() {
       } catch (error) {
         console.error("Failed to fetch user data:", error);
         // If not authenticated, redirect to login
-        if (error.message === "API request failed") {
-          navigate("/#p-auth");
+        if (error.status === 401 || error.message === "API request failed") {
+          redirectToWelcomeAuth(navigate);
         }
       }
     }

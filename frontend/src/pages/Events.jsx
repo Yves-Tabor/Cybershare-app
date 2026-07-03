@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { eventsAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -969,8 +970,8 @@ export default function Events() {
         setEvents(transformedEvents);
       } catch (error) {
         console.error("Failed to fetch events:", error);
-        if (error.message === "API request failed") {
-          navigate("/#p-auth");
+        if (error.status === 401 || error.message === "API request failed") {
+          redirectToWelcomeAuth(navigate);
         }
       } finally {
         setLoading(false);

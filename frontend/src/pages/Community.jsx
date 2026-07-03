@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { postsAPI, groupsAPI, authAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1280,8 +1281,8 @@ export default function Community() {
         setGroups(transformedGroups);
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        if (error.message === "API request failed") {
-          navigate("/#p-auth");
+        if (error.status === 401 || error.message === "API request failed") {
+          redirectToWelcomeAuth(navigate);
         }
       } finally {
         setLoading(false);

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { scansAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 import "./Scanner.css";
 
 const SCAN_POLL_INTERVAL_MS = 2000;
@@ -347,8 +348,8 @@ export default function Scanner() {
           setScanHistory(data.scans || []);
         } catch (error) {
           console.error("Failed to fetch scan history:", error);
-          if (error.message === "API request failed") {
-            navigate("/#p-auth");
+          if (error.status === 401 || error.message === "API request failed") {
+            redirectToWelcomeAuth(navigate);
           }
         } finally {
           setLoading(false);
@@ -432,8 +433,8 @@ export default function Scanner() {
       setScanning(false);
       setStepIndex(-1);
       setStatusText("Scan failed. Please try again.");
-      if (error.message === "API request failed") {
-        navigate("/#p-auth");
+      if (error.status === 401 || error.message === "API request failed") {
+        redirectToWelcomeAuth(navigate);
       }
     }
   }
