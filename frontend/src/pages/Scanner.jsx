@@ -784,7 +784,7 @@ export default function Scanner() {
                           className="border border-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:border-[#2a2a2a] transition-colors"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-[12px] font-semibold text-white truncate">
+                            <span className="app-title-text text-[12px] font-semibold text-white truncate">
                               {scan.targetUrl}
                             </span>
                             <span

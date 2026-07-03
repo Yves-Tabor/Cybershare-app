@@ -172,7 +172,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                 <line x1="20" y1="8" x2="20" y2="14" />
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-[#080808]">
+            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
               Create a group
             </span>
           </div>
@@ -412,7 +412,7 @@ function CreateGroupModal({ onClose, onCreate }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[13px] font-semibold text-white truncate">
+                  <p className="app-title-text text-[13px] font-semibold text-white truncate">
                     {name || "Group name"}
                   </p>
                   <span
@@ -539,7 +539,7 @@ function InviteModal({ group, onClose, onInvite }) {
           }}
         >
           <div>
-            <p className="text-[13px] font-semibold text-[#080808]">
+            <p className="app-title-text text-[13px] font-semibold text-[#080808]">
               Invite to {group.name}
             </p>
             <p className="text-[10.5px] text-silver font-mono mt-0.5">

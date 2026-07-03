@@ -439,7 +439,7 @@ function MyPostCard({ post }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="text-[14px] font-semibold text-white">
+            <span className="app-title-text text-[14px] font-semibold text-white">
               {title}
             </span>
             <span
@@ -654,7 +654,7 @@ function CreatePostModal({ onClose, onSubmit }) {
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-[#080808]">
+            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
               Create a post
             </span>
           </div>
@@ -948,7 +948,7 @@ function CompleteProfileModal({ onClose, onSubmit }) {
                 <circle cx="12" cy="7" r="4" />
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-[#080808]">
+            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
               Complete your profile
             </span>
           </div>
@@ -1604,7 +1604,7 @@ export default function Home() {
           {view === "my" && (
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
+                <p className="app-title-text text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
                   My Posts
                 </p>
                 <div className="flex-1 h-px bg-[#1a1a1a]" />
