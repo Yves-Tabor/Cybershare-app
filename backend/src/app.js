@@ -17,6 +17,9 @@ const groupRoutes = require("./routes/groupRoutes");
 
 const app = express();
 
+// Trust the reverse proxy (Render load balancer) so secure cookies can be set
+app.set("trust proxy", 1);
+
 // Security middleware
 app.use(helmet());
 
