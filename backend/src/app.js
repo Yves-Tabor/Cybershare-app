@@ -21,9 +21,13 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
+const clientOrigin = process.env.CLIENT_URL 
+  ? process.env.CLIENT_URL.replace(/\/$/, "") 
+  : "http://localhost:5173";
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: clientOrigin,
     credentials: true,
   }),
 );
