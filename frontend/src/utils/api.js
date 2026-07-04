@@ -1,18 +1,41 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+// Token helpers
+export function saveToken(token) {
+  localStorage.setItem("cybershare_token", token);
+}
+export function getToken() {
+  return localStorage.getItem("cybershare_token");
+}
+export function clearToken() {
+  localStorage.removeItem("cybershare_token");
+}
+
 // Helper function to make API requests
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  // Attach Bearer token if available (used after Google OAuth redirect)
+  const token = getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const defaultOptions = {
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     credentials: "include",
   };
 
-  const mergedOptions = { ...defaultOptions, ...options };
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: { ...headers, ...(options.headers || {}) },
+  };
 
   try {
     const response = await fetch(url, mergedOptions);

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
-import { postsAPI, authAPI, commentsAPI } from "../utils/api";
+import { postsAPI, authAPI, commentsAPI, saveToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const TAGS = {
@@ -1225,11 +1225,17 @@ export default function Home() {
   const toastTimer = useRef(null);
   const pendingLikeIdsRef = useRef(new Set());
 
-  // Check for profile completion flag on mount
+  // Check for OAuth token and profile completion flag on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const oauthToken = urlParams.get("token");
+    if (oauthToken) {
+      saveToken(oauthToken);
+    }
     if (urlParams.get("complete_profile") === "true") {
       setCompleteProfileOpen(true);
+    }
+    if (oauthToken || urlParams.get("complete_profile")) {
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }

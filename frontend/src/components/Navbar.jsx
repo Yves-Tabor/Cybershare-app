@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { authAPI, notificationsAPI } from "../utils/api";
+import { authAPI, notificationsAPI, clearToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const SITE_CONFIG = {
@@ -811,6 +811,7 @@ export default function Navbar() {
   async function handleSignOut() {
     try {
       await authAPI.logout();
+      clearToken();
       setUser(null);
       setUserOpen(false);
       navigate("/#p-auth");

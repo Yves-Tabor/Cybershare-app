@@ -182,24 +182,18 @@ const googleCallback = async (req, res) => {
     // Generate token
     const token = generateToken(user.id);
 
-    // Set cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    const clientUrl = process.env.CLIENT_URL.replace(/\/$/, "");
 
     // Check if user needs to complete profile (has default username from email)
     const needsProfileCompletion =
       userData.username.includes("@") || !userData.password_hash;
 
-    // Redirect to frontend with profile completion flag
-    const clientUrl = process.env.CLIENT_URL.replace(/\/$/, "");
+    // Pass token as URL param so the frontend can store it reliably
+    // (cross-site cookie delivery during redirects is unreliable in production)
     if (needsProfileCompletion) {
-      res.redirect(`${clientUrl}/main?complete_profile=true`);
+      res.redirect(`${clientUrl}/main?token=${token}&complete_profile=true`);
     } else {
-      res.redirect(`${clientUrl}/main`);
+      res.redirect(`${clientUrl}/main?token=${token}`);
     }
   } catch (error) {
     console.error("Google callback error:", error);
