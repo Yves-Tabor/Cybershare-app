@@ -1,0 +1,11 @@
+{
+  "name": "cybershare-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev:frontend": "pnpm --filter cybershare dev",
+    "dev:backend": "pnpm --filter cybershare-backend dev",
+    "build:frontend": "pnpm --filter cybershare build",
+    "start:backend": "pnpm --filter cybershare-backend start"
+  }
+}

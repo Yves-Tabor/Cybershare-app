@@ -59,7 +59,7 @@ psql -U postgres -d cybershare -f sql/schema.sql
 ### 3. Install Dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 4. Configure Environment
@@ -74,12 +74,12 @@ The `.env` file is already configured with:
 
 Development mode (with auto-reload):
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Production mode:
 ```bash
-npm start
+pnpm start
 ```
 
 ## API Endpoints
