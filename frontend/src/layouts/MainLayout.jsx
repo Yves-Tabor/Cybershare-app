@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { authAPI } from "../utils/api";
+import { authAPI, saveToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const MainLayout = () => {
@@ -11,6 +11,18 @@ const MainLayout = () => {
 
   useEffect(() => {
     let active = true;
+
+    // Capture OAuth token from URL before verifying auth
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthToken = urlParams.get("token");
+    if (oauthToken) {
+      saveToken(oauthToken);
+    }
+    
+    // Clean URL if token is present
+    if (oauthToken) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     async function verifyAuth() {
       try {
