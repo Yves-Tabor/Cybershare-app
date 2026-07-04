@@ -195,14 +195,16 @@ const googleCallback = async (req, res) => {
       userData.username.includes("@") || !userData.password_hash;
 
     // Redirect to frontend with profile completion flag
+    const clientUrl = process.env.CLIENT_URL.replace(/\/$/, "");
     if (needsProfileCompletion) {
-      res.redirect(`${process.env.CLIENT_URL}/main?complete_profile=true`);
+      res.redirect(`${clientUrl}/main?complete_profile=true`);
     } else {
-      res.redirect(`${process.env.CLIENT_URL}/main`);
+      res.redirect(`${clientUrl}/main`);
     }
   } catch (error) {
     console.error("Google callback error:", error);
-    res.redirect(`${process.env.CLIENT_URL}/#p-auth?error=google_auth_failed`);
+    const clientUrl = process.env.CLIENT_URL.replace(/\/$/, "");
+    res.redirect(`${clientUrl}/#p-auth?error=google_auth_failed`);
   }
 };
 
