@@ -1225,8 +1225,9 @@ export default function Home() {
   const toastTimer = useRef(null);
   const pendingLikeIdsRef = useRef(new Set());
 
-  // Check for OAuth token and profile completion flag on mount
+  // On mount: capture OAuth token from URL (if any), then fetch data
   useEffect(() => {
+    // 1. Capture token from URL before any API calls
     const urlParams = new URLSearchParams(window.location.search);
     const oauthToken = urlParams.get("token");
     if (oauthToken) {
@@ -1236,13 +1237,10 @@ export default function Home() {
       setCompleteProfileOpen(true);
     }
     if (oauthToken || urlParams.get("complete_profile")) {
-      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
 
-  // Fetch current user and posts on mount
-  useEffect(() => {
+    // 2. Now fetch data — token is guaranteed to be in localStorage
     async function fetchData() {
       try {
         const userResponse = await authAPI.me();
