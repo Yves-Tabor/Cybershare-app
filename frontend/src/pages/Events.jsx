@@ -1,12 +1,22 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { eventsAPI } from "../utils/api";
+import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ME = { handle: "you", initials: "YO", color: "#534AB7" };
 
 const AVATAR_COLORS = [
-  "#534AB7", "#0F6E56", "#993C1D", "#185FA5", "#854F0B", "#993556", "#2a6b6b", "#6b2a55",
+  "#534AB7",
+  "#0F6E56",
+  "#993C1D",
+  "#185FA5",
+  "#854F0B",
+  "#993556",
+  "#2a6b6b",
+  "#6b2a55",
 ];
 
 const CATEGORIES = [
@@ -21,20 +31,50 @@ const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-function pad(n) { return String(n).padStart(2, "0"); }
-function toISO(y, m, d) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
-function todayISO() { const d = new Date(); return toISO(d.getFullYear(), d.getMonth(), d.getDate()); }
+function pad(n) {
+  return String(n).padStart(2, "0");
+}
+function toISO(y, m, d) {
+  return `${y}-${pad(m + 1)}-${pad(d)}`;
+}
+function todayISO() {
+  const d = new Date();
+  return toISO(d.getFullYear(), d.getMonth(), d.getDate());
+}
 function addDays(iso, n) {
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + n);
   return toISO(d.getFullYear(), d.getMonth(), d.getDate());
 }
-function parseISO(iso) { return new Date(iso + "T00:00:00"); }
-function formatShort(iso) { return parseISO(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }); }
-function formatLong(iso) { return parseISO(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }); }
-function shortMonth(iso) { return parseISO(iso).toLocaleDateString("en-US", { month: "short" }); }
-function dayNum(iso) { return parseISO(iso).getDate(); }
-function monthLabel(year, month) { return new Date(year, month, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" }); }
+function parseISO(iso) {
+  return new Date(iso + "T00:00:00");
+}
+function formatShort(iso) {
+  return parseISO(iso).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+function formatLong(iso) {
+  return parseISO(iso).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+function shortMonth(iso) {
+  return parseISO(iso).toLocaleDateString("en-US", { month: "short" });
+}
+function dayNum(iso) {
+  return parseISO(iso).getDate();
+}
+function monthLabel(year, month) {
+  return new Date(year, month, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
 function formatTime(t) {
   if (!t) return "";
   const [h, m] = t.split(":").map(Number);
@@ -44,74 +84,6 @@ function formatTime(t) {
 }
 
 const TODAY = todayISO();
-
-// ─── Seed data ────────────────────────────────────────────────────────────────
-
-const INITIAL_EVENTS = [
-  {
-    id: 1,
-    title: "Sigma Rule Writing Workshop",
-    description: "Hands-on session building detection rules from real adversary simulation logs. Bring your own EDR export or use our sample dataset.",
-    category: "Workshop", categoryColor: "#7F77DD", categoryBg: "#1a1a2e",
-    date: addDays(TODAY, 2), time: "18:00",
-    isOnline: true, location: "Discord — #workshop-stage",
-    host: "patchwatcher", attendees: 64, addedToCalendar: true,
-  },
-  {
-    id: 2,
-    title: "Quarterly CTF Finals",
-    description: "Top 10 teams from the qualifier round face off live. Pwn, crypto, and web categories with a $4,000 prize pool.",
-    category: "CTF", categoryColor: "#639922", categoryBg: "#1a2e1a",
-    date: addDays(TODAY, 5), time: "10:00",
-    isOnline: true, location: "ctftime.org/event/4471",
-    host: "defcon_jay", attendees: 211, addedToCalendar: true,
-  },
-  {
-    id: 3,
-    title: "Red Team Tactics: DCOM Lateral Movement",
-    description: "Deep dive into the DCOM-based lateral movement technique posted in Red Team Operators last week, with a live demo and detection gaps.",
-    category: "Webinar", categoryColor: "#185FA5", categoryBg: "#16222e",
-    date: addDays(TODAY, 5), time: "15:30",
-    isOnline: true, location: "Zoom",
-    host: "cypher_x", attendees: 89, addedToCalendar: false,
-  },
-  {
-    id: 4,
-    title: "Bug Bounty Live Triage",
-    description: "Watch a P1 SSRF chain get triaged end to end, from initial recon to disclosure writeup. Q&A after.",
-    category: "Meetup", categoryColor: "#BA7517", categoryBg: "#2e2a1a",
-    date: addDays(TODAY, 9), time: "17:00",
-    isOnline: true, location: "Twitch — root_kai",
-    host: "root_kai", attendees: 47, addedToCalendar: false,
-  },
-  {
-    id: 5,
-    title: "Blue Team Threat Hunting Meetup",
-    description: "In-person meetup for SOC analysts. Bring a hunt hypothesis, leave with three. Pizza provided.",
-    category: "Meetup", categoryColor: "#BA7517", categoryBg: "#2e2a1a",
-    date: addDays(TODAY, 12), time: "19:00",
-    isOnline: false, location: "414 Industry Ave, Austin TX",
-    host: "alex_hunt", attendees: 22, addedToCalendar: true,
-  },
-  {
-    id: 6,
-    title: "Malware Lab: Unpacking a Custom XOR-Chain",
-    description: "Walkthrough of the 4-layer obfuscation scheme from last week's infostealer post, in a debugger, line by line.",
-    category: "Workshop", categoryColor: "#7F77DD", categoryBg: "#1a1a2e",
-    date: addDays(TODAY, -3), time: "16:00",
-    isOnline: true, location: "Discord — #workshop-stage",
-    host: "nullbyte", attendees: 73, addedToCalendar: false,
-  },
-  {
-    id: 7,
-    title: "DEF CON Prep Night",
-    description: "Coordinating talks, villages, and meetup spots for DEF CON. Open floor for anyone presenting this year.",
-    category: "Conference", categoryColor: "#1D9E75", categoryBg: "#1a2a2e",
-    date: addDays(TODAY, 21), time: "20:00",
-    isOnline: true, location: "Discord — #defcon-2026",
-    host: "0xmira", attendees: 134, addedToCalendar: true,
-  },
-];
 
 // ─── Small shared bits ────────────────────────────────────────────────────────
 
@@ -128,7 +100,8 @@ function Avatar({ initials, color, className = "w-7 h-7 text-[10px]" }) {
 
 function avatarColor(str) {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < str.length; i++)
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
@@ -158,27 +131,52 @@ function CreateEventModal({ onClose, onCreate }) {
 
   useEffect(() => {
     titleRef.current?.focus();
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   function handleCreate() {
-    if (!title.trim()) { setFormError("Event title is required."); return; }
-    if (!date) { setFormError("Pick a date."); return; }
-    if (!time) { setFormError("Pick a time."); return; }
-    if (!location.trim()) { setFormError(isOnline ? "Add a link or platform." : "Add a venue or address."); return; }
+    if (!title.trim()) {
+      setFormError("Event title is required.");
+      return;
+    }
+    if (!date) {
+      setFormError("Pick a date.");
+      return;
+    }
+    if (!time) {
+      setFormError("Pick a time.");
+      return;
+    }
+    if (!location.trim()) {
+      setFormError(
+        isOnline ? "Add a link or platform." : "Add a venue or address.",
+      );
+      return;
+    }
     const cat = CATEGORIES.find((c) => c.label === category);
     onCreate({
       title: title.trim(),
       description: description.trim() || "No description provided.",
-      category, categoryColor: cat.color, categoryBg: cat.bg,
-      isOnline, location: location.trim(), date, time,
+      category,
+      categoryColor: cat.color,
+      categoryBg: cat.bg,
+      isOnline,
+      location: location.trim(),
+      date,
+      time,
     });
   }
 
   const selectedCat = CATEGORIES.find((c) => c.label === category);
-  const previewMonth = date ? new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short" }) : "—";
+  const previewMonth = date
+    ? new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+        month: "short",
+      })
+    : "—";
   const previewDay = date ? new Date(date + "T00:00:00").getDate() : "–";
 
   return (
@@ -188,27 +186,53 @@ function CreateEventModal({ onClose, onCreate }) {
       style={{ padding: "16px" }}
     >
       <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
-
         {/* Modal header */}
         <div
           className="flex items-center justify-between border-b border-white"
           style={{ padding: "16px 24px" }}
         >
-          <div className="flex items-center bg-white gap-2.5 rounded-md" style={{ padding: "10px" }}>
+          <div
+            className="flex items-center bg-white gap-2.5 rounded-md"
+            style={{ padding: "10px" }}
+          >
             <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#7F77DD"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-[#080808]">Post an event</span>
+            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
+              Post an event
+            </span>
           </div>
           <button
             onClick={onClose}
             className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
             style={{ padding: "4px" }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -219,21 +243,29 @@ function CreateEventModal({ onClose, onCreate }) {
           style={{ padding: "24px" }}
         >
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Event Title</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Event Title
+            </label>
             <input
               ref={titleRef}
               type="text"
               value={title}
-              onChange={(e) => { setTitle(e.target.value); setFormError(""); }}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setFormError("");
+              }}
               placeholder="e.g. Sigma Rule Writing Workshop"
               maxLength={80}
               className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
-          </div><br />
+          </div>
+          <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Description</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -242,48 +274,72 @@ function CreateEventModal({ onClose, onCreate }) {
               className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
-          </div><br />
+          </div>
+          <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">Category</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">
+              Category
+            </label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.label}
                   onClick={() => setCategory(cat.label)}
-                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${category === cat.label
-                    ? "border-current font-semibold"
-                    : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
-                    }`}
+                  className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
+                    category === cat.label
+                      ? "border-current font-semibold"
+                      : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
+                  }`}
                   style={{
-                    paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "6px",
-                    ...(category === cat.label ? { color: cat.color, background: cat.bg, borderColor: cat.color + "55" } : {})
+                    paddingLeft: "12px",
+                    paddingRight: "12px",
+                    paddingTop: "6px",
+                    paddingBottom: "6px",
+                    ...(category === cat.label
+                      ? {
+                          color: cat.color,
+                          background: cat.bg,
+                          borderColor: cat.color + "55",
+                        }
+                      : {}),
                   }}
                 >
                   {cat.label}
                 </button>
               ))}
             </div>
-          </div><br />
+          </div>
+          <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">Format</label>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">
+              Format
+            </label>
             <div className="flex gap-2">
-              {[{ k: true, l: "Online" }, { k: false, l: "In-person" }].map((opt) => (
+              {[
+                { k: true, l: "Online" },
+                { k: false, l: "In-person" },
+              ].map((opt) => (
                 <button
                   key={opt.l}
-                  onClick={() => { setIsOnline(opt.k); setFormError(""); }}
-                  className={`flex-1 rounded-lg text-[11.5px] font-mono border transition-all cursor-pointer ${isOnline === opt.k
-                    ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/10"
-                    : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
-                    }`}
+                  onClick={() => {
+                    setIsOnline(opt.k);
+                    setFormError("");
+                  }}
+                  className={`flex-1 rounded-lg text-[11.5px] font-mono border transition-all cursor-pointer ${
+                    isOnline === opt.k
+                      ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/10"
+                      : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
+                  }`}
                   style={{ padding: "8px 12px" }}
                 >
                   {opt.l}
                 </button>
               ))}
             </div>
-          </div><br />
+          </div>
+          <br />
 
           <div>
             <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
@@ -292,31 +348,49 @@ function CreateEventModal({ onClose, onCreate }) {
             <input
               type="text"
               value={location}
-              onChange={(e) => { setLocation(e.target.value); setFormError(""); }}
-              placeholder={isOnline ? "Discord, Zoom, Twitch…" : "Street address or venue name"}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setFormError("");
+              }}
+              placeholder={
+                isOnline
+                  ? "Discord, Zoom, Twitch…"
+                  : "Street address or venue name"
+              }
               className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
-          </div><br />
+          </div>
+          <br />
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Date</label>
+              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+                Date
+              </label>
               <input
                 type="date"
                 value={date}
                 min={todayISO()}
-                onChange={(e) => { setDate(e.target.value); setFormError(""); }}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setFormError("");
+                }}
                 className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
                 style={{ padding: "12px 16px" }}
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">Time</label>
+              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+                Time
+              </label>
               <input
                 type="time"
                 value={time}
-                onChange={(e) => { setTime(e.target.value); setFormError(""); }}
+                onChange={(e) => {
+                  setTime(e.target.value);
+                  setFormError("");
+                }}
                 className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
                 style={{ padding: "12px 16px" }}
               />
@@ -328,31 +402,53 @@ function CreateEventModal({ onClose, onCreate }) {
             className="border border-gray rounded-xl bg-gray"
             style={{ padding: "16px" }}
           >
-            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">Preview</p>
+            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">
+              Preview
+            </p>
             <div className="flex items-start gap-3">
               <div
                 className="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border"
-                style={{ background: selectedCat.bg, borderColor: selectedCat.color + "22" }}
+                style={{
+                  background: selectedCat.bg,
+                  borderColor: selectedCat.color + "22",
+                }}
               >
-                <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: selectedCat.color }}>{previewMonth}</span>
-                <span className="text-[14px] font-bold text-white leading-none mt-0.5">{previewDay}</span>
+                <span
+                  className="text-[8px] font-mono uppercase tracking-wider"
+                  style={{ color: selectedCat.color }}
+                >
+                  {previewMonth}
+                </span>
+                <span className="text-[14px] font-bold text-white leading-none mt-0.5">
+                  {previewDay}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[13px] font-semibold text-white truncate">{title || "Event title"}</p>
+                  <p className="app-title-text text-[13px] font-semibold text-white truncate">
+                    {title || "Event title"}
+                  </p>
                   <span
                     className="text-[10px] font-mono rounded-md flex-shrink-0"
-                    style={{ background: selectedCat.bg, color: selectedCat.color, padding: "2px 8px" }}
+                    style={{
+                      background: selectedCat.bg,
+                      color: selectedCat.color,
+                      padding: "2px 8px",
+                    }}
                   >
                     {category}
                   </span>
                 </div>
-                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">{description || "Your description will appear here."}</p>
+                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">
+                  {description || "Your description will appear here."}
+                </p>
               </div>
             </div>
           </div>
 
-          {formError && <p className="text-[11px] text-white font-mono">{formError}</p>}
+          {formError && (
+            <p className="text-[11px] text-white font-mono">{formError}</p>
+          )}
         </div>
 
         {/* Modal footer */}
@@ -372,7 +468,16 @@ function CreateEventModal({ onClose, onCreate }) {
             className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
             style={{ padding: "8px 16px" }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
             Post event
@@ -394,64 +499,134 @@ function EventCard({ event, onToggleCalendar }) {
       <div className="flex items-start gap-4">
         <div
           className="flex flex-col items-center justify-center w-14 h-14 rounded-xl flex-shrink-0 border"
-          style={{ background: event.categoryBg, borderColor: event.categoryColor + "22" }}
+          style={{
+            background: event.categoryBg,
+            borderColor: event.categoryColor + "22",
+          }}
         >
-          <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: event.categoryColor }}>{shortMonth(event.date)}</span>
-          <span className="text-[16px] font-bold text-white leading-none mt-0.5">{dayNum(event.date)}</span>
+          <span
+            className="text-[9px] font-mono uppercase tracking-wider"
+            style={{ color: event.categoryColor }}
+          >
+            {shortMonth(event.date)}
+          </span>
+          <span className="text-[16px] font-bold text-white leading-none mt-0.5">
+            {dayNum(event.date)}
+          </span>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="text-[14px] font-semibold text-white">{event.title}</span>
+            <span className="app-title-text text-[14px] font-semibold text-white">
+              {event.title}
+            </span>
             <span
               className="text-[10px] font-mono rounded-md"
-              style={{ background: event.categoryBg, color: event.categoryColor, padding: "2px 8px" }}
+              style={{
+                background: event.categoryBg,
+                color: event.categoryColor,
+                padding: "2px 8px",
+              }}
             >
               {event.category}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-[#555] font-mono mb-2.5 flex-wrap">
-            <span>{formatShort(event.date)} · {formatTime(event.time)}</span>
+            <span>
+              {formatShort(event.date)} · {formatTime(event.time)}
+            </span>
             <span className="text-[#222]">·</span>
             <span className="flex items-center gap-1.5">
               {event.isOnline ? (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               ) : (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
               )}
               {event.location}
             </span>
           </div>
 
-          <p className="text-[12.5px] text-[#555] leading-relaxed mb-3.5 line-clamp-2">{event.description}</p>
+          <p className="text-[12.5px] text-[#555] leading-relaxed mb-3.5 line-clamp-2">
+            {event.description}
+          </p>
 
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <Avatar initials={event.host.slice(0, 2).toUpperCase()} color={avatarColor(event.host)} className="w-5 h-5 text-[8px]" />
-              <span className="text-[11px] text-[#444] font-mono truncate">Hosted by {event.host} · {event.attendees} going</span>
+              <Avatar
+                initials={event.host.slice(0, 2).toUpperCase()}
+                color={avatarColor(event.host)}
+                className="w-5 h-5 text-[8px]"
+              />
+              <span className="text-[11px] text-[#444] font-mono truncate">
+                Hosted by {event.host} · {event.attendees} going
+              </span>
             </div>
             <button
               onClick={() => onToggleCalendar(event.id)}
-              className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${event.addedToCalendar
-                ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
-                : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
-                }`}
+              className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
+                event.addedToCalendar
+                  ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
+                  : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+              }`}
               style={{ padding: "6px 12px" }}
             >
               {event.addedToCalendar ? (
                 <>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   Added
                 </>
               ) : (
                 <>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
                   Add to calendar
                 </>
               )}
@@ -471,10 +646,17 @@ function MiniEventRow({ event, onToggleCalendar }) {
       className="flex items-center gap-3 bg-[#0a0a0a] border border-[#161616] rounded-xl"
       style={{ padding: "12px 14px" }}
     >
-      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: event.categoryColor }} />
+      <div
+        className="w-2 h-2 rounded-full flex-shrink-0"
+        style={{ background: event.categoryColor }}
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-[12.5px] font-semibold text-white truncate">{event.title}</p>
-        <p className="text-[10.5px] text-[#444] font-mono mt-0.5 truncate">{formatTime(event.time)} · {event.location}</p>
+        <p className="app-title-text text-[12.5px] font-semibold text-white truncate">
+          {event.title}
+        </p>
+        <p className="text-[10.5px] text-[#444] font-mono mt-0.5 truncate">
+          {formatTime(event.time)} · {event.location}
+        </p>
       </div>
       <button
         onClick={() => onToggleCalendar(event.id)}
@@ -497,7 +679,11 @@ function buildGrid(year, month) {
     const dayOffset = i - firstWeekday + 1;
     const cellDate = new Date(year, month, dayOffset);
     cells.push({
-      iso: toISO(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate()),
+      iso: toISO(
+        cellDate.getFullYear(),
+        cellDate.getMonth(),
+        cellDate.getDate(),
+      ),
       day: cellDate.getDate(),
       inMonth: cellDate.getMonth() === month,
       year: cellDate.getFullYear(),
@@ -515,18 +701,26 @@ function getDots(dayEvents) {
 
 function CalendarView({ events, onToggleCalendar }) {
   const now = new Date();
-  const [cursor, setCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const [cursor, setCursor] = useState({
+    year: now.getFullYear(),
+    month: now.getMonth(),
+  });
   const [selectedDay, setSelectedDay] = useState(null);
 
   const addedEvents = events.filter((e) => e.addedToCalendar);
   const cells = buildGrid(cursor.year, cursor.month);
-  const isCurrentMonth = cursor.year === now.getFullYear() && cursor.month === now.getMonth();
+  const isCurrentMonth =
+    cursor.year === now.getFullYear() && cursor.month === now.getMonth();
 
   function prevMonth() {
-    setCursor(({ year, month }) => (month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 }));
+    setCursor(({ year, month }) =>
+      month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 },
+    );
   }
   function nextMonth() {
-    setCursor(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));
+    setCursor(({ year, month }) =>
+      month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 },
+    );
   }
   function goToday() {
     setCursor({ year: now.getFullYear(), month: now.getMonth() });
@@ -536,10 +730,15 @@ function CalendarView({ events, onToggleCalendar }) {
     if (!cell.inMonth) setCursor({ year: cell.year, month: cell.monthIdx });
   }
 
-  const dayEventsForSelected = selectedDay ? addedEvents.filter((e) => e.date === selectedDay) : [];
+  const dayEventsForSelected = selectedDay
+    ? addedEvents.filter((e) => e.date === selectedDay)
+    : [];
 
   return (
-    <div className="flex flex-col md:flex-row gap-7" style={{ paddingTop: "30px" }}>
+    <div
+      className="flex flex-col md:flex-row gap-7"
+      style={{ paddingTop: "30px" }}
+    >
       <div
         className="border-2 border-[#1c1c1c] rounded-2xl flex-shrink-0 w-full md:w-[380px]"
         style={{ padding: "20px" }}
@@ -550,10 +749,23 @@ function CalendarView({ events, onToggleCalendar }) {
             className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer hover:bg-[#141414] rounded-lg"
             style={{ padding: "6px" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
           </button>
           <div className="flex items-center gap-3">
-            <h2 className="text-[14px] font-semibold text-white tracking-tight">{monthLabel(cursor.year, cursor.month)}</h2>
+            <h2 className="text-[14px] font-semibold text-white tracking-tight">
+              {monthLabel(cursor.year, cursor.month)}
+            </h2>
             {!isCurrentMonth && (
               <button
                 onClick={goToday}
@@ -569,13 +781,29 @@ function CalendarView({ events, onToggleCalendar }) {
             className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer hover:bg-[#141414] rounded-lg"
             style={{ padding: "6px" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-1.5 mb-2">
           {WEEKDAYS.map((d) => (
-            <div key={d} className="text-center text-[9px] font-mono text-silver tracking-wider">{d}</div>
+            <div
+              key={d}
+              className="text-center text-[9px] font-mono text-silver tracking-wider"
+            >
+              {d}
+            </div>
           ))}
         </div>
 
@@ -589,22 +817,37 @@ function CalendarView({ events, onToggleCalendar }) {
               <button
                 key={cell.iso}
                 onClick={() => handleCellClick(cell)}
-                className={`relative aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border transition-all cursor-pointer ${isSelected
-                  ? "border-[#7F77DD]/60 bg-[#7F77DD]/10"
-                  : isToday
-                    ? "border-[#333] bg-[#0d0d0d]"
-                    : "border-[#141414] hover:border-[#222] hover:bg-[#0a0a0a]"
-                  }`}
+                className={`relative aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border transition-all cursor-pointer ${
+                  isSelected
+                    ? "border-[#7F77DD]/60 bg-[#7F77DD]/10"
+                    : isToday
+                      ? "border-[#333] bg-[#0d0d0d]"
+                      : "border-[#141414] hover:border-[#222] hover:bg-[#0a0a0a]"
+                }`}
               >
                 <span
-                  className={`text-[11.5px] font-mono ${!cell.inMonth ? "text-[#222]" : isToday ? "text-white font-bold" : isSelected ? "text-[#bbb]" : "text-[#888]"
-                    }`}
+                  className={`text-[11.5px] font-mono ${
+                    !cell.inMonth
+                      ? "text-[#222]"
+                      : isToday
+                        ? "text-white font-bold"
+                        : isSelected
+                          ? "text-[#bbb]"
+                          : "text-[#888]"
+                  }`}
                 >
                   {cell.day}
                 </span>
                 <div className="flex gap-[3px] h-[4px]">
                   {dots.map((c, i) => (
-                    <span key={i} className="w-[4px] h-[4px] rounded-full" style={{ background: c, opacity: cell.inMonth ? 1 : 0.35 }} />
+                    <span
+                      key={i}
+                      className="w-[4px] h-[4px] rounded-full"
+                      style={{
+                        background: c,
+                        opacity: cell.inMonth ? 1 : 0.35,
+                      }}
+                    />
                   ))}
                 </div>
               </button>
@@ -631,23 +874,43 @@ function CalendarView({ events, onToggleCalendar }) {
 
           {!selectedDay && (
             <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#222"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <p className="text-[12px] font-mono text-gray-400">Tap a day with dots to see what you've added.</p>
+              <p className="text-[12px] font-mono text-gray-400">
+                Tap a day with dots to see what you've added.
+              </p>
             </div>
           )}
 
           {selectedDay && dayEventsForSelected.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <p className="text-[12px] font-mono text-gray-400">No events added for this day.</p>
+              <p className="text-[12px] font-mono text-gray-400">
+                No events added for this day.
+              </p>
             </div>
           )}
 
           {selectedDay && dayEventsForSelected.length > 0 && (
             <div className="flex flex-col gap-2.5">
               {dayEventsForSelected.map((e) => (
-                <MiniEventRow key={e.id} event={e} onToggleCalendar={onToggleCalendar} />
+                <MiniEventRow
+                  key={e.id}
+                  event={e}
+                  onToggleCalendar={onToggleCalendar}
+                />
               ))}
             </div>
           )}
@@ -657,9 +920,10 @@ function CalendarView({ events, onToggleCalendar }) {
   );
 }
 
-
 export default function Events() {
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState("events"); // "events" | "calendar"
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all"); // "all" | "added"
@@ -667,28 +931,150 @@ export default function Events() {
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
+  // Fetch events on mount
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const data = await eventsAPI.getAll();
+        const categoryMap = {
+          Conference: { color: "#1D9E75", bg: "#1a2a2e" },
+          Workshop: { color: "#7F77DD", bg: "#1a1a2e" },
+          CTF: { color: "#639922", bg: "#1a2e1a" },
+          Meetup: { color: "#BA7517", bg: "#2e2a1a" },
+          Webinar: { color: "#185FA5", bg: "#16222e" },
+        };
+        const transformedEvents = data.events.map((e) => {
+          const cat = categoryMap[e.category] || {
+            color: "#7F77DD",
+            bg: "#1a1a2e",
+          };
+          return {
+            id: e.id,
+            title: e.title,
+            description: e.description,
+            category: e.category,
+            categoryColor: cat.color,
+            categoryBg: cat.bg,
+            date: e.start_date.split("T")[0],
+            time: e.start_date.split("T")[1]?.slice(0, 5) || "00:00",
+            isOnline:
+              e.location?.toLowerCase().includes("http") ||
+              e.location?.toLowerCase().includes("discord") ||
+              e.location?.toLowerCase().includes("zoom"),
+            location: e.location || "TBD",
+            host: e.username || "Unknown",
+            attendees: e.attendee_count || 0,
+            addedToCalendar: e.registered || false,
+          };
+        });
+        setEvents(transformedEvents);
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+        if (error.status === 401 || error.message === "API request failed") {
+          redirectToWelcomeAuth(navigate);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEvents();
+  }, [navigate]);
+
   function showToast(msg) {
     clearTimeout(toastTimer.current);
     setToast({ visible: true, message: msg });
-    toastTimer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2800);
-  }
-
-  function handleToggleCalendar(id) {
-    setEvents((prev) =>
-      prev.map((e) => {
-        if (e.id !== id) return e;
-        const added = !e.addedToCalendar;
-        showToast(added ? `Added "${e.title}" to your calendar` : `Removed "${e.title}" from your calendar`);
-        return { ...e, addedToCalendar: added };
-      })
+    toastTimer.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      2800,
     );
   }
 
-  function handleCreate(data) {
-    const newEvent = { id: Date.now(), ...data, host: ME.handle, attendees: 1, addedToCalendar: true };
-    setEvents((prev) => [newEvent, ...prev]);
-    setShowCreate(false);
-    showToast(`"${newEvent.title}" posted and added to your calendar`);
+  async function handleToggleCalendar(id) {
+    const event = events.find((e) => e.id === id);
+    if (!event) return;
+
+    try {
+      if (event.addedToCalendar) {
+        await eventsAPI.unregister(id);
+        setEvents((prev) =>
+          prev.map((e) => {
+            if (e.id !== id) return e;
+            showToast(`Removed "${e.title}" from your calendar`);
+            return { ...e, addedToCalendar: false };
+          }),
+        );
+      } else {
+        await eventsAPI.register(id);
+        setEvents((prev) =>
+          prev.map((e) => {
+            if (e.id !== id) return e;
+            showToast(`Added "${e.title}" to your calendar`);
+            return { ...e, addedToCalendar: true };
+          }),
+        );
+      }
+    } catch (error) {
+      console.error("Failed to toggle calendar:", error);
+      showToast("Failed to update calendar.");
+    }
+  }
+
+  async function handleCreate(data) {
+    try {
+      const categoryMap = {
+        Conference: { color: "#1D9E75", bg: "#1a2a2e" },
+        Workshop: { color: "#7F77DD", bg: "#1a1a2e" },
+        CTF: { color: "#639922", bg: "#1a2e1a" },
+        Meetup: { color: "#BA7517", bg: "#2e2a1a" },
+        Webinar: { color: "#185FA5", bg: "#16222e" },
+      };
+      const cat = categoryMap[data.category] || {
+        color: "#7F77DD",
+        bg: "#1a1a2e",
+      };
+      await eventsAPI.create(
+        data.title,
+        data.description,
+        data.location,
+        `${data.date}T${data.time}`,
+        `${data.date}T${data.time}`,
+        null,
+        data.category,
+        "upcoming",
+      );
+      // Refresh events
+      const response = await eventsAPI.getAll();
+      const transformedEvents = response.events.map((e) => {
+        const cat = categoryMap[e.category] || {
+          color: "#7F77DD",
+          bg: "#1a1a2e",
+        };
+        return {
+          id: e.id,
+          title: e.title,
+          description: e.description,
+          category: e.category,
+          categoryColor: cat.color,
+          categoryBg: cat.bg,
+          date: e.start_date.split("T")[0],
+          time: e.start_date.split("T")[1]?.slice(0, 5) || "00:00",
+          isOnline:
+            e.location?.toLowerCase().includes("http") ||
+            e.location?.toLowerCase().includes("discord") ||
+            e.location?.toLowerCase().includes("zoom"),
+          location: e.location || "TBD",
+          host: e.username || "Unknown",
+          attendees: e.attendee_count || 0,
+          addedToCalendar: e.registered || false,
+        };
+      });
+      setEvents(transformedEvents);
+      setShowCreate(false);
+      showToast(`"${data.title}" posted and added to your calendar`);
+    } catch (error) {
+      console.error("Failed to create event:", error);
+      showToast("Failed to create event.");
+    }
   }
 
   const addedCount = events.filter((e) => e.addedToCalendar).length;
@@ -706,7 +1092,28 @@ export default function Events() {
         e.date.includes(q)
       );
     })
-    .sort((a, b) => (a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)));
+    .sort((a, b) =>
+      a.date === b.date
+        ? a.time.localeCompare(b.time)
+        : a.date.localeCompare(b.date),
+    );
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+        style={{
+          fontFamily: "'DM Sans', sans-serif",
+          backgroundImage: `url(${mainBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -724,17 +1131,22 @@ export default function Events() {
           className="w-[375px] sm:w-[768px] lg:w-[1100px] mx-auto"
           style={{ padding: "48px 32px 80px" }}
         >
-
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-[18px] font-semibold text-white tracking-tight">Events</h1>
+              <h1 className="text-[18px] font-semibold text-white tracking-tight">
+                Events
+              </h1>
               <div className="flex items-center gap-3 mt-1">
-                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">{events.length} posted</p>
+                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">
+                  {events.length} posted
+                </p>
                 {addedCount > 0 && (
                   <>
                     <span className="text-gray-400 md:text-[#444]">·</span>
-                    <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">{addedCount} in your calendar</p>
+                    <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">
+                      {addedCount} in your calendar
+                    </p>
                   </>
                 )}
               </div>
@@ -745,8 +1157,18 @@ export default function Events() {
                 className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
                 style={{ padding: "8px 16px" }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 Post event
               </button>
@@ -760,24 +1182,55 @@ export default function Events() {
           >
             <button
               onClick={() => setView("events")}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${view === "events" ? "bg-white text-black" : "bg-transparent text-white hover:text-[#777]"
-                }`}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
+                view === "events"
+                  ? "bg-white text-black"
+                  : "bg-transparent text-white hover:text-[#777]"
+              }`}
               style={{ padding: "10px 16px" }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
-                <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="8" y1="6" x2="21" y2="6" />
+                <line x1="8" y1="12" x2="21" y2="12" />
+                <line x1="8" y1="18" x2="21" y2="18" />
+                <line x1="3" y1="6" x2="3.01" y2="6" />
+                <line x1="3" y1="12" x2="3.01" y2="12" />
+                <line x1="3" y1="18" x2="3.01" y2="18" />
               </svg>
               Events
             </button>
             <button
               onClick={() => setView("calendar")}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${view === "calendar" ? "bg-white text-black" : "bg-transparent text-white hover:text-[#777]"
-                }`}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
+                view === "calendar"
+                  ? "bg-white text-black"
+                  : "bg-transparent text-white hover:text-[#777]"
+              }`}
               style={{ padding: "10px 16px" }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               Calendar
             </button>
@@ -786,13 +1239,24 @@ export default function Events() {
           {view === "events" && (
             <>
               {/* Search + filter */}
-              <div className="flex flex-col sm:flex-row gap-2.5 mb-6" style={{ padding: "10px 12px" }}>
+              <div
+                className="flex flex-col sm:flex-row gap-2.5 mb-6"
+                style={{ padding: "10px 12px" }}
+              >
                 <div className="relative flex-1">
                   <svg
                     className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white pointer-events-none"
-                    width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    <circle cx="11" cy="11" r="7" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
                   <input
                     type="text"
@@ -804,31 +1268,45 @@ export default function Events() {
                   />
                 </div>
                 <div className="flex w-fit rounded-xl overflow-hidden">
-                  {[{ k: "all", l: "All" }, { k: "added", l: "Added" }].map((f) => (
+                  {[
+                    { k: "all", l: "All" },
+                    { k: "added", l: "Added" },
+                  ].map((f) => (
                     <button
                       key={f.k}
                       onClick={() => setFilter(f.k)}
-                      className={`text-[11.5px] font-mono transition-colors cursor-pointer border-none ${filter === f.k ? "bg-white text-black" : "bg-transparent text-white hover:text-[#777]"
-                        }`}
+                      className={`text-[11.5px] font-mono transition-colors cursor-pointer border-none ${
+                        filter === f.k
+                          ? "bg-white text-black"
+                          : "bg-transparent text-white hover:text-[#777]"
+                      }`}
                       style={{ padding: "10px 16px" }}
                     >
                       {f.l}
                     </button>
                   ))}
                 </div>
-              </div><br />
+              </div>
+              <br />
 
               <div className="flex items-center gap-3 mb-4">
                 <p className="text-[9.5px] font-mono font-bold text-white tracking-[0.18em] uppercase whitespace-nowrap">
-                  {query || filter !== "all" ? `${filteredEvents.length} result${filteredEvents.length !== 1 ? "s" : ""}` : "All events"}
+                  {query || filter !== "all"
+                    ? `${filteredEvents.length} result${filteredEvents.length !== 1 ? "s" : ""}`
+                    : "All events"}
                 </p>
                 <div className="flex-1 h-px bg-white" />
-              </div><br />
+              </div>
+              <br />
 
               {filteredEvents.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {filteredEvents.map((e) => (
-                    <EventCard key={e.id} event={e} onToggleCalendar={handleToggleCalendar} />
+                    <EventCard
+                      key={e.id}
+                      event={e}
+                      onToggleCalendar={handleToggleCalendar}
+                    />
                   ))}
                 </div>
               ) : (
@@ -836,10 +1314,24 @@ export default function Events() {
                   className="flex flex-col items-center justify-center gap-3"
                   style={{ padding: "64px 0" }}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#222"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
-                  <p className="text-[12px] font-mono text-[#2a2a2a]">No events found.</p>
+                  <p className="text-[12px] font-mono text-[#2a2a2a]">
+                    No events found.
+                  </p>
                   {filter === "added" && (
                     <button
                       onClick={() => setFilter("all")}
@@ -854,12 +1346,20 @@ export default function Events() {
           )}
 
           {view === "calendar" && (
-            <CalendarView events={events} onToggleCalendar={handleToggleCalendar} />
+            <CalendarView
+              events={events}
+              onToggleCalendar={handleToggleCalendar}
+            />
           )}
         </div>
       </div>
 
-      {showCreate && <CreateEventModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />}
+      {showCreate && (
+        <CreateEventModal
+          onClose={() => setShowCreate(false)}
+          onCreate={handleCreate}
+        />
+      )}
 
       <Toast message={toast.message} visible={toast.visible} />
     </div>
