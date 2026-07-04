@@ -1281,5 +1281,5 @@ export default function Welcome() {
         </section>
       </div>
     </>
-  )
+  );
 }
