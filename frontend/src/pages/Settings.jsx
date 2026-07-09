@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { authAPI } from "../utils/api";
+import { authAPI, userSettingsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -335,11 +335,12 @@ function SettingRow({ label, description, control }) {
   );
 }
 
-function SaveButton({ onClick, children = "Save changes" }) {
+function SaveButton({ onClick, children = "Save changes", loading = false }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+      disabled={loading}
+      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         paddingLeft: "14px",
         paddingRight: "14px",
@@ -347,7 +348,7 @@ function SaveButton({ onClick, children = "Save changes" }) {
         paddingBottom: "7px",
       }}
     >
-      {children}
+      {loading ? "Saving..." : children}
     </button>
   );
 }
@@ -848,10 +849,27 @@ function CreateKeyModal({ onClose, onCreate }) {
 
 function ProfileSection({ profile, setProfile, showToast }) {
   const [local, setLocal] = useState(profile);
+  const [loading, setLoading] = useState(false);
 
-  function save() {
-    setProfile(local);
-    showToast("Profile updated.");
+  async function save() {
+    setLoading(true);
+    try {
+      // Update display name if changed
+      if (local.displayName !== profile.displayName) {
+        await userSettingsAPI.updateDisplayName(local.displayName);
+      }
+      // Update avatar color if changed
+      if (local.color !== profile.color) {
+        await userSettingsAPI.updateAvatarColor(local.color);
+      }
+      setProfile(local);
+      showToast("Profile updated.");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      showToast("Failed to update profile.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -944,7 +962,7 @@ function ProfileSection({ profile, setProfile, showToast }) {
         className="flex justify-end pt-3 border-t border-white/20"
         style={{ paddingBlock: "10px" }}
       >
-        <SaveButton onClick={save} />
+        <SaveButton onClick={save} loading={loading} />
       </div>
     </SectionCard>
   );

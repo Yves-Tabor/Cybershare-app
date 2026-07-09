@@ -449,4 +449,62 @@ export const groupsAPI = {
   },
 };
 
+// User Settings API
+export const userSettingsAPI = {
+  updateDisplayName: async (displayName) => {
+    return apiRequest('/user/settings/display-name', {
+      method: 'PATCH',
+      body: JSON.stringify({ displayName }),
+    });
+  },
+
+  updateAvatarColor: async (avatarColor) => {
+    return apiRequest('/user/settings/avatar-color', {
+      method: 'PATCH',
+      body: JSON.stringify({ avatarColor }),
+    });
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    return apiRequest('/user/settings/password', {
+      method: 'PATCH',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  getSessions: async () => {
+    return apiRequest('/user/settings/sessions');
+  },
+
+  deleteSession: async (sessionId) => {
+    return apiRequest(`/user/settings/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  deleteAllSessions: async () => {
+    return apiRequest('/user/settings/sessions', {
+      method: 'DELETE',
+    });
+  },
+
+  getNotificationPreferences: async () => {
+    return apiRequest('/user/settings/notifications');
+  },
+
+  updateNotificationPreferences: async (preferences) => {
+    return apiRequest('/user/settings/notifications', {
+      method: 'PATCH',
+      body: JSON.stringify(preferences),
+    });
+  },
+
+  deleteAccount: async (password) => {
+    return apiRequest('/user/settings/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
+  },
+};
+
 export default apiRequest;
