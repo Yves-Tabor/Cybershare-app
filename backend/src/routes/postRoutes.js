@@ -8,6 +8,7 @@ const {
   deletePost,
   likePost,
   unlikePost,
+  getLikeStatus,
 } = require("../controllers/postController");
 const authMiddleware = require("../middleware/authMiddleware");
 const { optionalAuth } = require("../middleware/authMiddleware");
@@ -36,7 +37,8 @@ router.get("/:id", optionalAuth, getPostById);
 router.post("/", authMiddleware, validate(createPostSchema), createPost);
 router.patch("/:id", authMiddleware, validate(updatePostSchema), updatePost);
 router.delete("/:id", authMiddleware, deletePost);
-router.post("/:id/like", authMiddleware, likePost);
+router.put("/:id/like", authMiddleware, likePost);
 router.delete("/:id/like", authMiddleware, unlikePost);
+router.get("/:id/like-status", optionalAuth, getLikeStatus);
 
 module.exports = router;

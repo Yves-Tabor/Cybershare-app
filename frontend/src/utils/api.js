@@ -37,6 +37,11 @@ async function apiRequest(endpoint, options = {}) {
     headers: { ...headers, ...(options.headers || {}) },
   };
 
+  // Handle keepalive option
+  if (options.keepalive) {
+    mergedOptions.keepalive = true;
+  }
+
   try {
     const response = await fetch(url, mergedOptions);
 
@@ -174,14 +179,20 @@ export const postsAPI = {
 
   like: async (id) => {
     return apiRequest(`/posts/${id}/like`, {
-      method: "POST",
+      method: "PUT",
+      keepalive: true,
     });
   },
 
   unlike: async (id) => {
     return apiRequest(`/posts/${id}/like`, {
       method: "DELETE",
+      keepalive: true,
     });
+  },
+
+  getLikeStatus: async (id) => {
+    return apiRequest(`/posts/${id}/like-status`);
   },
 };
 

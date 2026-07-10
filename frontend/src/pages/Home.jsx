@@ -1303,11 +1303,25 @@ export default function Home() {
     setPendingLikes((prev) => ({ ...prev, [id]: true }));
 
     try {
+      let response;
       if (snapshot.liked) {
-        await postsAPI.unlike(id);
+        response = await postsAPI.unlike(id);
       } else {
-        await postsAPI.like(id);
+        response = await postsAPI.like(id);
       }
+
+      // Sync with server response (source of truth)
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                liked: response.liked,
+                likes: response.likeCount,
+              }
+            : p,
+        ),
+      );
     } catch (error) {
       console.error("Failed to toggle like:", error);
       setPosts((prev) =>
