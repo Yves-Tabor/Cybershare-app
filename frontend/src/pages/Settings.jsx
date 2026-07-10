@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { authAPI } from "../utils/api";
+import { authAPI, userSettingsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -276,7 +276,7 @@ function Toast({ message, visible }) {
 
 // ─── Small UI atoms ───────────────────────────────────────────────────────────
 
-function Toggle({ checked, onChange, disabled }) {
+function Toggle({ checked, onChange, disabled = false }) {
   return (
     <button
       type="button"
@@ -335,11 +335,12 @@ function SettingRow({ label, description, control }) {
   );
 }
 
-function SaveButton({ onClick, children = "Save changes" }) {
+function SaveButton({ onClick, children = "Save changes", loading = false }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+      disabled={loading}
+      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         paddingLeft: "14px",
         paddingRight: "14px",
@@ -347,7 +348,7 @@ function SaveButton({ onClick, children = "Save changes" }) {
         paddingBottom: "7px",
       }}
     >
-      {children}
+      {loading ? "Saving..." : children}
     </button>
   );
 }
@@ -542,6 +543,7 @@ function ConfirmModal({
   requireText,
   onConfirm,
   onClose,
+  children,
 }) {
   const [input, setInput] = useState("");
   const inputRef = useRef(null);
@@ -604,6 +606,7 @@ function ConfirmModal({
               />
             </div>
           )}
+          {children}
         </div>
         <div
           className="flex justify-end gap-2.5 border-t border-[#141414]"
@@ -848,10 +851,27 @@ function CreateKeyModal({ onClose, onCreate }) {
 
 function ProfileSection({ profile, setProfile, showToast }) {
   const [local, setLocal] = useState(profile);
+  const [loading, setLoading] = useState(false);
 
-  function save() {
-    setProfile(local);
-    showToast("Profile updated.");
+  async function save() {
+    setLoading(true);
+    try {
+      // Update display name if changed
+      if (local.displayName !== profile.displayName) {
+        await userSettingsAPI.updateDisplayName(local.displayName);
+      }
+      // Update avatar color if changed
+      if (local.color !== profile.color) {
+        await userSettingsAPI.updateAvatarColor(local.color);
+      }
+      setProfile(local);
+      showToast("Profile updated.");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      showToast("Failed to update profile.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -944,15 +964,13 @@ function ProfileSection({ profile, setProfile, showToast }) {
         className="flex justify-end pt-3 border-t border-white/20"
         style={{ paddingBlock: "10px" }}
       >
-        <SaveButton onClick={save} />
+        <SaveButton onClick={save} loading={loading} />
       </div>
     </SectionCard>
   );
 }
 
 function SecuritySection({
-  security,
-  setSecurity,
   sessions,
   setSessions,
   showToast,
@@ -960,10 +978,10 @@ function SecuritySection({
 }) {
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  function updatePassword() {
+  async function updatePassword() {
     if (!pw.current || !pw.next) {
       setPwError("All fields are required.");
       return;
@@ -976,30 +994,31 @@ function SecuritySection({
       setPwError("New password must be at least 8 characters.");
       return;
     }
-    setPw({ current: "", next: "", confirm: "" });
-    setPwError("");
-    showToast("Password updated.");
+    
+    setPwLoading(true);
+    try {
+      await userSettingsAPI.changePassword(pw.current, pw.next);
+      setPw({ current: "", next: "", confirm: "" });
+      setPwError("");
+      showToast("Password updated. All other sessions have been revoked.");
+    } catch (error) {
+      console.error("Failed to update password:", error);
+      setPwError(error.message || "Failed to update password.");
+    } finally {
+      setPwLoading(false);
+    }
   }
 
-  function toggle2FA() {
-    const next = !security.twoFactorEnabled;
-    setSecurity((prev) => ({ ...prev, twoFactorEnabled: next }));
-    showToast(
-      next
-        ? "Two-factor authentication enabled."
-        : "Two-factor authentication disabled.",
-    );
-  }
-
-  function handleRevoke() {
-    setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
-    showToast("Session revoked.");
-    setRevokeTarget(null);
-  }
-
-  function handleDelete() {
-    showToast("Account deleted.");
-    setConfirmDelete(false);
+  async function handleRevoke() {
+    try {
+      await userSettingsAPI.deleteSession(revokeTarget.id);
+      setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
+      showToast("Session revoked.");
+      setRevokeTarget(null);
+    } catch (error) {
+      console.error("Failed to revoke session:", error);
+      showToast("Failed to revoke session.");
+    }
   }
 
   return (
@@ -1057,33 +1076,8 @@ function SecuritySection({
           <p className="text-[11px] text-[#E24B4A] font-mono mb-3">{pwError}</p>
         )}
         <div className="flex justify-end pt-3 border-t border-[#111]">
-          <SaveButton onClick={updatePassword}>Update password</SaveButton>
+          <SaveButton onClick={updatePassword} loading={pwLoading}>Update password</SaveButton>
         </div>
-      </SectionCard>
-      <br />
-
-      <SectionCard title="Two-factor authentication" icon={<IconShield />}>
-        <SettingRow
-          label="Authenticator app"
-          description={
-            security.twoFactorEnabled
-              ? "Enabled — a code is required at sign-in."
-              : "Add a second step when you sign in."
-          }
-          control={
-            <Toggle checked={security.twoFactorEnabled} onChange={toggle2FA} />
-          }
-        />
-        {security.twoFactorEnabled && (
-          <div className="flex justify-end pt-3">
-            <button
-              onClick={() => showToast("Backup codes regenerated.")}
-              className="text-[11px] font-mono text-[#555] hover:text-[#999] transition-colors bg-transparent border-none cursor-pointer"
-            >
-              View backup codes
-            </button>
-          </div>
-        )}
       </SectionCard>
       <br />
 
@@ -1098,8 +1092,119 @@ function SecuritySection({
           ))}
         </div>
       </SectionCard>
-      <br />
 
+      {revokeTarget && (
+        <ConfirmModal
+          title="Revoke session"
+          message={`This will sign out "${revokeTarget.device}" immediately.`}
+          confirmLabel="Revoke session"
+          danger
+          onConfirm={handleRevoke}
+          onClose={() => setRevokeTarget(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function NotificationsSection({ notifications, setNotifications, showToast }) {
+  const [loading, setLoading] = useState(false);
+
+  async function toggle(key) {
+    setLoading(true);
+    try {
+      const newValue = !notifications[key];
+      await userSettingsAPI.updateNotificationPreferences({ [key]: newValue });
+      setNotifications((prev) => ({ ...prev, [key]: newValue }));
+      showToast("Notification preferences updated.");
+    } catch (error) {
+      console.error("Failed to update notification preferences:", error);
+      showToast("Failed to update notification preferences.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <SectionCard
+      title="Notifications"
+      icon={<IconBell />}
+      description="Choose what you hear about and how often."
+    >
+      <SettingRow
+        label="Email marketing"
+        description="Receive marketing emails and updates."
+        control={
+          <Toggle
+            checked={notifications.email_marketing}
+            onChange={() => toggle("email_marketing")}
+            disabled={loading}
+          />
+        }
+      />
+      <SettingRow
+        label="Email activity"
+        description="Receive emails about your account activity."
+        control={
+          <Toggle
+            checked={notifications.email_activity}
+            onChange={() => toggle("email_activity")}
+            disabled={loading}
+          />
+        }
+      />
+      <SettingRow
+        label="Push messages"
+        description="Receive push notifications for messages."
+        control={
+          <Toggle
+            checked={notifications.push_messages}
+            onChange={() => toggle("push_messages")}
+            disabled={loading}
+          />
+        }
+      />
+      <SettingRow
+        label="Push mentions"
+        description="Receive push notifications when mentioned."
+        control={
+          <Toggle
+            checked={notifications.push_mentions}
+            onChange={() => toggle("push_mentions")}
+            disabled={loading}
+          />
+        }
+      />
+    </SectionCard>
+  );
+}
+
+function DangerZoneSection({ profile, showToast }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  async function handleDelete() {
+    setDeleteLoading(true);
+    try {
+      await userSettingsAPI.deleteAccount(deletePassword);
+      showToast("Account deleted.");
+      setConfirmDelete(false);
+      // Redirect to welcome page after account deletion
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to delete account:", error);
+      showToast(error.message || "Failed to delete account.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  return (
+    <>
       <SectionCard
         title="Danger zone"
         icon={<IconAlert />}
@@ -1130,17 +1235,6 @@ function SecuritySection({
           </button>
         </div>
       </SectionCard>
-
-      {revokeTarget && (
-        <ConfirmModal
-          title="Revoke session"
-          message={`This will sign out "${revokeTarget.device}" immediately.`}
-          confirmLabel="Revoke session"
-          danger
-          onConfirm={handleRevoke}
-          onClose={() => setRevokeTarget(null)}
-        />
-      )}
       {confirmDelete && (
         <ConfirmModal
           title="Delete account"
@@ -1149,61 +1243,32 @@ function SecuritySection({
           requireText={profile.handle}
           danger
           onConfirm={handleDelete}
-          onClose={() => setConfirmDelete(false)}
-        />
+          onClose={() => {
+            setConfirmDelete(false);
+            setDeletePassword("");
+            setDeleteConfirmText("");
+          }}
+        >
+          <div className="mt-4">
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+              Confirm password
+            </label>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+              style={{
+                paddingLeft: "16px",
+                paddingRight: "16px",
+                paddingTop: "10px",
+                paddingBottom: "10px",
+              }}
+            />
+          </div>
+        </ConfirmModal>
       )}
     </>
-  );
-}
-
-function NotificationsSection({ notifications, setNotifications, showToast }) {
-  function toggle(key) {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
-    showToast("Notification preferences updated.");
-  }
-
-  return (
-    <SectionCard
-      title="Notifications"
-      icon={<IconBell />}
-      description="Choose what you hear about and how often."
-    >
-      <SettingRow
-        label="Comments on your posts"
-        description="Someone replies to something you've posted in a group."
-        control={
-          <Toggle
-            checked={notifications.comments}
-            onChange={() => toggle("comments")}
-          />
-        }
-      />
-      <SettingRow
-        label="Group invites"
-        description="An owner invites you to join their group."
-        control={
-          <Toggle
-            checked={notifications.invites}
-            onChange={() => toggle("invites")}
-          />
-        }
-      />
-      <SettingRow
-        label="Mentions"
-        description="Someone mentions your handle in a post or comment."
-        control={
-          <Toggle
-            checked={notifications.mentions}
-            onChange={() => toggle("mentions")}
-          />
-        }
-      />
-      <SettingRow
-        label="Security alerts"
-        description="New sign-ins, revoked sessions, and key changes. Always on."
-        control={<Toggle checked disabled onChange={() => {}} />}
-      />
-    </SectionCard>
   );
 }
 
@@ -1213,6 +1278,7 @@ const SECTIONS = [
   { id: "profile", label: "Profile", icon: <IconUser /> },
   { id: "security", label: "Security", icon: <IconShield /> },
   { id: "notifications", label: "Notifications", icon: <IconBell /> },
+  { id: "danger", label: "Danger Zone", icon: <IconAlert />, danger: true },
 ];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -1228,40 +1294,46 @@ export default function Settings() {
     color: ME.color,
     bio: "",
   });
-  const [security, setSecurity] = useState({ twoFactorEnabled: false });
   const [sessions, setSessions] = useState(INITIAL_SESSIONS);
   const [notifications, setNotifications] = useState({
-    comments: true,
-    invites: true,
-    mentions: true,
+    email_marketing: true,
+    email_activity: true,
+    push_messages: true,
+    push_mentions: true,
   });
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
   // Fetch user data on mount
   useEffect(() => {
-    async function fetchUser() {
+    async function fetchData() {
       try {
-        const data = await authAPI.me();
-        const user = data.user;
+        const [userData, notificationData] = await Promise.all([
+          authAPI.me(),
+          userSettingsAPI.getNotificationPreferences(),
+        ]);
+        
+        const user = userData.user;
         setProfile({
           handle: user.username,
-          displayName: user.username,
+          displayName: user.display_name || user.username,
           initials: user.username.slice(0, 2).toUpperCase(),
-          color: ME.color,
+          color: user.avatar_color || ME.color,
           bio: user.bio || "",
           email: user.email,
           avatar: user.avatar,
         });
+        
+        setNotifications(notificationData);
       } catch (error) {
-        console.error("Failed to fetch user data:", error);
+        console.error("Failed to fetch data:", error);
         // Redirect to login if not authenticated
         redirectToWelcomeAuth(navigate);
       } finally {
         setLoading(false);
       }
     }
-    fetchUser();
+    fetchData();
   }, [navigate]);
 
   function showToast(msg) {
@@ -1343,8 +1415,6 @@ export default function Settings() {
               )}
               {section === "security" && (
                 <SecuritySection
-                  security={security}
-                  setSecurity={setSecurity}
                   sessions={sessions}
                   setSessions={setSessions}
                   showToast={showToast}
@@ -1355,6 +1425,12 @@ export default function Settings() {
                 <NotificationsSection
                   notifications={notifications}
                   setNotifications={setNotifications}
+                  showToast={showToast}
+                />
+              )}
+              {section === "danger" && (
+                <DangerZoneSection
+                  profile={profile}
                   showToast={showToast}
                 />
               )}
