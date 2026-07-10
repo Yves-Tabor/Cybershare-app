@@ -13,10 +13,14 @@ const AVATAR_COLORS = {
 function UploadForm({ onPublish }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [url, setUrl] = useState("");
+  const [category, setCategory] = useState("Guides");
   const [files, setFiles] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
+
+  const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
 
   const addFiles = (incoming) => {
     const arr = Array.from(incoming);
@@ -52,6 +56,16 @@ function UploadForm({ onPublish }) {
       setError("Resource title is required.");
       return;
     }
+    if (!url.trim()) {
+      setError("URL is required.");
+      return;
+    }
+    try {
+      new URL(url.trim());
+    } catch (_) {
+      setError("Please enter a valid URL (including http:// or https://).");
+      return;
+    }
     if (!content.trim()) {
       setError("Content is required.");
       return;
@@ -60,6 +74,8 @@ function UploadForm({ onPublish }) {
     onPublish({
       title: title.trim(),
       content: content.trim(),
+      url: url.trim(),
+      category,
       files: files.map((f) => ({
         name: f.name,
         size: formatBytes(f.size),
@@ -68,6 +84,8 @@ function UploadForm({ onPublish }) {
     });
     setTitle("");
     setContent("");
+    setUrl("");
+    setCategory("Guides");
     setFiles([]);
   }
 
@@ -123,6 +141,53 @@ function UploadForm({ onPublish }) {
           />
         </div>
 
+        {/* URL */}
+        <div>
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
+            Resource URL <span className="text-[#333]">[Entry Required]</span>
+          </label>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setError("");
+            }}
+            placeholder="https://example.com/resource"
+            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "14px",
+              paddingBottom: "14px",
+            }}
+          />
+        </div>
+
+        {/* Category */}
+        <div>
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
+            Category
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "14px",
+              paddingBottom: "14px",
+            }}
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat} className="bg-[#0a0a0a] text-[#ccc]">
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Content */}
         <div>
           <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
@@ -149,7 +214,7 @@ function UploadForm({ onPublish }) {
         {/* File attachments */}
         <div>
           <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            File Attachments
+            File Attachments <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
           </label>
 
           {/* Drop zone */}
@@ -331,7 +396,33 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
       <p className="app-title-text text-[14px] font-bold text-white mb-1">
         {resource.title}
       </p>
-      <p className="text-[13px] text-[#666] mb-4">{resource.content}</p>
+      <p className="text-[13px] text-[#666] mb-3">{resource.content}</p>
+
+      {/* URL Link */}
+      {resource.url && (
+        <a
+          href={resource.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[12px] font-mono text-[#7F77DD] hover:underline mb-4 flex items-center gap-1.5 w-fit"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+          Go to resource
+        </a>
+      )}
 
       {/* File attachments */}
       {resource.files && resource.files.length > 0 && (
@@ -393,9 +484,11 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
             <span
               key={tag}
               className={`text-[11px] font-mono rounded-full border cursor-pointer transition-colors ${
-                tag === "#Resource"
-                  ? "border-[#1D9E75]/50 text-[#1D9E75] bg-[#1D9E75]/5 hover:bg-[#1D9E75]/10"
-                  : "border-[#333] text-[#666] bg-transparent hover:border-[#444] hover:text-[#888]"
+                tag.startsWith("#") && tag !== "#Resource"
+                  ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/5 hover:bg-[#7F77DD]/10"
+                  : tag === "#Resource"
+                    ? "border-[#1D9E75]/50 text-[#1D9E75] bg-[#1D9E75]/5 hover:bg-[#1D9E75]/10"
+                    : "border-[#333] text-[#666] bg-transparent hover:border-[#444] hover:text-[#888]"
               }`}
               style={{
                 paddingLeft: "12px",
@@ -457,13 +550,14 @@ export default function Resources() {
         // Transform backend data to match frontend format
         const transformedResources = data.resources.map((r) => ({
           id: r.id,
-          author: r.username,
-          handle: `@${r.username}`,
-          date: new Date(r.created_at).toLocaleDateString(),
-          initials: r.username.slice(0, 2).toUpperCase(),
+          author: r.user?.username || r.username || "Unknown",
+          handle: `@${r.user?.username || r.username || "unknown"}`,
+          date: new Date(r.createdAt || r.created_at).toLocaleDateString(),
+          initials: (r.user?.username || r.username || "??").slice(0, 2).toUpperCase(),
           title: r.title,
           content: r.description,
-          tags: r.tags || ["#Resource"],
+          url: r.url,
+          tags: r.category ? [`#${r.category}`] : ["#Resource"],
           files: r.files || [],
         }));
         setResources(transformedResources);
@@ -516,20 +610,21 @@ export default function Resources() {
     });
   }
 
-  async function handlePublish({ title, content, files }) {
+  async function handlePublish({ title, content, url, category, files }) {
     try {
-      await resourcesAPI.create(title, content, files);
+      await resourcesAPI.create(title, content, url, category);
       // Refresh resources after publishing
       const data = await resourcesAPI.getAll();
       const transformedResources = data.resources.map((r) => ({
         id: r.id,
-        author: r.username,
-        handle: `@${r.username}`,
-        date: new Date(r.created_at).toLocaleDateString(),
-        initials: r.username.slice(0, 2).toUpperCase(),
+        author: r.user?.username || r.username || "Unknown",
+        handle: `@${r.user?.username || r.username || "unknown"}`,
+        date: new Date(r.createdAt || r.created_at).toLocaleDateString(),
+        initials: (r.user?.username || r.username || "??").slice(0, 2).toUpperCase(),
         title: r.title,
         content: r.description,
-        tags: r.tags || ["#Resource"],
+        url: r.url,
+        tags: r.category ? [`#${r.category}`] : ["#Resource"],
         files: r.files || [],
       }));
       setResources(transformedResources);

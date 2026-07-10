@@ -19,21 +19,25 @@ async function isAdminOrModerator(userId) {
   }
 }
 
-// Get all events (public - no auth required)
+// Get all events (public - no auth required, optional auth for registration status)
 const getAllEvents = async (req, res) => {
   try {
     const { category, status } = req.query;
+    const userId = req.userId || null;
 
     let query = `
       SELECT e.id, e.title, e.description, e.location, e.start_date, e.end_date,
              e.image_url, e.category, e.status, e.created_at, e.updated_at,
              u.id as created_by_id, u.username as created_by_username, u.avatar as created_by_avatar,
-             (SELECT COUNT(*) FROM event_attendees WHERE event_id = e.id) as attendee_count
+             (SELECT COUNT(*) FROM event_attendees WHERE event_id = e.id) as attendee_count,
+             CASE WHEN $1::INTEGER IS NOT NULL AND EXISTS (
+               SELECT 1 FROM event_attendees WHERE event_id = e.id AND user_id = $1
+             ) THEN true ELSE false END as is_registered
       FROM events e
       JOIN users u ON e.created_by = u.id
     `;
     
-    const params = [];
+    const params = [userId];
     const conditions = [];
 
     if (category) {
@@ -72,6 +76,7 @@ const getAllEvents = async (req, res) => {
         avatar: row.created_by_avatar,
       },
       attendeeCount: parseInt(row.attendee_count),
+      isRegistered: row.is_registered,
     }));
 
     res.status(200).json({ events });
@@ -140,6 +145,11 @@ const createEvent = async (req, res) => {
     const hasPermission = await isAdminOrModerator(userId);
     if (!hasPermission) {
       return res.status(403).json({ error: 'Only admins and moderators can create events' });
+    }
+
+    // Validate dates
+    if (end_date && new Date(end_date) < new Date(start_date)) {
+      return res.status(400).json({ error: 'End date must be after or equal to start date' });
     }
 
     const result = await pool.query(
@@ -211,12 +221,19 @@ const updateEvent = async (req, res) => {
 
     // Check if event exists
     const existingEvent = await pool.query(
-      'SELECT id FROM events WHERE id = $1',
+      'SELECT start_date, end_date FROM events WHERE id = $1',
       [id]
     );
 
     if (existingEvent.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Validate dates
+    const finalStart = start_date !== undefined ? start_date : existingEvent.rows[0].start_date;
+    const finalEnd = end_date !== undefined ? end_date : existingEvent.rows[0].end_date;
+    if (finalEnd && new Date(finalEnd) < new Date(finalStart)) {
+      return res.status(400).json({ error: 'End date must be after or equal to start date' });
     }
 
     // Build update query dynamically

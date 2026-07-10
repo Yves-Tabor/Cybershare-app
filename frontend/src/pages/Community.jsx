@@ -1505,9 +1505,21 @@ export default function Community() {
     invites,
   }) {
     try {
-      await groupsAPI.create(name, description, category);
+      const createResponse = await groupsAPI.create(name, description, category);
+      const newGroupId = createResponse.group?.id;
+
+      // Send invites now that we have the group ID
+      let successfulInvites = 0;
+      if (newGroupId && invites && invites.length > 0) {
+        const inviteResults = await Promise.allSettled(
+          invites.map((email) => groupsAPI.invite(newGroupId, email))
+        );
+        successfulInvites = inviteResults.filter((r) => r.status === "fulfilled").length;
+      }
+
       // Refresh groups
       const groupsResponse = await groupsAPI.getAll();
+
       const categoryMap = {
         Offensive: { color: "#E24B4A", bg: "#2e1a1a" },
         Defensive: { color: "#1D9E75", bg: "#1a2a2e" },
@@ -1537,7 +1549,7 @@ export default function Community() {
       setGroups(transformedGroups);
       setShowCreate(false);
       showToast(
-        `"${name}" created${invites.length ? ` · ${invites.length} invite${invites.length > 1 ? "s" : ""} sent` : ""}.`,
+        `"${name}" created${successfulInvites > 0 ? ` · ${successfulInvites} invite${successfulInvites > 1 ? "s" : ""} sent` : ""}.`,
       );
     } catch (error) {
       console.error("Failed to create group:", error);
