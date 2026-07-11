@@ -109,6 +109,13 @@ export const authAPI = {
       body: JSON.stringify({ username, password }),
     });
   },
+
+  updateProfile: async (username, bio, color) => {
+    return apiRequest("/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify({ username, bio, color }),
+    });
+  },
 };
 
 // Resources API

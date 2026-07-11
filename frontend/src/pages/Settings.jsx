@@ -335,11 +335,12 @@ function SettingRow({ label, description, control }) {
   );
 }
 
-function SaveButton({ onClick, children = "Save changes" }) {
+function SaveButton({ onClick, children = "Save changes", disabled = false }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+      disabled={disabled}
+      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         paddingLeft: "14px",
         paddingRight: "14px",
@@ -848,10 +849,24 @@ function CreateKeyModal({ onClose, onCreate }) {
 
 function ProfileSection({ profile, setProfile, showToast }) {
   const [local, setLocal] = useState(profile);
+  const [saving, setSaving] = useState(false);
 
-  function save() {
-    setProfile(local);
-    showToast("Profile updated.");
+  async function save() {
+    setSaving(true);
+    try {
+      await authAPI.updateProfile(local.displayName, local.bio, local.color);
+      setProfile(local);
+      showToast("Profile updated.");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      if (error.message === "Username already taken") {
+        showToast("Username already taken.");
+      } else {
+        showToast("Failed to update profile.");
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -944,7 +959,9 @@ function ProfileSection({ profile, setProfile, showToast }) {
         className="flex justify-end pt-3 border-t border-white/20"
         style={{ paddingBlock: "10px" }}
       >
-        <SaveButton onClick={save} />
+        <SaveButton onClick={save} disabled={saving}>
+          {saving ? "Saving..." : "Save changes"}
+        </SaveButton>
       </div>
     </SectionCard>
   );
@@ -1248,7 +1265,7 @@ export default function Settings() {
           handle: user.username,
           displayName: user.username,
           initials: user.username.slice(0, 2).toUpperCase(),
-          color: ME.color,
+          color: user.color || ME.color,
           bio: user.bio || "",
           email: user.email,
           avatar: user.avatar,

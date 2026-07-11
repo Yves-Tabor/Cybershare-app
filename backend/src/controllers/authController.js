@@ -35,7 +35,7 @@ const register = async (req, res) => {
 
     // Insert user with normalized username
     const result = await pool.query(
-      "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, role, created_at",
+      "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, color, role, created_at",
       [normalizedUsername, email, passwordHash, bio || null],
     );
 
@@ -60,6 +60,7 @@ const register = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
+        color: user.color,
         role: user.role,
         createdAt: user.created_at,
       },
@@ -77,7 +78,7 @@ const login = async (req, res) => {
 
     // Find user
     const result = await pool.query(
-      "SELECT id, username, email, password_hash, bio, avatar, role, created_at FROM users WHERE email = $1",
+      "SELECT id, username, email, password_hash, bio, avatar, color, role, created_at FROM users WHERE email = $1",
       [email],
     );
 
@@ -113,6 +114,7 @@ const login = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
+        color: user.color,
         role: user.role,
         createdAt: user.created_at,
       },
@@ -129,7 +131,7 @@ const me = async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      "SELECT id, username, email, bio, avatar, role, created_at FROM users WHERE id = $1",
+      "SELECT id, username, email, bio, avatar, color, role, created_at FROM users WHERE id = $1",
       [userId],
     );
 
@@ -146,6 +148,7 @@ const me = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
+        color: user.color,
         role: user.role,
         createdAt: user.created_at,
       },
@@ -227,7 +230,7 @@ const completeProfile = async (req, res) => {
 
     // Update user
     const result = await pool.query(
-      "UPDATE users SET username = $1, password_hash = $2 WHERE id = $3 RETURNING id, username, email, bio, avatar, role, created_at",
+      "UPDATE users SET username = $1, password_hash = $2 WHERE id = $3 RETURNING id, username, email, bio, avatar, color, role, created_at",
       [normalizedUsername, passwordHash, userId],
     );
 
@@ -241,12 +244,84 @@ const completeProfile = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
+        color: user.color,
         role: user.role,
         createdAt: user.created_at,
       },
     });
   } catch (error) {
     console.error("Complete profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Update user profile settings
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { username, bio, color } = req.body;
+
+    // Normalize username if provided
+    const normalizedUsername = username ? username.toLowerCase().replace(/\s+/g, "") : null;
+
+    // Check if username is already taken (if changing username)
+    if (normalizedUsername) {
+      const existingUser = await pool.query(
+        "SELECT id FROM users WHERE username = $1 AND id != $2",
+        [normalizedUsername, userId],
+      );
+
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: "Username already taken" });
+      }
+    }
+
+    // Build update query dynamically based on provided fields
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (normalizedUsername) {
+      updates.push(`username = $${paramIndex++}`);
+      values.push(normalizedUsername);
+    }
+    if (bio !== undefined) {
+      updates.push(`bio = $${paramIndex++}`);
+      values.push(bio);
+    }
+    if (color) {
+      updates.push(`color = $${paramIndex++}`);
+      values.push(color);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    values.push(userId);
+
+    const result = await pool.query(
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING id, username, email, bio, avatar, color, role, created_at`,
+      values,
+    );
+
+    const user = result.rows[0];
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        avatar: user.avatar,
+        color: user.color,
+        role: user.role,
+        createdAt: user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -258,4 +333,5 @@ module.exports = {
   logout,
   googleCallback,
   completeProfile,
+  updateProfile,
 };
