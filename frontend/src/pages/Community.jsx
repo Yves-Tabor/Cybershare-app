@@ -1070,8 +1070,8 @@ function GroupDetail({
   function handleFileChange(e) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        alert("File size exceeds 2MB limit for free-tier storage.");
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size exceeds 10MB limit.");
         e.target.value = "";
         return;
       }

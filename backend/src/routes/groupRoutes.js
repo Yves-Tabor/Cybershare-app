@@ -5,7 +5,7 @@ const { optionalAuth } = require("../middleware/authMiddleware");
 const multer = require("multer");
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
 const {

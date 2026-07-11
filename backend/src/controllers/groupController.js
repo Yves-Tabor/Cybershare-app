@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const { checkAndPruneStorage } = require("../services/storageService");
 const { createNotification, NOTIFICATION_TYPES } = require("../services/notification/notificationService");
 
 // Get all groups
@@ -243,6 +244,13 @@ const createGroupPost = async (req, res) => {
 
     const result = await db.query(query, values);
     res.status(201).json({ post: result.rows[0] });
+
+    // Asynchronously prune old storage if limit reached
+    if (file) {
+      checkAndPruneStorage().catch((err) =>
+        console.error("Storage pruning background task failed:", err)
+      );
+    }
   } catch (error) {
     console.error("Error creating group post:", error);
     res.status(500).json({ error: "Failed to create post" });
