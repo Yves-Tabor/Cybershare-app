@@ -192,6 +192,9 @@ CREATE TABLE IF NOT EXISTS group_posts (
   group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  attachment_data BYTEA,
+  attachment_name VARCHAR(255),
+  attachment_type VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

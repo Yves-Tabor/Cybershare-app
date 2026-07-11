@@ -398,7 +398,37 @@ export const groupsAPI = {
     });
   },
 
-  createPost: async (groupId, content) => {
+  createPost: async (groupId, content, attachment) => {
+    if (attachment) {
+      const formData = new FormData();
+      if (content) formData.append("content", content);
+      formData.append("attachment", attachment);
+
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      // We cannot use apiRequest directly because fetch needs to calculate Content-Type for FormData
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/groups/${groupId}/posts`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          throw new Error("API request failed");
+        }
+        const error = new Error(errorData.error || "API request failed");
+        error.status = response.status;
+        throw error;
+      }
+      return response.json();
+    }
+
     return apiRequest(`/groups/${groupId}/posts`, {
       method: "POST",
       body: JSON.stringify({ content }),
@@ -434,6 +464,12 @@ export const groupsAPI = {
     return apiRequest(`/groups/${groupId}/invite`, {
       method: "POST",
       body: JSON.stringify({ email }),
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/groups/${id}`, {
+      method: "DELETE",
     });
   },
 };
