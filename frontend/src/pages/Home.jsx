@@ -70,7 +70,7 @@ function transformPost(p) {
   return {
     id: p.id,
     author: username,
-    avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
+    avatarColor: p.user?.color || AVATAR_COLORS[p.id % AVATAR_COLORS.length],
     initials: username.slice(0, 2).toUpperCase(),
     cat,
     body,
@@ -78,10 +78,82 @@ function transformPost(p) {
     comments: p.comments || 0,
     liked: p.liked || false,
     ts: new Date(p.createdAt || p.created_at).getTime(),
+    user: p.user,
   };
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ProfilePopup({ user, onClose }) {
+  const bio = user?.bio || "Contributor";
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      style={{ padding: "16px" }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-[320px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+        <div
+          className="border-b border-[#141414]"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "16px",
+            paddingBottom: "16px",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center text-[14px] font-bold text-white flex-shrink-0"
+              style={{ background: user?.color || "#534AB7" }}
+            >
+              {user?.username?.slice(0, 2).toUpperCase() || "??"}
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-white">
+                @{user?.username || "Unknown"}
+              </p>
+              <p className="text-[11px] text-[#888]">User</p>
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "20px",
+            paddingBottom: "20px",
+          }}
+        >
+          <p className="text-[12px] text-[#888] leading-relaxed">{bio}</p>
+        </div>
+        <div
+          className="flex justify-end border-t border-[#141414]"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "16px",
+            paddingBottom: "16px",
+          }}
+        >
+          <button
+            onClick={onClose}
+            className="bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "8px",
+              paddingBottom: "8px",
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PostCard({
   post,
@@ -93,6 +165,7 @@ function PostCard({
   onDelete,
   onCommentAdd,
   onCommentRemove,
+  onProfileClick,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -195,12 +268,13 @@ function PostCard({
     >
       <div className="flex gap-3">
         {/* Avatar */}
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0"
+        <button
+          onClick={() => onProfileClick(post.user)}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           style={{ background: post.avatarColor }}
         >
           {post.initials}
-        </div>
+        </button>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -367,17 +441,17 @@ function PostCard({
                 ) : (
                   comments.map((comment) => (
                     <div key={comment.id} className="flex gap-2">
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
+                      <button
+                        onClick={() => onProfileClick(comment.user)}
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{
                           background:
-                            AVATAR_COLORS[
-                              comment.user.id % AVATAR_COLORS.length
-                            ],
+                            comment.user?.color || 
+                            AVATAR_COLORS[comment.user.id % AVATAR_COLORS.length],
                         }}
                       >
                         {comment.user.username.slice(0, 2).toUpperCase()}
-                      </div>
+                      </button>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[11px] font-semibold text-white">
@@ -1221,6 +1295,7 @@ export default function Home() {
   const [view, setView] = useState("all");
   const [toast, setToast] = useState({ message: "", visible: false });
   const [pendingLikes, setPendingLikes] = useState({});
+  const [profilePopupUser, setProfilePopupUser] = useState(null);
   const feedRef = useRef(null);
   const toastTimer = useRef(null);
   const pendingLikeIdsRef = useRef(new Set());
@@ -1408,6 +1483,14 @@ export default function Home() {
         showToast(error.message || "Failed to complete profile.");
       }
     }
+  }
+
+  function handleProfileClick(user) {
+    setProfilePopupUser(user);
+  }
+
+  function handleCloseProfilePopup() {
+    setProfilePopupUser(null);
   }
 
   if (loading) {
@@ -1664,6 +1747,7 @@ export default function Home() {
                     onDelete={handleDelete}
                     onCommentAdd={handleCommentAdd}
                     onCommentRemove={handleCommentRemove}
+                    onProfileClick={handleProfileClick}
                   />
                 ))}
               </div>
@@ -1692,6 +1776,13 @@ export default function Home() {
         <CompleteProfileModal
           onClose={() => setCompleteProfileOpen(false)}
           onSubmit={handleCompleteProfile}
+        />
+      )}
+
+      {profilePopupUser && (
+        <ProfilePopup
+          user={profilePopupUser}
+          onClose={handleCloseProfilePopup}
         />
       )}
 

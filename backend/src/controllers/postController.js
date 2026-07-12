@@ -9,7 +9,7 @@ const getAllPosts = async (req, res) => {
              COALESCE(l.like_count, 0) as likes,
              COALESCE(c.comment_count, 0) as comments,
              COALESCE(pl.user_id IS NOT NULL, false) as liked,
-             u.id as user_id, u.username, u.avatar
+             u.id as user_id, u.username, u.avatar, u.color, u.bio
       FROM posts p
       JOIN users u ON p.user_id = u.id
       LEFT JOIN (
@@ -40,6 +40,8 @@ const getAllPosts = async (req, res) => {
         id: row.user_id,
         username: row.username,
         avatar: row.avatar,
+        color: row.color,
+        bio: row.bio,
       },
     }));
 
@@ -57,7 +59,7 @@ const getPostById = async (req, res) => {
 
     const result = await pool.query(
       `SELECT p.id, p.content, p.created_at, p.updated_at,
-              u.id as user_id, u.username, u.avatar
+              u.id as user_id, u.username, u.avatar, u.color, u.bio
        FROM posts p
        JOIN users u ON p.user_id = u.id
        WHERE p.id = $1`,
@@ -79,6 +81,8 @@ const getPostById = async (req, res) => {
         id: row.user_id,
         username: row.username,
         avatar: row.avatar,
+        color: row.color,
+        bio: row.bio,
       },
     };
 
@@ -106,7 +110,7 @@ const createPost = async (req, res) => {
 
     // Get user info for response
     const userResult = await pool.query(
-      'SELECT id, username, avatar FROM users WHERE id = $1',
+      'SELECT id, username, avatar, color, bio FROM users WHERE id = $1',
       [userId]
     );
 
@@ -123,6 +127,7 @@ const createPost = async (req, res) => {
           id: user.id,
           username: user.username,
           avatar: user.avatar,
+          color: user.color,
         },
       },
     });
@@ -165,7 +170,7 @@ const updatePost = async (req, res) => {
 
     // Get user info for response
     const userResult = await pool.query(
-      'SELECT id, username, avatar FROM users WHERE id = $1',
+      'SELECT id, username, avatar, color, bio FROM users WHERE id = $1',
       [userId]
     );
 
@@ -182,6 +187,7 @@ const updatePost = async (req, res) => {
           id: user.id,
           username: user.username,
           avatar: user.avatar,
+          color: user.color,
         },
       },
     });

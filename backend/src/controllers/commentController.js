@@ -8,7 +8,7 @@ const getPostComments = async (req, res) => {
     // Get all comments for the post with user info
     const query = `
       SELECT c.id, c.content, c.parent_comment_id, c.created_at,
-             u.id as user_id, u.username, u.avatar
+             u.id as user_id, u.username, u.avatar, u.color, u.bio
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.post_id = $1
@@ -26,6 +26,8 @@ const getPostComments = async (req, res) => {
         id: row.user_id,
         username: row.username,
         avatar: row.avatar,
+        color: row.color,
+        bio: row.bio,
       },
     }));
 
@@ -81,7 +83,7 @@ const createComment = async (req, res) => {
 
     // Get user info for response
     const userResult = await pool.query(
-      "SELECT id, username, avatar FROM users WHERE id = $1",
+      "SELECT id, username, avatar, color, bio FROM users WHERE id = $1",
       [userId],
     );
 
@@ -98,6 +100,8 @@ const createComment = async (req, res) => {
           id: user.id,
           username: user.username,
           avatar: user.avatar,
+          color: user.color,
+          bio: user.bio,
         },
       },
     });
