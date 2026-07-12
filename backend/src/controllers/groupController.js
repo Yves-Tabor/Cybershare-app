@@ -262,7 +262,7 @@ const getGroupPostAttachment = async (req, res) => {
   try {
     const { id, postId } = req.params;
     
-    const query = \`SELECT attachment_data, attachment_name, attachment_type FROM group_posts WHERE id = $1 AND group_id = $2\`;
+    const query = `SELECT attachment_data, attachment_name, attachment_type FROM group_posts WHERE id = $1 AND group_id = $2`;
     const result = await db.query(query, [postId, id]);
 
     if (result.rows.length === 0 || !result.rows[0].attachment_data) {
@@ -271,7 +271,7 @@ const getGroupPostAttachment = async (req, res) => {
 
     const attachment = result.rows[0];
     res.setHeader("Content-Type", attachment.attachment_type);
-    res.setHeader("Content-Disposition", \`inline; filename="\${attachment.attachment_name}"\`);
+    res.setHeader("Content-Disposition", `inline; filename="${attachment.attachment_name}"`);
     res.send(attachment.attachment_data);
   } catch (error) {
     console.error("Error fetching attachment:", error);
