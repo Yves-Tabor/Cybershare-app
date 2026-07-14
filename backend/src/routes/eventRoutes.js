@@ -26,7 +26,7 @@ const validate = (schema) => (req, res, next) => {
 };
 
 // Public routes (no auth required)
-router.get('/', getAllEvents);
+router.get('/', authMiddleware.optionalAuth, getAllEvents);
 router.get('/:id', getEventById);
 
 // Protected routes (require authentication)
