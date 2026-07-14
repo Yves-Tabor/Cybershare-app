@@ -3,6 +3,8 @@ import mainBg from "../assets/mainBg.png";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const AVATAR_COLORS = [
   "#534AB7",
   "#0F6E56",
@@ -88,106 +90,9 @@ function extractDomain(url) {
 
 const TODAY = todayISO();
 
-// ─── Seed data ────────────────────────────────────────────────────────────────
+// ─── API Integration ─────────────────────────────────────────────────────────
 
-const INITIAL_ITEMS = [
-  {
-    id: 1,
-    type: "post",
-    title: "New lateral movement technique using DCOM",
-    snippet:
-      "Avoids Sysmon event 3 entirely — full write-up posted in the thread, tested on Win11 22H2.",
-    context: "Red Team Operators",
-    author: "cypher_x",
-    meta: { likes: 41, comments: 2 },
-    savedAt: Date.now() - 1000 * 60 * 60 * 4,
-  },
-  {
-    id: 2,
-    type: "post",
-    title: "23 living-off-the-land binaries most EDRs still miss",
-    snippet:
-      "A compiled list of LOLBins that fly under common EDR detection logic going into 2026.",
-    context: "Red Team Operators",
-    author: "vxresearch",
-    meta: { likes: 88, comments: 0 },
-    savedAt: Date.now() - 1000 * 60 * 60 * 21,
-  },
-  {
-    id: 3,
-    type: "post",
-    title: "Sigma rule: detects PrintNightmare-style abuse",
-    snippet:
-      "Tested against 14 adversary simulations. A non-system-printer condition cuts false positives by ~40%.",
-    context: "Blue Team Collective",
-    author: "patchwatcher",
-    meta: { likes: 67, comments: 1 },
-    savedAt: Date.now() - 1000 * 60 * 60 * 29,
-  },
-  {
-    id: 4,
-    type: "post",
-    title: "P1 SSRF chained with an open redirect — $18k payout",
-    snippet:
-      "Full methodology from the fintech engagement, including the recon steps that surfaced the redirect.",
-    context: "Bug Bounty Hunters",
-    author: "root_kai",
-    meta: { likes: 112, comments: 1 },
-    savedAt: Date.now() - 1000 * 60 * 60 * 47,
-  },
-  {
-    id: 5,
-    type: "event",
-    title: "Sigma Rule Writing Workshop",
-    snippet:
-      "Hands-on session building detection rules from real adversary simulation logs.",
-    context: "Hosted by patchwatcher",
-    date: addDays(TODAY, 2),
-    time: "18:00",
-    savedAt: Date.now() - 1000 * 60 * 60 * 3,
-  },
-  {
-    id: 6,
-    type: "event",
-    title: "Quarterly CTF Finals",
-    snippet:
-      "Top 10 teams from the qualifier round face off live across pwn, crypto, and web.",
-    context: "Hosted by defcon_jay",
-    date: addDays(TODAY, 5),
-    time: "10:00",
-    savedAt: Date.now() - 1000 * 60 * 60 * 8,
-  },
-  {
-    id: 7,
-    type: "resource",
-    title: "GTFOBins",
-    snippet:
-      "Curated list of Unix binaries that can be abused to bypass local security restrictions.",
-    domain: "gtfobins.github.io",
-    url: "https://gtfobins.github.io",
-    savedAt: Date.now() - 1000 * 60 * 60 * 70,
-  },
-  {
-    id: 8,
-    type: "resource",
-    title: "MITRE ATT&CK Navigator",
-    snippet:
-      "Layered matrix view for mapping detection coverage and gaps to ATT&CK techniques.",
-    domain: "mitre-attack.github.io",
-    url: "https://mitre-attack.github.io/attack-navigator/",
-    savedAt: Date.now() - 1000 * 60 * 60 * 94,
-  },
-  {
-    id: 9,
-    type: "resource",
-    title: "HackTricks",
-    snippet:
-      "Pentesting methodology wiki — escalation paths, cloud abuse techniques, and CTF tricks.",
-    domain: "book.hacktricks.xyz",
-    url: "https://book.hacktricks.xyz",
-    savedAt: Date.now() - 1000 * 60 * 60 * 118,
-  },
-];
+import { savedItemsAPI } from "../utils/api";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -594,27 +499,18 @@ function SavedItemCard({ item, onRemove, onOpen }) {
 
             {item.type === "resource" ? (
               <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={item.fileId ? `${API_BASE}/resources/files/${item.fileId}/download` : item.url}
+                target={item.fileId ? undefined : "_blank"}
+                rel={item.fileId ? undefined : "noopener noreferrer"}
+                download={item.fileId ? item.fileName : undefined}
                 className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#BA7517]/10 border-[#BA7517]/40 text-[#BA7517] hover:bg-[#BA7517]/20 no-underline"
                 style={{ padding: "6px 12px" }}
               >
-                Visit
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
+                {item.fileId ? "Download" : "Visit"}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m-6 3.75 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" />
                 </svg>
+
               </a>
             ) : (
               <button
@@ -652,12 +548,27 @@ function SavedItemCard({ item, onRemove, onOpen }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SavedItems() {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [showSave, setShowSave] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
+
+  useEffect(() => {
+    async function fetchItems() {
+      try {
+        const data = await savedItemsAPI.getAll();
+        setItems(data.items || []);
+      } catch (err) {
+        console.error("Failed to fetch saved items:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchItems();
+  }, []);
 
   function showToast(msg) {
     clearTimeout(toastTimer.current);
@@ -668,12 +579,17 @@ export default function SavedItems() {
     );
   }
 
-  function handleRemove(id) {
-    setItems((prev) => {
-      const target = prev.find((i) => i.id === id);
-      if (target) showToast(`Removed "${target.title}" from saved items`);
-      return prev.filter((i) => i.id !== id);
-    });
+  async function handleRemove(id) {
+    const target = items.find((i) => i.id === id);
+    if (!target) return;
+    try {
+      await savedItemsAPI.unsave(target.type, target.real_id);
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      showToast(`Removed "${target.title}" from saved items`);
+    } catch (e) {
+      console.error(e);
+      showToast("Failed to remove item");
+    }
   }
 
   function handleOpen(item) {
@@ -812,11 +728,10 @@ export default function SavedItems() {
                   <button
                     key={f.key}
                     onClick={() => setFilter(f.key)}
-                    className={`flex items-center gap-1.5 text-[11.5px] font-mono transition-colors cursor-pointer border-none ${
-                      active
-                        ? "bg-white text-black"
-                        : "bg-transparent text-white hover:text-[#777]"
-                    }`}
+                    className={`flex items-center gap-1.5 text-[11.5px] font-mono transition-colors cursor-pointer border-none ${active
+                      ? "bg-white text-black"
+                      : "bg-transparent text-white hover:text-[#777]"
+                      }`}
                     style={{ padding: "10px 16px" }}
                   >
                     {f.label}

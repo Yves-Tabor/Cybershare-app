@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { resourcesAPI, authAPI } from "../utils/api";
+import { resourcesAPI, authAPI, savedItemsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const AVATAR_COLORS = {
   default: "#2a2a3a",
@@ -66,15 +68,8 @@ function UploadForm({ onPublish }) {
       return;
     }
     setError("");
-    onPublish({
-      title: title.trim(),
-      content: content.trim(),
-      files: files.map((f) => ({
-        name: f.name,
-        size: formatBytes(f.size),
-        type: f.type,
-      })),
-    });
+    // Pass raw File objects so the parent can upload them
+    onPublish({ title: title.trim(), content: content.trim(), files });
     setTitle("");
     setContent("");
     setFiles([]);
@@ -398,17 +393,20 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
                 className="flex justify-end mt-3 border-t border-[#141414]"
                 style={{ paddingTop: "12px" }}
               >
-                <button
-                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none"
+                <a
+                  href={`${API_BASE}/resources/files/${file.id}/download`}
+                  download={file.name}
+                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none no-underline"
                   style={{
                     paddingLeft: "16px",
                     paddingRight: "16px",
                     paddingTop: "6px",
                     paddingBottom: "6px",
+                    display: "inline-block",
                   }}
                 >
                   download
-                </button>
+                </a>
               </div>
             </div>
           ))}
@@ -512,6 +510,13 @@ export default function Resources() {
           files: r.files || [],
         }));
         setResources(transformedResources);
+
+        // Fetch saved items to populate the initial bookmark state
+        const savedData = await savedItemsAPI.getAll();
+        const savedResourceIds = new Set(
+          savedData.items.filter((i) => i.type === "resource").map((i) => i.real_id)
+        );
+        setBookmarked(savedResourceIds);
       } catch (error) {
         console.error("Failed to fetch resources:", error);
         // Redirect to login if not authenticated
@@ -547,18 +552,36 @@ export default function Resources() {
     );
   }
 
-  function handleBookmarkToggle(id) {
+  async function handleBookmarkToggle(id) {
+    const isBookmarked = bookmarked.has(id);
+    
+    // Optimistic update
     setBookmarked((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        showToast("Bookmark removed.");
-      } else {
-        next.add(id);
-        showToast("Resource bookmarked.");
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
+
+    try {
+      if (isBookmarked) {
+        await savedItemsAPI.unsave("resource", id);
+        showToast("Removed from saved items");
+      } else {
+        await savedItemsAPI.save("resource", id);
+        showToast("Saved resource");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Failed to update saved status");
+      // Revert on failure
+      setBookmarked((prev) => {
+        const next = new Set(prev);
+        if (isBookmarked) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    }
   }
 
   async function handleDelete(id) {
@@ -574,8 +597,23 @@ export default function Resources() {
 
   async function handlePublish({ title, content, files }) {
     try {
-      await resourcesAPI.create(title, content, "https://cybershare.local", "General");
-      // Refresh resources after publishing
+      // Create the resource entry first
+      const created = await resourcesAPI.create(
+        title,
+        content,
+        "https://cybershare.local",
+        "General"
+      );
+      const resourceId = created.resource.id;
+
+      // Upload each attached file to the newly created resource
+      if (files && files.length > 0) {
+        await Promise.all(
+          files.map((file) => resourcesAPI.uploadFile(resourceId, file))
+        );
+      }
+
+      // Refresh resources after publishing so file IDs are loaded
       const data = await resourcesAPI.getAll();
       const transformedResources = data.resources.map((r) => ({
         id: r.id,

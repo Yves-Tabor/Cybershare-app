@@ -159,6 +159,37 @@ export const resourcesAPI = {
     });
   },
 
+  // Upload a file attachment to an existing resource (multipart)
+  uploadFile: async (resourceId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = getToken();
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(
+      `${API_BASE_URL}/resources/${resourceId}/files`,
+      { method: "POST", headers, body: formData, credentials: "include" }
+    );
+
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json")
+      ? await response.json()
+      : null;
+
+    if (!response.ok) {
+      const error = new Error(data?.error || "Upload failed");
+      error.status = response.status;
+      throw error;
+    }
+    return data;
+  },
+
+  // Returns the URL string for downloading a file (use as href or window.open)
+  downloadFileUrl: (fileId) =>
+    `${API_BASE_URL}/resources/files/${fileId}/download`,
+
   update: async (id, title, description, url, category) => {
     return apiRequest(`/resources/${id}`, {
       method: "PATCH",
@@ -503,6 +534,27 @@ export const groupsAPI = {
       method: "DELETE",
     });
   },
+};
+
+// Saved Items API
+export const savedItemsAPI = {
+  getAll: async () => {
+    return apiRequest("/saved-items");
+  },
+  save: async (item_type, item_id) => {
+    return apiRequest("/saved-items", {
+      method: "POST",
+      body: JSON.stringify({ item_type, item_id }),
+    });
+  },
+  unsave: async (item_type, item_id) => {
+    const params = new URLSearchParams();
+    params.append("item_type", item_type);
+    params.append("item_id", item_id);
+    return apiRequest(`/saved-items?${params.toString()}`, {
+      method: "DELETE",
+    });
+  }
 };
 
 export default apiRequest;
