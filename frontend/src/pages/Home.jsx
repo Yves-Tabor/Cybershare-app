@@ -1375,62 +1375,43 @@ export default function Home() {
   }
 
   async function handleLike(id) {
-    if (pendingLikeIdsRef.current.has(id)) return;
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
 
-    let snapshot = null;
+    const wasLiked = post.liked;
 
-    setPosts((prev) => {
-      const currentPost = prev.find((p) => p.id === id);
-      if (!currentPost) return prev;
-
-      snapshot = {
-        liked: currentPost.liked,
-        likes: currentPost.likes,
-      };
-
-      return prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              liked: !p.liked,
-              likes: p.liked ? Math.max(0, p.likes - 1) : p.likes + 1,
-            }
-          : p,
-      );
-    });
-
-    if (!snapshot) return;
-
-    pendingLikeIdsRef.current.add(id);
-    setPendingLikes((prev) => ({ ...prev, [id]: true }));
+    // Optimistic UI update — update immediately
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        return {
+          ...p,
+          liked: !p.liked,
+          likes: p.liked ? p.likes - 1 : p.likes + 1,
+        };
+      }),
+    );
 
     try {
-      if (snapshot.liked) {
+      if (wasLiked) {
         await postsAPI.unlike(id);
       } else {
         await postsAPI.like(id);
       }
     } catch (error) {
-      console.error("Failed to toggle like:", error);
+      console.error("Failed to like/unlike post:", error);
+      // Revert on failure
       setPosts((prev) =>
-        prev.map((p) =>
-          p.id === id
-            ? {
-                ...p,
-                liked: snapshot.liked,
-                likes: Math.max(0, snapshot.likes),
-              }
-            : p,
-        ),
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return {
+            ...p,
+            liked: wasLiked,
+            likes: wasLiked ? p.likes + 1 : p.likes - 1,
+          };
+        }),
       );
       showToast("Failed to update like");
-    } finally {
-      pendingLikeIdsRef.current.delete(id);
-      setPendingLikes((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
     }
   }
 
