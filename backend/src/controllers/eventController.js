@@ -151,6 +151,12 @@ const createEvent = async (req, res) => {
 
     const event = result.rows[0];
 
+    // Automatically register the creator to their own event
+    await pool.query(
+      `INSERT INTO event_attendees (event_id, user_id) VALUES ($1, $2)`,
+      [event.id, userId]
+    );
+
     // Get creator info for response
     const userResult = await pool.query(
       'SELECT id, username, avatar FROM users WHERE id = $1',

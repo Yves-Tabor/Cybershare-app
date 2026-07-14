@@ -256,7 +256,7 @@ function CreateEventModal({ onClose, onCreate }) {
               }}
               placeholder="e.g. Sigma Rule Writing Workshop"
               maxLength={80}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -271,7 +271,7 @@ function CreateEventModal({ onClose, onCreate }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What should people expect?"
               rows={3}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
+              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -357,7 +357,7 @@ function CreateEventModal({ onClose, onCreate }) {
                   ? "Discord, Zoom, Twitch…"
                   : "Street address or venue name"
               }
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -376,8 +376,8 @@ function CreateEventModal({ onClose, onCreate }) {
                   setDate(e.target.value);
                   setFormError("");
                 }}
-                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
-                style={{ padding: "12px 16px" }}
+                className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
+                style={{ padding: "12px 16px", colorScheme: "dark" }}
               />
             </div>
             <div className="flex-1">
@@ -391,8 +391,8 @@ function CreateEventModal({ onClose, onCreate }) {
                   setTime(e.target.value);
                   setFormError("");
                 }}
-                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
-                style={{ padding: "12px 16px" }}
+                className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
+                style={{ padding: "12px 16px", colorScheme: "dark" }}
               />
             </div>
           </div>
