@@ -103,10 +103,10 @@ export const authAPI = {
     return apiRequest("/auth/me");
   },
 
-  completeProfile: async (username, password) => {
+  completeProfile: async (username, password, bio) => {
     return apiRequest("/auth/complete-profile", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, bio }),
     });
   },
 
@@ -114,6 +114,30 @@ export const authAPI = {
     return apiRequest("/auth/profile", {
       method: "PATCH",
       body: JSON.stringify({ username, bio, color }),
+    });
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    return apiRequest("/auth/change-password", {
+      method: "PATCH",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  deleteAccount: async (password) => {
+    return apiRequest("/auth/account", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+    });
+  },
+
+  getSessions: async () => {
+    return apiRequest("/auth/sessions");
+  },
+
+  revokeSession: async (id) => {
+    return apiRequest(`/auth/sessions/${id}`, {
+      method: "DELETE",
     });
   },
 };

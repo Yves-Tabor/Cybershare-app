@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { authAPI, notificationsAPI, clearToken } from "../utils/api";
+import { authAPI, notificationsAPI, clearToken, getToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const SITE_CONFIG = {
@@ -807,10 +807,30 @@ export default function Navbar() {
       }
     });
 
+    const sha256 = async (message) => {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      return hashHex;
+    };
+
+    socket.on("session:revoked", async (data) => {
+      const localToken = getToken();
+      if (localToken) {
+        const localHash = await sha256(localToken);
+        if (localHash === data.tokenHash) {
+          clearToken();
+          // We can also redirect
+          redirectToWelcomeAuth(navigate);
+        }
+      }
+    });
+
     return () => {
       socket.disconnect();
     };
-  }, [user]);
+  }, [user, navigate]);
 
   function toggle() {
     setOpen((prev) => !prev);

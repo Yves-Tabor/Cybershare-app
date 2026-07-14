@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
+const pool = require("../config/database");
+const { hashToken } = require("../utils/sessionUtils");
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     // Accept token from cookie OR Authorization: Bearer <token> header
     let token = req.cookies.token;
@@ -15,11 +17,31 @@ const authMiddleware = (req, res, next) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    // Verify token
+    // Verify JWT signature + expiry
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach user ID to request
+    // Check the session is still active in the DB
+    const tokenHash = hashToken(token);
+    const sessionResult = await pool.query(
+      "SELECT id FROM user_sessions WHERE token_hash = $1 AND is_revoked = false",
+      [tokenHash]
+    );
+
+    if (sessionResult.rows.length === 0) {
+      // Token was revoked or never registered — treat as unauthorized
+      return res.status(401).json({ error: "Session expired or revoked" });
+    }
+
+    // Keep last_seen fresh (fire and forget — don't block the request)
+    pool.query(
+      "UPDATE user_sessions SET last_seen = NOW() WHERE token_hash = $1",
+      [tokenHash]
+    ).catch(() => {});
+
+    // Attach user ID and current token to request
     req.userId = decoded.userId;
+    req.token = token;
+    req.tokenHash = tokenHash;
 
     next();
   } catch (error) {
@@ -56,3 +78,4 @@ const optionalAuth = (req, res, next) => {
 
 module.exports = authMiddleware;
 module.exports.optionalAuth = optionalAuth;
+

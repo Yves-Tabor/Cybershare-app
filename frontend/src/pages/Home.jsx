@@ -928,6 +928,7 @@ function CompleteProfileModal({ onClose, onSubmit }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [bio, setBio] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -980,7 +981,7 @@ function CompleteProfileModal({ onClose, onSubmit }) {
       setError("Passwords do not match.");
       return;
     }
-    onSubmit({ username: username.trim(), password });
+    onSubmit({ username: username.trim(), password, bio: bio.trim() });
   }
 
   function handleBackdrop(e) {
@@ -1073,6 +1074,32 @@ function CompleteProfileModal({ onClose, onSubmit }) {
               placeholder="Choose a username…"
               maxLength={30}
               className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              style={{
+                paddingLeft: "16px",
+                paddingRight: "16px",
+                paddingTop: "12px",
+                paddingBottom: "12px",
+                background: "transparent",
+              }}
+            />
+          </div>
+          <br />
+
+          {/* Bio */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => {
+                setBio(e.target.value);
+                setError("");
+              }}
+              placeholder="Tell us about yourself…"
+              maxLength={160}
+              rows={2}
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver resize-none"
               style={{
                 paddingLeft: "16px",
                 paddingRight: "16px",
@@ -1469,11 +1496,13 @@ export default function Home() {
     }
   }
 
-  async function handleCompleteProfile({ username, password }) {
+  async function handleCompleteProfile({ username, password, bio }) {
     try {
-      await authAPI.completeProfile(username, password);
+      await authAPI.completeProfile(username, password, bio);
       setCompleteProfileOpen(false);
       showToast("Profile completed successfully!");
+      const userResponse = await authAPI.me();
+      setCurrentUser(userResponse.user);
     } catch (error) {
       console.error("Failed to complete profile:", error);
       if (error.details) {

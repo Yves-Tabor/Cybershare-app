@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { authAPI } from "../utils/api";
+import { authAPI, clearToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -17,34 +17,6 @@ const AVATAR_COLORS = [
   "#993556",
   "#2a6b6b",
   "#6b2a55",
-];
-
-const INITIAL_SESSIONS = [
-  {
-    id: 1,
-    device: "MacBook Pro · Chrome",
-    location: "Kigali, RW",
-    ip: "102.89.44.12",
-    ts: Date.now() - 1000 * 60 * 2,
-    current: true,
-  },
-  {
-    id: 2,
-    device: "iPhone 16 · Safari",
-    location: "Kigali, RW",
-    ip: "102.89.44.12",
-    ts: Date.now() - 1000 * 60 * 60 * 6,
-    current: false,
-  },
-  {
-    id: 3,
-    device: "Linux · Firefox",
-    location: "Amsterdam, NL",
-    ip: "185.220.101.7",
-    ts: Date.now() - 1000 * 60 * 60 * 24 * 3,
-    current: false,
-    unfamiliar: true,
-  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -968,19 +940,22 @@ function ProfileSection({ profile, setProfile, showToast }) {
 }
 
 function SecuritySection({
-  security,
-  setSecurity,
   sessions,
   setSessions,
   showToast,
   profile,
 }) {
+  const navigate = useNavigate();
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteSaving, setDeleteSaving] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
-  function updatePassword() {
+  async function updatePassword() {
     if (!pw.current || !pw.next) {
       setPwError("All fields are required.");
       return;
@@ -993,30 +968,48 @@ function SecuritySection({
       setPwError("New password must be at least 8 characters.");
       return;
     }
-    setPw({ current: "", next: "", confirm: "" });
+    setPwSaving(true);
     setPwError("");
-    showToast("Password updated.");
+    try {
+      await authAPI.changePassword(pw.current, pw.next);
+      setPw({ current: "", next: "", confirm: "" });
+      showToast("Password updated.");
+    } catch (err) {
+      setPwError(err.message || "Failed to update password.");
+    } finally {
+      setPwSaving(false);
+    }
   }
 
-  function toggle2FA() {
-    const next = !security.twoFactorEnabled;
-    setSecurity((prev) => ({ ...prev, twoFactorEnabled: next }));
-    showToast(
-      next
-        ? "Two-factor authentication enabled."
-        : "Two-factor authentication disabled.",
-    );
+  async function handleRevoke() {
+    try {
+      await authAPI.revokeSession(revokeTarget.id);
+      setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
+      showToast("Session revoked.");
+    } catch (err) {
+      showToast("Failed to revoke session.");
+    } finally {
+      setRevokeTarget(null);
+    }
   }
 
-  function handleRevoke() {
-    setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
-    showToast("Session revoked.");
-    setRevokeTarget(null);
-  }
-
-  function handleDelete() {
-    showToast("Account deleted.");
-    setConfirmDelete(false);
+  async function handleDelete() {
+    if (!deletePassword) {
+      setDeleteError("Password is required.");
+      return;
+    }
+    setDeleteSaving(true);
+    setDeleteError("");
+    try {
+      await authAPI.deleteAccount(deletePassword);
+      clearToken();
+      showToast("Account deleted.");
+      setTimeout(() => navigate("/"), 1200);
+    } catch (err) {
+      setDeleteError(err.message || "Failed to delete account.");
+    } finally {
+      setDeleteSaving(false);
+    }
   }
 
   return (
@@ -1074,33 +1067,10 @@ function SecuritySection({
           <p className="text-[11px] text-[#E24B4A] font-mono mb-3">{pwError}</p>
         )}
         <div className="flex justify-end pt-3 border-t border-[#111]">
-          <SaveButton onClick={updatePassword}>Update password</SaveButton>
+          <SaveButton onClick={updatePassword} disabled={pwSaving}>
+            {pwSaving ? "Updating..." : "Update password"}
+          </SaveButton>
         </div>
-      </SectionCard>
-      <br />
-
-      <SectionCard title="Two-factor authentication" icon={<IconShield />}>
-        <SettingRow
-          label="Authenticator app"
-          description={
-            security.twoFactorEnabled
-              ? "Enabled — a code is required at sign-in."
-              : "Add a second step when you sign in."
-          }
-          control={
-            <Toggle checked={security.twoFactorEnabled} onChange={toggle2FA} />
-          }
-        />
-        {security.twoFactorEnabled && (
-          <div className="flex justify-end pt-3">
-            <button
-              onClick={() => showToast("Backup codes regenerated.")}
-              className="text-[11px] font-mono text-[#555] hover:text-[#999] transition-colors bg-transparent border-none cursor-pointer"
-            >
-              View backup codes
-            </button>
-          </div>
-        )}
       </SectionCard>
       <br />
 
@@ -1134,7 +1104,7 @@ function SecuritySection({
             </p>
           </div>
           <button
-            onClick={() => setConfirmDelete(true)}
+            onClick={() => { setDeletePassword(""); setDeleteError(""); setConfirmDelete(true); }}
             className="text-[11px] font-mono rounded-lg bg-[#E24B4A] text-white hover:opacity-90 transition-all cursor-pointer border-none flex-shrink-0"
             style={{
               paddingLeft: "14px",
@@ -1158,16 +1128,64 @@ function SecuritySection({
           onClose={() => setRevokeTarget(null)}
         />
       )}
+
       {confirmDelete && (
-        <ConfirmModal
-          title="Delete account"
-          message="This permanently deletes your profile, posts, comments, and group memberships. This cannot be undone."
-          confirmLabel="Delete account"
-          requireText={profile.handle}
-          danger
-          onConfirm={handleDelete}
-          onClose={() => setConfirmDelete(false)}
-        />
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+          onClick={(e) => e.target === e.currentTarget && !deleteSaving && setConfirmDelete(false)}
+          style={{ padding: "16px" }}
+        >
+          <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+            <div
+              className="border-b border-[#141414]"
+              style={{ paddingLeft: "24px", paddingRight: "24px", paddingTop: "16px", paddingBottom: "16px" }}
+            >
+              <p className="text-[13px] font-semibold text-white">Delete account</p>
+            </div>
+            <div style={{ paddingLeft: "24px", paddingRight: "24px", paddingTop: "20px", paddingBottom: "20px" }}>
+              <p className="text-[12.5px] text-[#888] leading-relaxed">
+                This permanently deletes your profile, posts, comments, and group memberships. This cannot be undone.
+              </p>
+              <div className="mt-4">
+                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                  Enter your <span className="text-[#E24B4A]">password</span> to confirm
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                  disabled={deleteSaving}
+                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors font-mono"
+                  style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "10px", paddingBottom: "10px" }}
+                />
+                {deleteError && (
+                  <p className="text-[11px] text-[#E24B4A] font-mono mt-1.5">{deleteError}</p>
+                )}
+              </div>
+            </div>
+            <div
+              className="flex justify-end gap-2.5 border-t border-[#141414]"
+              style={{ paddingLeft: "24px", paddingRight: "24px", paddingTop: "16px", paddingBottom: "16px" }}
+            >
+              <button
+                onClick={() => !deleteSaving && setConfirmDelete(false)}
+                disabled={deleteSaving}
+                className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer disabled:opacity-50"
+                style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "8px", paddingBottom: "8px" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={!deletePassword || deleteSaving}
+                className="rounded-lg text-[12px] font-semibold cursor-pointer border-none bg-[#E24B4A] text-white hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "8px", paddingBottom: "8px" }}
+              >
+                {deleteSaving ? "Deleting..." : "Delete account"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
@@ -1246,7 +1264,7 @@ export default function Settings() {
     bio: "",
   });
   const [security, setSecurity] = useState({ twoFactorEnabled: false });
-  const [sessions, setSessions] = useState(INITIAL_SESSIONS);
+  const [sessions, setSessions] = useState([]);
   const [notifications, setNotifications] = useState({
     comments: true,
     invites: true,
@@ -1270,6 +1288,8 @@ export default function Settings() {
           email: user.email,
           avatar: user.avatar,
         });
+        const sessData = await authAPI.getSessions();
+        setSessions(sessData.sessions || []);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
         // Redirect to login if not authenticated
@@ -1360,8 +1380,6 @@ export default function Settings() {
               )}
               {section === "security" && (
                 <SecuritySection
-                  security={security}
-                  setSecurity={setSecurity}
                   sessions={sessions}
                   setSessions={setSessions}
                   showToast={showToast}
