@@ -18,8 +18,17 @@ function UploadForm({ onPublish }) {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
   const addFiles = (incoming) => {
     const arr = Array.from(incoming);
+    const oversized = arr.filter((f) => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) {
+      setError(
+        `File${oversized.length > 1 ? "s" : ""} too large (max 10 MB): ${oversized.map((f) => f.name).join(", ")}`
+      );
+      return;
+    }
     setFiles((prev) => {
       const names = new Set(prev.map((f) => f.name));
       return [...prev, ...arr.filter((f) => !names.has(f.name))];
@@ -431,29 +440,37 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
             </span>
           ))}
         </div>
-        <button
-          className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg cursor-pointer"
-          style={{
-            paddingLeft: "12px",
-            paddingRight: "12px",
-            paddingTop: "6px",
-            paddingBottom: "6px",
-          }}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {resource.url && resource.url !== "https://cybershare.local" && (
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#aaa] transition-colors border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg no-underline"
+            style={{
+              paddingLeft: "12px",
+              paddingRight: "12px",
+              paddingTop: "6px",
+              paddingBottom: "6px",
+            }}
+            aria-label="Download resource"
           >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          comment
-        </button>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            download
+          </a>
+        )}
       </div>
     </div>
   );
@@ -490,6 +507,7 @@ export default function Resources() {
           initials: (r.user?.username || "OP").slice(0, 2).toUpperCase(),
           title: r.title,
           content: r.description,
+          url: r.url || null,
           tags: r.tags || ["#Resource"],
           files: r.files || [],
         }));
@@ -567,6 +585,7 @@ export default function Resources() {
         initials: (r.user?.username || "OP").slice(0, 2).toUpperCase(),
         title: r.title,
         content: r.description,
+        url: r.url || null,
         tags: r.tags || ["#Resource"],
         files: r.files || [],
       }));
