@@ -1193,7 +1193,13 @@ function SecuritySection({
 
 function NotificationsSection({ notifications, setNotifications, showToast }) {
   function toggle(key) {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+    setNotifications((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem("notif_prefs", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
     showToast("Notification preferences updated.");
   }
 
@@ -1224,12 +1230,12 @@ function NotificationsSection({ notifications, setNotifications, showToast }) {
         }
       />
       <SettingRow
-        label="Mentions"
-        description="Someone mentions your handle in a post or comment."
+        label="Event creation"
+        description="A new event is posted to the community."
         control={
           <Toggle
-            checked={notifications.mentions}
-            onChange={() => toggle("mentions")}
+            checked={notifications.eventCreation}
+            onChange={() => toggle("eventCreation")}
           />
         }
       />
@@ -1265,10 +1271,16 @@ export default function Settings() {
   });
   const [security, setSecurity] = useState({ twoFactorEnabled: false });
   const [sessions, setSessions] = useState([]);
-  const [notifications, setNotifications] = useState({
-    comments: true,
-    invites: true,
-    mentions: true,
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const stored = localStorage.getItem("notif_prefs");
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return {
+      comments: true,
+      invites: true,
+      eventCreation: true,
+    };
   });
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
