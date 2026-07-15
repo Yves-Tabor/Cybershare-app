@@ -326,7 +326,7 @@ const updateProfile = async (req, res) => {
     }
     if (bio !== undefined) {
       updates.push(`bio = $${paramIndex++}`);
-      values.push(bio);
+      values.push(bio || null);
     }
     if (color) {
       updates.push(`color = $${paramIndex++}`);
