@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { resourcesAPI } from "../utils/api";
+import { resourcesAPI, authAPI, savedItemsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const AVATAR_COLORS = {
   default: "#2a2a3a",
@@ -20,10 +22,18 @@ function UploadForm({ onPublish }) {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
   const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
 
   const addFiles = (incoming) => {
     const arr = Array.from(incoming);
+    const oversized = arr.filter((f) => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) {
+      setError(
+        `File${oversized.length > 1 ? "s" : ""} too large (max 10 MB): ${oversized.map((f) => f.name).join(", ")}`
+      );
+      return;
+    }
     setFiles((prev) => {
       const names = new Set(prev.map((f) => f.name));
       return [...prev, ...arr.filter((f) => !names.has(f.name))];
@@ -76,11 +86,7 @@ function UploadForm({ onPublish }) {
       content: content.trim(),
       url: url.trim(),
       category,
-      files: files.map((f) => ({
-        name: f.name,
-        size: formatBytes(f.size),
-        type: f.type,
-      })),
+      files,
     });
     setTitle("");
     setContent("");
@@ -337,8 +343,9 @@ function UploadForm({ onPublish }) {
 
 // ─── Resource card ────────────────────────────────────────────────────────────
 
-function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
+function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
+  const isOwner = currentUser && currentUser.username === resource.author;
 
   return (
     <div
@@ -350,7 +357,7 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
         paddingBottom: "20px",
       }}
     >
-      {/* Author row + bookmark */}
+      {/* Author row + bookmark / delete */}
       <div className="flex items-start justify-between gap-2 mb-4">
         <div className="flex items-center gap-3">
           <div
@@ -369,27 +376,49 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
           </div>
         </div>
 
-        {/* Bookmark button */}
-        <button
-          onClick={() => onBookmarkToggle(resource.id)}
-          className="flex-shrink-0 bg-transparent border-none cursor-pointer transition-colors mt-0.5"
-          aria-label={isBookmarked ? "Remove bookmark" : "Bookmark resource"}
-          style={{ padding: "4px" }}
-        >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill={isBookmarked ? "#7F77DD" : "none"}
-            stroke={isBookmarked ? "#7F77DD" : "#444"}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ transition: "all 0.15s ease" }}
+        {isOwner ? (
+          <button
+            onClick={() => onDelete(resource.id)}
+            className="flex-shrink-0 bg-transparent border-none cursor-pointer text-[#555] hover:text-[#E24B4A] transition-colors mt-0.5"
+            aria-label="Delete resource"
+            style={{ padding: "4px" }}
           >
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            onClick={() => onBookmarkToggle(resource.id)}
+            className="flex-shrink-0 bg-transparent border-none cursor-pointer transition-colors mt-0.5"
+            aria-label={isBookmarked ? "Remove bookmark" : "Bookmark resource"}
+            style={{ padding: "4px" }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill={isBookmarked ? "#7F77DD" : "none"}
+              stroke={isBookmarked ? "#7F77DD" : "#444"}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transition: "all 0.15s ease" }}
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Title & body */}
@@ -457,17 +486,20 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
                 className="flex justify-end mt-3 border-t border-[#141414]"
                 style={{ paddingTop: "12px" }}
               >
-                <button
-                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none"
+                <a
+                  href={`${API_BASE}/resources/files/${file.id}/download`}
+                  download={file.name}
+                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none no-underline"
                   style={{
                     paddingLeft: "16px",
                     paddingRight: "16px",
                     paddingTop: "6px",
                     paddingBottom: "6px",
+                    display: "inline-block",
                   }}
                 >
                   download
-                </button>
+                </a>
               </div>
             </div>
           ))}
@@ -501,29 +533,37 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
             </span>
           ))}
         </div>
-        <button
-          className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg cursor-pointer"
-          style={{
-            paddingLeft: "12px",
-            paddingRight: "12px",
-            paddingTop: "6px",
-            paddingBottom: "6px",
-          }}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {resource.url && resource.url !== "https://cybershare.local" && (
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#aaa] transition-colors border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg no-underline"
+            style={{
+              paddingLeft: "12px",
+              paddingRight: "12px",
+              paddingTop: "6px",
+              paddingBottom: "6px",
+            }}
+            aria-label="Download resource"
           >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          comment
-        </button>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            download
+          </a>
+        )}
       </div>
     </div>
   );
@@ -534,6 +574,7 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle }) {
 export default function Resources() {
   const navigate = useNavigate();
   const [resources, setResources] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookmarked, setBookmarked] = useState(new Set());
   const [view, setView] = useState("feed"); // "feed" | "upload"
@@ -542,25 +583,35 @@ export default function Resources() {
   const toastTimer = useRef(null);
   const searchRef = useRef(null);
 
-  // Fetch resources on mount
+  // Fetch resources and current user on mount
   useEffect(() => {
     async function fetchResources() {
       try {
+        const userResponse = await authAPI.me();
+        setCurrentUser(userResponse.user);
+
         const data = await resourcesAPI.getAll();
         // Transform backend data to match frontend format
         const transformedResources = data.resources.map((r) => ({
           id: r.id,
           author: r.user?.username || r.username || "Unknown",
           handle: `@${r.user?.username || r.username || "unknown"}`,
-          date: new Date(r.createdAt || r.created_at).toLocaleDateString(),
+          date: new Date(r.createdAt || r.created_at || Date.now()).toLocaleDateString(),
           initials: (r.user?.username || r.username || "??").slice(0, 2).toUpperCase(),
           title: r.title,
           content: r.description,
-          url: r.url,
-          tags: r.category ? [`#${r.category}`] : ["#Resource"],
+          url: r.url || null,
+          tags: r.tags || (r.category ? [`#${r.category}`] : ["#Resource"]),
           files: r.files || [],
         }));
         setResources(transformedResources);
+
+        // Fetch saved items to populate the initial bookmark state
+        const savedData = await savedItemsAPI.getAll();
+        const savedResourceIds = new Set(
+          savedData.items.filter((i) => i.type === "resource").map((i) => i.real_id)
+        );
+        setBookmarked(savedResourceIds);
       } catch (error) {
         console.error("Failed to fetch resources:", error);
         // Redirect to login if not authenticated
@@ -596,35 +647,74 @@ export default function Resources() {
     );
   }
 
-  function handleBookmarkToggle(id) {
+  async function handleBookmarkToggle(id) {
+    const isBookmarked = bookmarked.has(id);
+    
+    // Optimistic update
     setBookmarked((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        showToast("Bookmark removed.");
-      } else {
-        next.add(id);
-        showToast("Resource bookmarked.");
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
+
+    try {
+      if (isBookmarked) {
+        await savedItemsAPI.unsave("resource", id);
+        showToast("Removed from saved items");
+      } else {
+        await savedItemsAPI.save("resource", id);
+        showToast("Saved resource");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Failed to update saved status");
+      // Revert on failure
+      setBookmarked((prev) => {
+        const next = new Set(prev);
+        if (isBookmarked) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  async function handleDelete(id) {
+    try {
+      await resourcesAPI.delete(id);
+      setResources((prev) => prev.filter((r) => r.id !== id));
+      showToast("Resource deleted.");
+    } catch (error) {
+      console.error("Failed to delete resource:", error);
+      showToast("Failed to delete resource.");
+    }
   }
 
   async function handlePublish({ title, content, url, category, files }) {
     try {
-      await resourcesAPI.create(title, content, url, category);
-      // Refresh resources after publishing
+      // Create the resource entry first
+      const created = await resourcesAPI.create(title, content, url, category);
+      const resourceId = created?.resource?.id || created?.id;
+
+      // Upload each attached file to the newly created resource
+      if (files && files.length > 0 && resourceId) {
+        await Promise.all(
+          files.map((file) => resourcesAPI.uploadFile(resourceId, file))
+        );
+      }
+
+      // Refresh resources after publishing so file IDs are loaded
       const data = await resourcesAPI.getAll();
       const transformedResources = data.resources.map((r) => ({
         id: r.id,
         author: r.user?.username || r.username || "Unknown",
         handle: `@${r.user?.username || r.username || "unknown"}`,
-        date: new Date(r.createdAt || r.created_at).toLocaleDateString(),
+        date: new Date(r.createdAt || r.created_at || Date.now()).toLocaleDateString(),
         initials: (r.user?.username || r.username || "??").slice(0, 2).toUpperCase(),
         title: r.title,
         content: r.description,
-        url: r.url,
-        tags: r.category ? [`#${r.category}`] : ["#Resource"],
+        url: r.url || null,
+        tags: r.tags || (r.category ? [`#${r.category}`] : ["#Resource"]),
         files: r.files || [],
       }));
       setResources(transformedResources);
@@ -677,68 +767,71 @@ export default function Resources() {
           {/* Centered top section */}
           <div className="max-w-[600px] mx-auto">
             {/* Page header */}
-            <div className="flex items-center justify-between mb-6">
-              <div style={{ paddingRight: "1rem" }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div>
                 <h1 className="text-[18px] font-semibold text-white tracking-tight">
                   Resources
                 </h1>
                 <p className="text-[11px] text-[#444] mt-0.5 font-mono tracking-wide">
                   {resources.length} entries · {bookmarked.size} saved
                 </p>
-                <br />
               </div>
-              <button
-                onClick={() => {
-                  setView(view === "upload" ? "feed" : "upload");
-                  setQuery("");
-                }}
-                className={`flex items-center gap-2 rounded-lg text-[12px] font-mono tracking-wide border transition-all cursor-pointer ${
-                  view === "upload"
-                    ? "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
-                    : "bg-white text-[#080808] border-white hover:opacity-90 font-semibold"
-                }`}
-                style={{
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                  paddingTop: "8px",
-                  paddingBottom: "8px",
-                }}
+
+              <div
+                className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 self-start sm:self-center"
+                style={{ padding: "4px" }}
               >
-                {view === "upload" ? (
-                  <>
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                    Back to feed
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Add resource
-                  </>
-                )}
-              </button>
+                <button
+                  onClick={() => {
+                    setView("feed");
+                    setQuery("");
+                  }}
+                  className={`flex items-center justify-center gap-2 rounded-lg text-[12.5px] font-mono transition-colors cursor-pointer border-none ${view === "feed" ? "bg-white text-black font-semibold" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
+                  style={{ padding: "8px 16px" }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="13"
+                    height="13"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                    <line x1="3" y1="18" x2="3.01" y2="18" />
+                  </svg>
+                  Resource Feed
+                </button>
+                <button
+                  onClick={() => {
+                    setView("upload");
+                    setQuery("");
+                  }}
+                  className={`flex items-center justify-center gap-2 rounded-lg text-[12.5px] font-mono transition-colors cursor-pointer border-none ${view === "upload" ? "bg-white text-black font-semibold" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
+                  style={{ padding: "8px 16px" }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="13"
+                    height="13"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Publish Resource
+                </button>
+              </div>
             </div>
 
             {/* Search bar — only on feed view */}
@@ -832,6 +925,8 @@ export default function Resources() {
                     resource={r}
                     isBookmarked={bookmarked.has(r.id)}
                     onBookmarkToggle={handleBookmarkToggle}
+                    currentUser={currentUser}
+                    onDelete={handleDelete}
                   />
                 ))}
               </div>

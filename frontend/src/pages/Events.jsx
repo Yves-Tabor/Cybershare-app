@@ -256,7 +256,7 @@ function CreateEventModal({ onClose, onCreate }) {
               }}
               placeholder="e.g. Sigma Rule Writing Workshop"
               maxLength={80}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -271,7 +271,7 @@ function CreateEventModal({ onClose, onCreate }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What should people expect?"
               rows={3}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
+              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -357,7 +357,7 @@ function CreateEventModal({ onClose, onCreate }) {
                   ? "Discord, Zoom, Twitch…"
                   : "Street address or venue name"
               }
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -376,8 +376,8 @@ function CreateEventModal({ onClose, onCreate }) {
                   setDate(e.target.value);
                   setFormError("");
                 }}
-                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
-                style={{ padding: "12px 16px" }}
+                className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
+                style={{ padding: "12px 16px", colorScheme: "dark" }}
               />
             </div>
             <div className="flex-1">
@@ -391,8 +391,8 @@ function CreateEventModal({ onClose, onCreate }) {
                   setTime(e.target.value);
                   setFormError("");
                 }}
-                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
-                style={{ padding: "12px 16px" }}
+                className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
+                style={{ padding: "12px 16px", colorScheme: "dark" }}
               />
             </div>
           </div>
@@ -490,7 +490,7 @@ function CreateEventModal({ onClose, onCreate }) {
 
 // ─── Event card (events list) ─────────────────────────────────────────────────
 
-function EventCard({ event, onToggleCalendar }) {
+function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
   return (
     <div
       className="border-2 border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
@@ -587,15 +587,29 @@ function EventCard({ event, onToggleCalendar }) {
                 Hosted by {event.host} · {event.attendees} going
               </span>
             </div>
-            <button
-              onClick={() => onToggleCalendar(event.id)}
-              className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
-                event.addedToCalendar
-                  ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
-                  : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
-              }`}
-              style={{ padding: "6px 12px" }}
-            >
+            
+            <div className="flex items-center gap-2">
+              {currentUser?.id === event.hostId && (
+                <button
+                  onClick={() => onDelete(event.id)}
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-transparent border-red-500/40 text-red-500 hover:bg-red-500/10"
+                  style={{ padding: "6px 12px" }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4 w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                  </svg>
+                  Delete
+                </button>
+              )}
+              <button
+                onClick={() => onToggleCalendar(event.id)}
+                className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
+                  event.addedToCalendar
+                    ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
+                    : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                }`}
+                style={{ padding: "6px 12px" }}
+              >
               {event.addedToCalendar ? (
                 <>
                   <svg
@@ -630,7 +644,8 @@ function EventCard({ event, onToggleCalendar }) {
                   Add to calendar
                 </>
               )}
-            </button>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -699,7 +714,7 @@ function getDots(dayEvents) {
   return [0, 1, 2].map((i) => colors[i % colors.length]);
 }
 
-function CalendarView({ events, onToggleCalendar }) {
+function CalendarView({ events, onToggleCalendar, onDelete, currentUser }) {
   const now = new Date();
   const [cursor, setCursor] = useState({
     year: now.getFullYear(),
@@ -923,6 +938,7 @@ function CalendarView({ events, onToggleCalendar }) {
 export default function Events() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState("events"); // "events" | "calendar"
@@ -1028,6 +1044,18 @@ export default function Events() {
     } catch (error) {
       console.error("Failed to toggle calendar:", error);
       showToast("Failed to update calendar.");
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    try {
+      await eventsAPI.delete(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      showToast("Event deleted");
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+      showToast("Failed to delete event.");
     }
   }
 
@@ -1317,6 +1345,8 @@ export default function Events() {
                       key={e.id}
                       event={e}
                       onToggleCalendar={handleToggleCalendar}
+                      onDelete={handleDelete}
+                      currentUser={currentUser}
                     />
                   ))}
                 </div>

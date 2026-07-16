@@ -1,4 +1,6 @@
 const db = require("../config/database");
+const { checkAndPruneStorage } = require("../services/storageService");
+const { createNotification, NOTIFICATION_TYPES } = require("../services/notification/notificationService");
 
 // Get all groups
 const getAllGroups = async (req, res) => {
@@ -73,9 +75,9 @@ const getGroupById = async (req, res) => {
     // Get group posts with likes and comments count
     const postsQuery = `
       SELECT
-        gp.*,
+        gp.id, gp.group_id, gp.user_id, gp.content, gp.attachment_name, gp.attachment_type, gp.created_at, gp.updated_at,
         u.username,
-        u.id as user_id,
+        u.id as post_author_id,
         COUNT(DISTINCT gpl.id) as likes,
         COUNT(DISTINCT gpc.id) as comments,
         CASE WHEN gpl2.user_id IS NOT NULL THEN true ELSE false END as liked
@@ -227,9 +229,10 @@ const createGroupPost = async (req, res) => {
     const { id } = req.params;
     const { content } = req.body;
     const userId = req.userId;
+    const file = req.file;
 
-    if (!content) {
-      return res.status(400).json({ error: "Content is required" });
+    if (!content && !file) {
+      return res.status(400).json({ error: "Content or file is required" });
     }
 
     // Check if user is a member
@@ -242,17 +245,57 @@ const createGroupPost = async (req, res) => {
       return res.status(403).json({ error: "Must be a member to post" });
     }
 
-    const query = `
-      INSERT INTO group_posts (group_id, user_id, content)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `;
+    let query, values;
+    if (file) {
+      query = `
+        INSERT INTO group_posts (group_id, user_id, content, attachment_data, attachment_name, attachment_type)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, group_id, user_id, content, attachment_name, attachment_type, created_at, updated_at
+      `;
+      values = [id, userId, content || "", file.buffer, file.originalname, file.mimetype];
+    } else {
+      query = `
+        INSERT INTO group_posts (group_id, user_id, content)
+        VALUES ($1, $2, $3)
+        RETURNING id, group_id, user_id, content, attachment_name, attachment_type, created_at, updated_at
+      `;
+      values = [id, userId, content];
+    }
 
-    const result = await db.query(query, [id, userId, content]);
+    const result = await db.query(query, values);
     res.status(201).json({ post: result.rows[0] });
+
+    // Asynchronously prune old storage if limit reached
+    if (file) {
+      checkAndPruneStorage().catch((err) =>
+        console.error("Storage pruning background task failed:", err)
+      );
+    }
   } catch (error) {
     console.error("Error creating group post:", error);
     res.status(500).json({ error: "Failed to create post" });
+  }
+};
+
+// Get attachment for a group post
+const getGroupPostAttachment = async (req, res) => {
+  try {
+    const { id, postId } = req.params;
+    
+    const query = `SELECT attachment_data, attachment_name, attachment_type FROM group_posts WHERE id = $1 AND group_id = $2`;
+    const result = await db.query(query, [postId, id]);
+
+    if (result.rows.length === 0 || !result.rows[0].attachment_data) {
+      return res.status(404).json({ error: "Attachment not found" });
+    }
+
+    const attachment = result.rows[0];
+    res.setHeader("Content-Type", attachment.attachment_type);
+    res.setHeader("Content-Disposition", `inline; filename="${attachment.attachment_name}"`);
+    res.send(attachment.attachment_data);
+  } catch (error) {
+    console.error("Error fetching attachment:", error);
+    res.status(500).json({ error: "Failed to fetch attachment" });
   }
 };
 
@@ -443,9 +486,9 @@ const inviteToGroup = async (req, res) => {
     const { email } = req.body;
     const currentUserId = req.userId;
 
-    // Check if current user is the owner
+    // Check if current user is the owner and get group info
     const groupCheck = await db.query(
-      "SELECT owner_id FROM groups WHERE id = $1",
+      "SELECT g.owner_id, g.name, u.username as owner_username FROM groups g JOIN users u ON g.owner_id = u.id WHERE g.id = $1",
       [id],
     );
 
@@ -458,6 +501,9 @@ const inviteToGroup = async (req, res) => {
         .status(403)
         .json({ error: "Only the owner can invite members" });
     }
+
+    const groupName = groupCheck.rows[0].name;
+    const inviterUsername = groupCheck.rows[0].owner_username;
 
     // Find user by email
     const userResult = await db.query("SELECT id FROM users WHERE email = $1", [
@@ -483,10 +529,50 @@ const inviteToGroup = async (req, res) => {
       throw error;
     }
 
+    // Send notification to invited user
+    await createNotification(
+      targetUserId,
+      NOTIFICATION_TYPES.COMMUNITY,
+      "Group Invitation",
+      `You've been invited to join "${groupName}" by ${inviterUsername}`,
+      parseInt(id),
+    );
+
     res.json({ message: "User invited successfully" });
   } catch (error) {
     console.error("Error inviting user:", error);
     res.status(500).json({ error: "Failed to invite user" });
+  }
+};
+
+// Delete a group (owner only)
+const deleteGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.userId;
+
+    // Check if current user is the owner
+    const groupCheck = await db.query(
+      "SELECT owner_id FROM groups WHERE id = $1",
+      [id],
+    );
+
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    if (groupCheck.rows[0].owner_id !== currentUserId) {
+      return res
+        .status(403)
+        .json({ error: "Only the owner can delete the group" });
+    }
+
+    await db.query("DELETE FROM groups WHERE id = $1", [id]);
+
+    res.json({ message: "Group deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting group:", error);
+    res.status(500).json({ error: "Failed to delete group" });
   }
 };
 
@@ -497,9 +583,11 @@ module.exports = {
   joinGroup,
   leaveGroup,
   createGroupPost,
+  getGroupPostAttachment,
   likeGroupPost,
   unlikeGroupPost,
   createGroupPostComment,
   removeMember,
   inviteToGroup,
+  deleteGroup,
 };

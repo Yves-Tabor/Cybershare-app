@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { postsAPI, groupsAPI, authAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
@@ -46,6 +46,232 @@ function Avatar({ initials, color, size = 8 }) {
       style={{ background: color, minWidth: size * 4, minHeight: size * 4 }}
     >
       {initials}
+    </div>
+  );
+}
+
+// ─── Invite Member Modal ──────────────────────────────────────────────────────
+
+function InviteMemberModal({ groupName, onClose, onInvite }) {
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invites, setInvites] = useState([]);
+  const [inviteError, setInviteError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function addInvite() {
+    const email = inviteEmail.trim();
+    if (!email) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setInviteError("Please enter a valid email");
+      return;
+    }
+    if (invites.includes(email)) {
+      setInviteError("Email already added");
+      return;
+    }
+    setInvites((prev) => [...prev, email]);
+    setInviteEmail("");
+    setInviteError("");
+  }
+
+  function handleSend() {
+    if (invites.length === 0) return;
+    setIsSubmitting(true);
+    onInvite(invites);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{ padding: "16px" }}
+    >
+      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+        {/* Header */}
+        <div
+          className="flex items-center justify-between border-b border-white"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "16px",
+            paddingBottom: "16px",
+          }}
+        >
+          <div
+            className="flex items-center bg-white gap-2.5 rounded-md"
+            style={{ padding: "10px" }}
+          >
+            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#7F77DD"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
+            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
+              Invite to {groupName}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            style={{ padding: "4px" }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          className="space-y-5"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "24px",
+            paddingBottom: "24px",
+          }}
+        >
+          {/* Invites */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Email Addresses
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => {
+                  setInviteEmail(e.target.value);
+                  setInviteError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && addInvite()}
+                placeholder="colleague@example.com"
+                className="flex-1 text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver border-b border-silver"
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "12px",
+                  paddingBottom: "12px",
+                  background: "transparent",
+                }}
+              />
+              <button
+                onClick={addInvite}
+                className="bg-gray border border-gray rounded-xl text-[12px] font-mono text-silver hover:text-[#080808] hover:border-gray transition-all cursor-pointer flex-shrink-0"
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "12px",
+                  paddingBottom: "12px",
+                }}
+              >
+                Add
+              </button>
+            </div>
+            {inviteError && (
+              <p className="text-[11px] text-[#E24B4A] font-mono mt-1.5">
+                {inviteError}
+              </p>
+            )}
+
+            {invites.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {invites.map((email) => (
+                  <span
+                    key={email}
+                    className="flex items-center gap-1.5 bg-gray border border-gray rounded-lg text-[11px] font-mono text-silver"
+                    style={{
+                      paddingLeft: "10px",
+                      paddingRight: "10px",
+                      paddingTop: "4px",
+                      paddingBottom: "4px",
+                    }}
+                  >
+                    {email}
+                    <button
+                      onClick={() =>
+                        setInvites((p) => p.filter((e) => e !== email))
+                      }
+                      className="text-silver hover:text-[#080808] transition-colors bg-transparent border-none cursor-pointer ml-0.5"
+                      style={{ padding: "0" }}
+                    >
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          className="flex justify-end gap-3 bg-white/5 border-t border-white"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "16px",
+            paddingBottom: "16px",
+          }}
+        >
+          <button
+            onClick={onClose}
+            className="text-[12px] font-semibold text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "10px",
+              paddingBottom: "10px",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={invites.length === 0 || isSubmitting}
+            className="bg-white text-[#080808] rounded-xl text-[12px] font-bold hover:bg-[#e0e0e0] transition-colors border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            style={{
+              paddingLeft: "20px",
+              paddingRight: "20px",
+              paddingTop: "10px",
+              paddingBottom: "10px",
+            }}
+          >
+            {isSubmitting ? "Sending..." : `Send ${invites.length} Invite${invites.length === 1 ? '' : 's'}`}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -228,6 +454,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                 paddingRight: "16px",
                 paddingTop: "12px",
                 paddingBottom: "12px",
+                background: "transparent",
               }}
             />
           </div>
@@ -252,6 +479,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                 paddingRight: "16px",
                 paddingTop: "12px",
                 paddingBottom: "12px",
+                background: "transparent",
               }}
             />
           </div>
@@ -317,6 +545,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                   paddingRight: "16px",
                   paddingTop: "12px",
                   paddingBottom: "12px",
+                  background: "transparent",
                 }}
               />
               <button
@@ -494,181 +723,9 @@ function CreateGroupModal({ onClose, onCreate }) {
   );
 }
 
-// ─── Invite Modal (for existing group owners) ─────────────────────────────────
-
-function InviteModal({ group, onClose, onInvite }) {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState([]);
-  const [error, setError] = useState("");
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  function send() {
-    const e = email.trim().toLowerCase();
-    if (!e) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
-      setError("Enter a valid email.");
-      return;
-    }
-    if (sent.includes(e)) {
-      setError("Already sent.");
-      return;
-    }
-    setSent((p) => [...p, e]);
-    setEmail("");
-    setError("");
-    onInvite(e);
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      style={{ padding: "16px" }}
-    >
-      <div className="w-full max-w-[420px] bg-white border border-gray rounded-2xl overflow-hidden">
-        <div
-          className="flex items-center justify-between border-b border-[#141414]"
-          style={{
-            paddingLeft: "24px",
-            paddingRight: "24px",
-            paddingTop: "16px",
-            paddingBottom: "16px",
-          }}
-        >
-          <div>
-            <p className="app-title-text text-[13px] font-semibold text-[#080808]">
-              Invite to {group.name}
-            </p>
-            <p className="text-[10.5px] text-silver font-mono mt-0.5">
-              Invitations sent by email
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
-            style={{ padding: "4px" }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-        <div
-          className="space-y-4"
-          style={{
-            paddingLeft: "24px",
-            paddingRight: "24px",
-            paddingTop: "20px",
-            paddingBottom: "20px",
-          }}
-        >
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError("");
-              }}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Enter email address"
-              className="flex-1 bg-[#0a0a0a] border border-silver rounded-xl text-[13px] text-[#080808] outline-none focus:border-gray transition-colors placeholder:text-silver"
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "12px",
-                paddingBottom: "12px",
-              }}
-            />
-            <button
-              onClick={send}
-              className="bg-[#080808] text-white rounded-xl text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "12px",
-                paddingBottom: "12px",
-              }}
-            >
-              Send
-            </button>
-          </div>
-          {error && (
-            <p className="text-[11px] text-[#E24B4A] font-mono">{error}</p>
-          )}
-          {sent.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-silver tracking-widest uppercase">
-                Sent
-              </p>
-              {sent.map((e) => (
-                <div
-                  key={e}
-                  className="flex items-center gap-2 text-[12px] font-mono text-[#080808]"
-                >
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#1D9E75"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  {e}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div
-          className="border-t border-[#141414] flex justify-end"
-          style={{
-            paddingLeft: "24px",
-            paddingRight: "24px",
-            paddingTop: "16px",
-            paddingBottom: "16px",
-          }}
-        >
-          <button
-            onClick={onClose}
-            className="bg-gray border border-gray rounded-lg text-[12px] text-silver hover:text-[#080808] transition-colors cursor-pointer"
-            style={{
-              paddingLeft: "16px",
-              paddingRight: "16px",
-              paddingTop: "8px",
-              paddingBottom: "8px",
-            }}
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Group card (directory listing) ──────────────────────────────────────────
 
-function GroupCard({ group, onJoin, onOpen }) {
+function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
   return (
     <div
       className="border border-gray rounded-2xl hover:border-gray bg-[#111]/5 transition-colors"
@@ -723,7 +780,7 @@ function GroupCard({ group, onJoin, onOpen }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-1.5">
-                {group.members.slice(0, 4).map((m, i) => (
+                {(group.members || []).slice(0, 4).map((m, i) => (
                   <div
                     key={m}
                     className="w-5 h-5 rounded-full border border-[#080808] flex items-center justify-center text-[8px] font-bold text-white"
@@ -742,22 +799,37 @@ function GroupCard({ group, onJoin, onOpen }) {
               >
                 View
               </button>
-              <button
-                onClick={() => onJoin(group.id)}
-                className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
-                  group.joined
-                    ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
-                    : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
-                }`}
-                style={{
-                  paddingLeft: "12px",
-                  paddingRight: "12px",
-                  paddingTop: "6px",
-                  paddingBottom: "6px",
-                }}
-              >
-                {group.joined ? "Leave" : "Join"}
-              </button>
+              {isOwner ? (
+                <button
+                  onClick={() => onDelete(group.id)}
+                  className="text-[11px] font-mono rounded-lg border border-[#E24B4A]/40 text-[#E24B4A] hover:bg-[#E24B4A]/10 transition-all cursor-pointer bg-transparent"
+                  style={{
+                    paddingLeft: "12px",
+                    paddingRight: "12px",
+                    paddingTop: "6px",
+                    paddingBottom: "6px",
+                  }}
+                >
+                  Delete group
+                </button>
+              ) : (
+                <button
+                  onClick={() => onJoin(group.id)}
+                  className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
+                    group.joined
+                      ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
+                      : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                  }`}
+                  style={{
+                    paddingLeft: "12px",
+                    paddingRight: "12px",
+                    paddingTop: "6px",
+                    paddingBottom: "6px",
+                  }}
+                >
+                  {group.joined ? "Leave" : "Join"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -813,6 +885,34 @@ function GroupPost({ post, groupId, onLike, onComment }) {
       <p className="text-[13px] text-white leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]">
         {post.body}
       </p>
+
+      {post.attachment_name && (
+        <div className="mb-3.5 pl-[calc(1.75rem+0.625rem)]">
+          {post.attachment_type && post.attachment_type.startsWith("image/") ? (
+            <img 
+              src={`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/groups/${groupId}/posts/${post.id}/attachment`} 
+              alt={post.attachment_name} 
+              className="max-w-full md:max-w-[350px] max-h-[300px] rounded-lg border border-gray object-cover"
+            />
+          ) : (
+            <a 
+              href={`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/groups/${groupId}/posts/${post.id}/attachment`} 
+              download={post.attachment_name}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#1a1a2e] border border-[#7F77DD]/30 rounded-lg px-3 py-2 hover:bg-[#7F77DD]/10 transition-colors text-white text-[12px] no-underline max-w-full"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <polyline points="9 15 12 18 15 15" />
+              </svg>
+              <span className="truncate max-w-[200px]">{post.attachment_name}</span>
+            </a>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-4 pl-[calc(1.75rem+0.625rem)]">
@@ -952,15 +1052,31 @@ function GroupDetail({
   onPublish,
   onInvite,
   onJoin,
+  onDelete,
   isOwner,
 }) {
   const [postText, setPostText] = useState("");
-  const [showInvite, setShowInvite] = useState(false);
+  const [attachment, setAttachment] = useState(null);
+  const fileInputRef = useRef(null);
 
   function handlePost() {
-    if (!postText.trim()) return;
-    onPublish(group.id, postText.trim());
+    if (!postText.trim() && !attachment) return;
+    onPublish(postText.trim(), attachment);
     setPostText("");
+    setAttachment(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleFileChange(e) {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size exceeds 10MB limit.");
+        e.target.value = "";
+        return;
+      }
+      setAttachment(file);
+    }
   }
 
   return (
@@ -1049,7 +1165,7 @@ function GroupDetail({
               </p>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-1.5">
-                  {group.members.slice(0, 5).map((m, i) => (
+                  {(group.members || []).slice(0, 5).map((m, i) => (
                     <div
                       key={m}
                       className="w-5 h-5 rounded-full border border-[#080808] flex items-center justify-center text-[8px] font-bold text-white"
@@ -1068,7 +1184,7 @@ function GroupDetail({
           <div className="flex items-center gap-2 flex-shrink-0">
             {isOwner && (
               <button
-                onClick={() => setShowInvite(true)}
+                onClick={() => onInvite(group.id)}
                 className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-gray text-silver hover:text-white hover:border-gray transition-all cursor-pointer bg-transparent"
                 style={{
                   paddingLeft: "12px",
@@ -1093,22 +1209,37 @@ function GroupDetail({
                 Invite
               </button>
             )}
-            <button
-              onClick={() => onJoin(group.id)}
-              className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
-                group.joined
-                  ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
-                  : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
-              }`}
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "8px",
-                paddingBottom: "8px",
-              }}
-            >
-              {group.joined ? "Leave group" : "Join group"}
-            </button>
+            {isOwner ? (
+              <button
+                onClick={() => onDelete(group.id)}
+                className="text-[11px] font-mono rounded-lg border border-[#E24B4A]/40 text-[#E24B4A] hover:bg-[#E24B4A]/10 transition-all cursor-pointer bg-transparent"
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                Delete group
+              </button>
+            ) : (
+              <button
+                onClick={() => onJoin(group.id)}
+                className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
+                  group.joined
+                    ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
+                    : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                }`}
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                {group.joined ? "Leave group" : "Join group"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1140,10 +1271,42 @@ function GroupDetail({
                 rows={3}
                 className="w-full bg-transparent border-none outline-none text-[13px] text-white resize-none placeholder:text-silver leading-relaxed"
               />
-              <div className="flex justify-end mt-2 pt-2 border-t border-gray">
+              
+              {attachment && (
+                <div className="flex items-center gap-2 mt-2 bg-[#080808]/50 border border-gray rounded-md px-2 py-1.5 w-max max-w-[80%]">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                  </svg>
+                  <span className="text-[11px] text-silver truncate">{attachment.name}</span>
+                  <button 
+                    onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ""; }}
+                    className="ml-1 text-silver hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              )}
+
+              <div className="flex justify-between mt-2 pt-2 border-t border-gray items-center">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center text-silver hover:text-white bg-transparent border-none cursor-pointer transition-colors"
+                  title="Attach file (max 2MB)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                  </svg>
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  style={{ display: "none" }} 
+                />
+
                 <button
                   onClick={handlePost}
-                  disabled={!postText.trim()}
+                  disabled={!postText.trim() && !attachment}
                   className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
                   style={{
                     paddingLeft: "14px",
@@ -1214,14 +1377,6 @@ function GroupDetail({
           ))}
         </div>
       )}
-
-      {showInvite && (
-        <InviteModal
-          group={group}
-          onClose={() => setShowInvite(false)}
-          onInvite={(email) => onInvite(group.id, email)}
-        />
-      )}
     </div>
   );
 }
@@ -1230,14 +1385,19 @@ function GroupDetail({
 
 export default function Community() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
-  const [view, setView] = useState("directory"); // "directory" | "group"
-  const [activeGroupId, setActiveGroupId] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
+
+  // States
+  const [view, setView] = useState("directory");
+  const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("all"); // "all" | "joined"
+  const [showCreate, setShowCreate] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteTargetGroupId, setInviteTargetGroupId] = useState(null);
+  const [activeGroupId, setActiveGroupId] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: "" });
   const [searchOpen, setSearchOpen] = useState(false);
   const toastTimer = useRef(null);
@@ -1276,6 +1436,7 @@ export default function Community() {
             memberCount: parseInt(g.member_count) || 0,
             joined: g.joined,
             posts: [],
+            members: g.members || [],
           };
         });
         setGroups(transformedGroups);
@@ -1290,6 +1451,15 @@ export default function Community() {
     }
     fetchData();
   }, [navigate]);
+
+  // Auto-open group from URL param (e.g. from notification click)
+  useEffect(() => {
+    const groupId = searchParams.get("group");
+    if (groupId) {
+      handleGroupClick(parseInt(groupId));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const activeGroup = groups.find((g) => g.id === activeGroupId);
   const isOwner = activeGroup?.ownerId === currentUser?.id;
@@ -1345,6 +1515,22 @@ export default function Community() {
     } catch (error) {
       console.error("Failed to join/leave group:", error);
       showToast("Failed to update group membership.");
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm("Are you sure you want to delete this group?")) return;
+    try {
+      await groupsAPI.delete(id);
+      setGroups((prev) => prev.filter((g) => g.id !== id));
+      if (activeGroupId === id) {
+        setView("directory");
+        setActiveGroupId(null);
+      }
+      showToast("Group deleted successfully.");
+    } catch (error) {
+      console.error("Failed to delete group:", error);
+      showToast("Failed to delete group.");
     }
   }
 
@@ -1407,17 +1593,6 @@ export default function Community() {
       await groupsAPI.createComment(groupId, postId, body);
       // Refresh the group to get updated posts with comments
       const groupResponse = await groupsAPI.getById(groupId);
-      const categoryMap = {
-        Offensive: { color: "#E24B4A", bg: "#2e1a1a" },
-        Defensive: { color: "#1D9E75", bg: "#1a2a2e" },
-        Research: { color: "#7F77DD", bg: "#1a1a2e" },
-        Bounty: { color: "#BA7517", bg: "#2e2a1a" },
-        Learning: { color: "#639922", bg: "#1a2e1a" },
-      };
-      const cat = categoryMap[groupResponse.group.category] || {
-        color: "#7F77DD",
-        bg: "#1a1a2e",
-      };
       const transformedPosts = groupResponse.posts.map((p) => ({
         id: p.id,
         author: p.username,
@@ -1435,6 +1610,8 @@ export default function Community() {
         })),
         liked: p.liked,
         ts: new Date(p.created_at).getTime(),
+        attachment_name: p.attachment_name,
+        attachment_type: p.attachment_type,
       }));
       setGroups((prev) =>
         prev.map((g) => {
@@ -1449,46 +1626,10 @@ export default function Community() {
     }
   }
 
-  async function handlePublish(groupId, body) {
+  async function handlePublish(content, attachment) {
     try {
-      await groupsAPI.createPost(groupId, body);
-      // Refresh the group to get updated posts
-      const groupResponse = await groupsAPI.getById(groupId);
-      const categoryMap = {
-        Offensive: { color: "#E24B4A", bg: "#2e1a1a" },
-        Defensive: { color: "#1D9E75", bg: "#1a2a2e" },
-        Research: { color: "#7F77DD", bg: "#1a1a2e" },
-        Bounty: { color: "#BA7517", bg: "#2e2a1a" },
-        Learning: { color: "#639922", bg: "#1a2e1a" },
-      };
-      const cat = categoryMap[groupResponse.group.category] || {
-        color: "#7F77DD",
-        bg: "#1a1a2e",
-      };
-      const transformedPosts = groupResponse.posts.map((p) => ({
-        id: p.id,
-        author: p.username,
-        avatarColor: avatarColor(p.username),
-        initials: p.username.slice(0, 2).toUpperCase(),
-        body: p.content,
-        likes: parseInt(p.likes) || 0,
-        comments: (p.comments || []).map((c) => ({
-          id: c.id,
-          author: c.username,
-          color: avatarColor(c.username),
-          initials: c.username.slice(0, 2).toUpperCase(),
-          body: c.content,
-          ts: new Date(c.created_at).getTime(),
-        })),
-        liked: p.liked,
-        ts: new Date(p.created_at).getTime(),
-      }));
-      setGroups((prev) =>
-        prev.map((g) => {
-          if (g.id !== groupId) return g;
-          return { ...g, posts: transformedPosts };
-        }),
-      );
+      await groupsAPI.createPost(activeGroupId, content, attachment);
+      handleGroupClick(activeGroupId);
       showToast("Post published.");
     } catch (error) {
       console.error("Failed to publish post:", error);
@@ -1544,6 +1685,7 @@ export default function Community() {
           memberCount: parseInt(g.member_count) || 0,
           joined: g.joined,
           posts: [],
+          members: g.members || [],
         };
       });
       setGroups(transformedGroups);
@@ -1557,23 +1699,29 @@ export default function Community() {
     }
   }
 
-  async function handleInvite(groupId, email) {
-    try {
-      await groupsAPI.invite(groupId, email);
-      showToast(`Invite sent to ${email}`);
-    } catch (error) {
-      console.error("Failed to invite user:", error);
-      showToast("Failed to invite user.");
-    }
+  async function handleInvite(groupId) {
+    setInviteTargetGroupId(groupId);
+    setShowInviteModal(true);
   }
 
-  async function handleRemoveMember(groupId, userId) {
+  async function processInvites(invites) {
+    if (!invites || invites.length === 0) return;
+    setShowInviteModal(false);
     try {
-      await groupsAPI.removeMember(groupId, userId);
-      showToast("Member removed");
+      const inviteResults = await Promise.allSettled(
+        invites.map((email) => groupsAPI.invite(inviteTargetGroupId, email)),
+      );
+      const failedInvites = inviteResults.filter(
+        (r) => r.status === "rejected",
+      );
+      if (failedInvites.length > 0) {
+        showToast(`${failedInvites.length} invite(s) failed.`);
+      } else {
+        showToast(`${invites.length} invite(s) sent successfully.`);
+      }
     } catch (error) {
-      console.error("Failed to remove member:", error);
-      showToast("Failed to remove member.");
+      console.error("Failed to send invites:", error);
+      showToast("Failed to send invites.");
     }
   }
 
@@ -1581,17 +1729,6 @@ export default function Community() {
     try {
       setActiveGroupId(groupId);
       const groupResponse = await groupsAPI.getById(groupId);
-      const categoryMap = {
-        Offensive: { color: "#E24B4A", bg: "#2e1a1a" },
-        Defensive: { color: "#1D9E75", bg: "#1a2a2e" },
-        Research: { color: "#7F77DD", bg: "#1a1a2e" },
-        Bounty: { color: "#BA7517", bg: "#2e2a1a" },
-        Learning: { color: "#639922", bg: "#1a2e1a" },
-      };
-      const cat = categoryMap[groupResponse.group.category] || {
-        color: "#7F77DD",
-        bg: "#1a1a2e",
-      };
       const transformedPosts = groupResponse.posts.map((p) => ({
         id: p.id,
         author: p.username,
@@ -1609,11 +1746,13 @@ export default function Community() {
         })),
         liked: p.liked,
         ts: new Date(p.created_at).getTime(),
+        attachment_name: p.attachment_name,
+        attachment_type: p.attachment_type,
       }));
       setGroups((prev) =>
         prev.map((g) => {
           if (g.id !== groupId) return g;
-          return { ...g, posts: transformedPosts };
+          return { ...g, posts: transformedPosts, members: groupResponse.group.members || [] };
         }),
       );
       setView("group");
@@ -1816,6 +1955,8 @@ export default function Community() {
                       group={g}
                       onJoin={handleJoin}
                       onOpen={() => handleGroupClick(g.id)}
+                      isOwner={g.ownerId === currentUser?.id}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </div>
@@ -1864,6 +2005,7 @@ export default function Community() {
               onPublish={handlePublish}
               onInvite={handleInvite}
               onJoin={handleJoin}
+              onDelete={handleDelete}
               isOwner={isOwner}
             />
           )}
@@ -1874,6 +2016,14 @@ export default function Community() {
         <CreateGroupModal
           onClose={() => setShowCreate(false)}
           onCreate={handleCreate}
+        />
+      )}
+
+      {showInviteModal && (
+        <InviteMemberModal
+          groupName={groups.find((g) => g.id === inviteTargetGroupId)?.name || "Group"}
+          onClose={() => setShowInviteModal(false)}
+          onInvite={processInvites}
         />
       )}
 

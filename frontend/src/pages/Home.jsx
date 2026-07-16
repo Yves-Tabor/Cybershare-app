@@ -70,7 +70,7 @@ function transformPost(p) {
   return {
     id: p.id,
     author: username,
-    avatarColor: AVATAR_COLORS[p.id % AVATAR_COLORS.length],
+    avatarColor: p.user?.color || AVATAR_COLORS[p.id % AVATAR_COLORS.length],
     initials: username.slice(0, 2).toUpperCase(),
     cat,
     body,
@@ -78,10 +78,82 @@ function transformPost(p) {
     comments: p.comments || 0,
     liked: p.liked || false,
     ts: new Date(p.createdAt || p.created_at).getTime(),
+    user: p.user,
   };
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ProfilePopup({ user, onClose }) {
+  const bio = user?.bio || "Contributor";
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      style={{ padding: "16px" }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-[320px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+        <div
+          className="border-b border-[#141414]"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "16px",
+            paddingBottom: "16px",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center text-[14px] font-bold text-white flex-shrink-0"
+              style={{ background: user?.color || "#534AB7" }}
+            >
+              {user?.username?.slice(0, 2).toUpperCase() || "??"}
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-white">
+                @{user?.username || "Unknown"}
+              </p>
+              <p className="text-[11px] text-[#888]">User</p>
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "20px",
+            paddingBottom: "20px",
+          }}
+        >
+          <p className="text-[12px] text-[#888] leading-relaxed">{bio}</p>
+        </div>
+        <div
+          className="flex justify-end border-t border-[#141414]"
+          style={{
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            paddingTop: "16px",
+            paddingBottom: "16px",
+          }}
+        >
+          <button
+            onClick={onClose}
+            className="bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "8px",
+              paddingBottom: "8px",
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PostCard({
   post,
@@ -93,6 +165,7 @@ function PostCard({
   onDelete,
   onCommentAdd,
   onCommentRemove,
+  onProfileClick,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -195,12 +268,13 @@ function PostCard({
     >
       <div className="flex gap-3">
         {/* Avatar */}
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0"
+        <button
+          onClick={() => onProfileClick(post.user)}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           style={{ background: post.avatarColor }}
         >
           {post.initials}
-        </div>
+        </button>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -367,17 +441,17 @@ function PostCard({
                 ) : (
                   comments.map((comment) => (
                     <div key={comment.id} className="flex gap-2">
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
+                      <button
+                        onClick={() => onProfileClick(comment.user)}
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{
                           background:
-                            AVATAR_COLORS[
-                              comment.user.id % AVATAR_COLORS.length
-                            ],
+                            comment.user?.color || 
+                            AVATAR_COLORS[comment.user.id % AVATAR_COLORS.length],
                         }}
                       >
                         {comment.user.username.slice(0, 2).toUpperCase()}
-                      </div>
+                      </button>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[11px] font-semibold text-white">
@@ -854,6 +928,7 @@ function CompleteProfileModal({ onClose, onSubmit }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [bio, setBio] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -906,7 +981,7 @@ function CompleteProfileModal({ onClose, onSubmit }) {
       setError("Passwords do not match.");
       return;
     }
-    onSubmit({ username: username.trim(), password });
+    onSubmit({ username: username.trim(), password, bio: bio.trim() });
   }
 
   function handleBackdrop(e) {
@@ -999,6 +1074,32 @@ function CompleteProfileModal({ onClose, onSubmit }) {
               placeholder="Choose a username…"
               maxLength={30}
               className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              style={{
+                paddingLeft: "16px",
+                paddingRight: "16px",
+                paddingTop: "12px",
+                paddingBottom: "12px",
+                background: "transparent",
+              }}
+            />
+          </div>
+          <br />
+
+          {/* Bio */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => {
+                setBio(e.target.value);
+                setError("");
+              }}
+              placeholder="Tell us about yourself…"
+              maxLength={160}
+              rows={2}
+              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver resize-none"
               style={{
                 paddingLeft: "16px",
                 paddingRight: "16px",
@@ -1221,6 +1322,7 @@ export default function Home() {
   const [view, setView] = useState("all");
   const [toast, setToast] = useState({ message: "", visible: false });
   const [pendingLikes, setPendingLikes] = useState({});
+  const [profilePopupUser, setProfilePopupUser] = useState(null);
   const feedRef = useRef(null);
   const toastTimer = useRef(null);
   const pendingLikeIdsRef = useRef(new Set());
@@ -1273,34 +1375,22 @@ export default function Home() {
   }
 
   async function handleLike(id) {
-    if (pendingLikeIdsRef.current.has(id)) return;
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
 
-    let snapshot = null;
+    const wasLiked = post.liked;
 
-    setPosts((prev) => {
-      const currentPost = prev.find((p) => p.id === id);
-      if (!currentPost) return prev;
-
-      snapshot = {
-        liked: currentPost.liked,
-        likes: currentPost.likes,
-      };
-
-      return prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              liked: !p.liked,
-              likes: p.liked ? Math.max(0, p.likes - 1) : p.likes + 1,
-            }
-          : p,
-      );
-    });
-
-    if (!snapshot) return;
-
-    pendingLikeIdsRef.current.add(id);
-    setPendingLikes((prev) => ({ ...prev, [id]: true }));
+    // Optimistic UI update — update immediately
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        return {
+          ...p,
+          liked: !p.liked,
+          likes: p.liked ? p.likes - 1 : p.likes + 1,
+        };
+      }),
+    );
 
     try {
       let response;
@@ -1323,26 +1413,19 @@ export default function Home() {
         ),
       );
     } catch (error) {
-      console.error("Failed to toggle like:", error);
+      console.error("Failed to like/unlike post:", error);
+      // Revert on failure
       setPosts((prev) =>
-        prev.map((p) =>
-          p.id === id
-            ? {
-                ...p,
-                liked: snapshot.liked,
-                likes: Math.max(0, snapshot.likes),
-              }
-            : p,
-        ),
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return {
+            ...p,
+            liked: wasLiked,
+            likes: wasLiked ? p.likes + 1 : p.likes - 1,
+          };
+        }),
       );
       showToast("Failed to update like");
-    } finally {
-      pendingLikeIdsRef.current.delete(id);
-      setPendingLikes((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
     }
   }
 
@@ -1408,11 +1491,13 @@ export default function Home() {
     }
   }
 
-  async function handleCompleteProfile({ username, password }) {
+  async function handleCompleteProfile({ username, password, bio }) {
     try {
-      await authAPI.completeProfile(username, password);
+      await authAPI.completeProfile(username, password, bio);
       setCompleteProfileOpen(false);
       showToast("Profile completed successfully!");
+      const userResponse = await authAPI.me();
+      setCurrentUser(userResponse.user);
     } catch (error) {
       console.error("Failed to complete profile:", error);
       if (error.details) {
@@ -1422,6 +1507,14 @@ export default function Home() {
         showToast(error.message || "Failed to complete profile.");
       }
     }
+  }
+
+  function handleProfileClick(user) {
+    setProfilePopupUser(user);
+  }
+
+  function handleCloseProfilePopup() {
+    setProfilePopupUser(null);
   }
 
   if (loading) {
@@ -1678,6 +1771,7 @@ export default function Home() {
                     onDelete={handleDelete}
                     onCommentAdd={handleCommentAdd}
                     onCommentRemove={handleCommentRemove}
+                    onProfileClick={handleProfileClick}
                   />
                 ))}
               </div>
@@ -1706,6 +1800,13 @@ export default function Home() {
         <CompleteProfileModal
           onClose={() => setCompleteProfileOpen(false)}
           onSubmit={handleCompleteProfile}
+        />
+      )}
+
+      {profilePopupUser && (
+        <ProfilePopup
+          user={profilePopupUser}
+          onClose={handleCloseProfilePopup}
         />
       )}
 

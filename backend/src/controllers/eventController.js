@@ -141,11 +141,7 @@ const createEvent = async (req, res) => {
     const userId = req.userId;
     const { title, description, location, start_date, end_date, image_url, category, status } = req.body;
 
-    // Check if user is admin or moderator
-    const hasPermission = await isAdminOrModerator(userId);
-    if (!hasPermission) {
-      return res.status(403).json({ error: 'Only admins and moderators can create events' });
-    }
+    // Allow any authenticated user to create an event
 
     // Validate dates
     if (end_date && new Date(end_date) < new Date(start_date)) {
@@ -160,6 +156,12 @@ const createEvent = async (req, res) => {
     );
 
     const event = result.rows[0];
+
+    // Automatically register the creator to their own event
+    await pool.query(
+      `INSERT INTO event_attendees (event_id, user_id) VALUES ($1, $2)`,
+      [event.id, userId]
+    );
 
     // Get creator info for response
     const userResult = await pool.query(
@@ -341,20 +343,20 @@ const deleteEvent = async (req, res) => {
     const userId = req.userId;
     const { id } = req.params;
 
-    // Check if user is admin or moderator
-    const hasPermission = await isAdminOrModerator(userId);
-    if (!hasPermission) {
-      return res.status(403).json({ error: 'Only admins and moderators can delete events' });
-    }
-
     // Check if event exists
     const existingEvent = await pool.query(
-      'SELECT id FROM events WHERE id = $1',
+      'SELECT id, created_by FROM events WHERE id = $1',
       [id]
     );
 
     if (existingEvent.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Check if user is admin, moderator, or the creator
+    const hasPermission = await isAdminOrModerator(userId);
+    if (!hasPermission && existingEvent.rows[0].created_by !== userId) {
+      return res.status(403).json({ error: 'Only the creator, admins, and moderators can delete events' });
     }
 
     await pool.query('DELETE FROM events WHERE id = $1', [id]);

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, me, logout, googleCallback, completeProfile } = require('../controllers/authController');
+const { register, login, me, logout, googleCallback, completeProfile, updateProfile, changePassword, deleteAccount, getSessions, revokeSession } = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { registerSchema, loginSchema } = require('../validators/authValidator');
 const passport = require('../config/passport');
@@ -30,5 +30,10 @@ router.post('/login', validate(loginSchema), login);
 router.get('/me', authMiddleware, me);
 router.post('/logout', logout);
 router.post('/complete-profile', authMiddleware, completeProfile);
+router.patch('/profile', authMiddleware, updateProfile);
+router.patch('/change-password', authMiddleware, changePassword);
+router.delete('/account', authMiddleware, deleteAccount);
+router.get('/sessions', authMiddleware, getSessions);
+router.delete('/sessions/:id', authMiddleware, revokeSession);
 
 module.exports = router;

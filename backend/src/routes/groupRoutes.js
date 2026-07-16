@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const { optionalAuth } = require("../middleware/authMiddleware");
+const multer = require("multer");
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
+
 const {
   getAllGroups,
   getGroupById,
@@ -9,11 +15,13 @@ const {
   joinGroup,
   leaveGroup,
   createGroupPost,
+  getGroupPostAttachment,
   likeGroupPost,
   unlikeGroupPost,
   createGroupPostComment,
   removeMember,
   inviteToGroup,
+  deleteGroup,
 } = require("../controllers/groupController");
 const {
   createGroupSchema,
@@ -50,7 +58,10 @@ router.post("/:id/join", authMiddleware, joinGroup);
 router.post("/:id/leave", authMiddleware, leaveGroup);
 
 // Create a post in a group (requires auth)
-router.post("/:id/posts", authMiddleware, validate(createGroupPostSchema), createGroupPost);
+router.post("/:id/posts", authMiddleware, upload.single("attachment"), validate(createGroupPostSchema), createGroupPost);
+
+// Get attachment for a group post
+router.get("/:id/posts/:postId/attachment", optionalAuth, getGroupPostAttachment);
 
 // Like a group post (requires auth)
 router.post("/:groupId/posts/:postId/like", authMiddleware, likeGroupPost);
@@ -71,5 +82,8 @@ router.delete("/:id/members/:userId", authMiddleware, removeMember);
 
 // Invite a user to a group (requires auth, owner only)
 router.post("/:id/invite", authMiddleware, validate(inviteToGroupSchema), inviteToGroup);
+
+// Delete a group (requires auth, owner only)
+router.delete("/:id", authMiddleware, deleteGroup);
 
 module.exports = router;

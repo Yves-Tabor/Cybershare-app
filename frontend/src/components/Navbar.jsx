@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { authAPI, notificationsAPI, clearToken } from "../utils/api";
+import { authAPI, notificationsAPI, clearToken, getToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const SITE_CONFIG = {
@@ -251,6 +251,7 @@ function UserPanel({
   onClose,
   onSignOut,
   panelRef,
+  navigate,
 }) {
   const [showClearAll, setShowClearAll] = useState(false);
   const clearAllTimer = useRef(null);
@@ -502,6 +503,26 @@ function UserPanel({
           notifications.map((notif, i) => (
             <div
               key={notif.id}
+              onClick={async () => {
+                // Mark as read
+                try {
+                  await notificationsAPI.markAsRead(notif.id);
+                } catch (e) {
+                  // non-critical
+                }
+                onClose();
+                // Navigate based on type
+                if (notif.type === "COMMUNITY" && notif.relatedId) {
+                  navigate(`/main/community?group=${notif.relatedId}`);
+                } else if (
+                  (notif.type === "SCAN_COMPLETED" || notif.type === "SCAN_FAILED" || notif.type === "SECURITY_ALERT") &&
+                  notif.relatedId
+                ) {
+                  navigate(`/main/scanner`);
+                } else if (notif.type === "EVENT" && notif.relatedId) {
+                  navigate(`/main/events`);
+                }
+              }}
               style={{
                 display: "flex",
                 alignItems: "flex-start",
@@ -510,6 +531,14 @@ function UserPanel({
                 background: notif.unread ? "#f5f3ff" : "transparent",
                 borderBottom:
                   i !== notifications.length - 1 ? "1px solid #f0f0f0" : "none",
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = notif.unread ? "#ede9fc" : "#f9f9f9";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = notif.unread ? "#f5f3ff" : "transparent";
               }}
             >
               <div
@@ -634,7 +663,9 @@ export default function Navbar() {
     return {
       id: notification.id,
       type: notification.type || "system",
+      title: notification.title,
       message: notification.message,
+      relatedId: notification.relatedId ?? notification.related_id ?? null,
       time: notification.createdAt
         ? new Date(notification.createdAt).toLocaleString()
         : notification.created_at
@@ -776,10 +807,30 @@ export default function Navbar() {
       }
     });
 
+    const sha256 = async (message) => {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      return hashHex;
+    };
+
+    socket.on("session:revoked", async (data) => {
+      const localToken = getToken();
+      if (localToken) {
+        const localHash = await sha256(localToken);
+        if (localHash === data.tokenHash) {
+          clearToken();
+          // We can also redirect
+          redirectToWelcomeAuth(navigate);
+        }
+      }
+    });
+
     return () => {
       socket.disconnect();
     };
-  }, [user]);
+  }, [user, navigate]);
 
   function toggle() {
     setOpen((prev) => !prev);
@@ -907,6 +958,7 @@ export default function Navbar() {
           onClose={() => setUserOpen(false)}
           onSignOut={handleSignOut}
           panelRef={userPanelRef}
+          navigate={navigate}
         />
       )}
 

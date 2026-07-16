@@ -108,10 +108,41 @@ export const authAPI = {
     return apiRequest("/auth/me");
   },
 
-  completeProfile: async (username, password) => {
+  completeProfile: async (username, password, bio) => {
     return apiRequest("/auth/complete-profile", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, bio }),
+    });
+  },
+
+  updateProfile: async (username, bio, color) => {
+    return apiRequest("/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify({ username, bio, color }),
+    });
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    return apiRequest("/auth/change-password", {
+      method: "PATCH",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  deleteAccount: async (password) => {
+    return apiRequest("/auth/account", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+    });
+  },
+
+  getSessions: async () => {
+    return apiRequest("/auth/sessions");
+  },
+
+  revokeSession: async (id) => {
+    return apiRequest(`/auth/sessions/${id}`, {
+      method: "DELETE",
     });
   },
 };
@@ -132,6 +163,37 @@ export const resourcesAPI = {
       body: JSON.stringify({ title, description, url, category }),
     });
   },
+
+  // Upload a file attachment to an existing resource (multipart)
+  uploadFile: async (resourceId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = getToken();
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(
+      `${API_BASE_URL}/resources/${resourceId}/files`,
+      { method: "POST", headers, body: formData, credentials: "include" }
+    );
+
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json")
+      ? await response.json()
+      : null;
+
+    if (!response.ok) {
+      const error = new Error(data?.error || "Upload failed");
+      error.status = response.status;
+      throw error;
+    }
+    return data;
+  },
+
+  // Returns the URL string for downloading a file (use as href or window.open)
+  downloadFileUrl: (fileId) =>
+    `${API_BASE_URL}/resources/files/${fileId}/download`,
 
   update: async (id, title, description, url, category) => {
     return apiRequest(`/resources/${id}`, {
@@ -409,7 +471,37 @@ export const groupsAPI = {
     });
   },
 
-  createPost: async (groupId, content) => {
+  createPost: async (groupId, content, attachment) => {
+    if (attachment) {
+      const formData = new FormData();
+      if (content) formData.append("content", content);
+      formData.append("attachment", attachment);
+
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      // We cannot use apiRequest directly because fetch needs to calculate Content-Type for FormData
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/groups/${groupId}/posts`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          throw new Error("API request failed");
+        }
+        const error = new Error(errorData.error || "API request failed");
+        error.status = response.status;
+        throw error;
+      }
+      return response.json();
+    }
+
     return apiRequest(`/groups/${groupId}/posts`, {
       method: "POST",
       body: JSON.stringify({ content }),
@@ -447,6 +539,33 @@ export const groupsAPI = {
       body: JSON.stringify({ email }),
     });
   },
+
+  delete: async (id) => {
+    return apiRequest(`/groups/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+// Saved Items API
+export const savedItemsAPI = {
+  getAll: async () => {
+    return apiRequest("/saved-items");
+  },
+  save: async (item_type, item_id) => {
+    return apiRequest("/saved-items", {
+      method: "POST",
+      body: JSON.stringify({ item_type, item_id }),
+    });
+  },
+  unsave: async (item_type, item_id) => {
+    const params = new URLSearchParams();
+    params.append("item_type", item_type);
+    params.append("item_id", item_id);
+    return apiRequest(`/saved-items?${params.toString()}`, {
+      method: "DELETE",
+    });
+  }
 };
 
 // User Settings API
