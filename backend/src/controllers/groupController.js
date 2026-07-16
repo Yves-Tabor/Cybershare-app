@@ -191,10 +191,30 @@ const leaveGroup = async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
 
-    await db.query(
-      "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [id, userId],
+    // Prevent the group owner from leaving — would leave the group ownerless
+    const groupCheck = await db.query(
+      "SELECT owner_id FROM groups WHERE id = $1",
+      [id]
     );
+
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    if (groupCheck.rows[0].owner_id === userId) {
+      return res.status(400).json({
+        error: "Group owner cannot leave. Delete the group or transfer ownership first.",
+      });
+    }
+
+    const result = await db.query(
+      "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(400).json({ error: "You are not a member of this group" });
+    }
 
     res.json({ message: "Left group successfully" });
   } catch (error) {
@@ -285,6 +305,30 @@ const likeGroupPost = async (req, res) => {
     const { groupId, postId } = req.params;
     const userId = req.userId;
 
+    // Check if group exists
+    const groupCheck = await db.query("SELECT 1 FROM groups WHERE id = $1", [groupId]);
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    // Check if user is a member of the group
+    const memberCheck = await db.query(
+      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, userId]
+    );
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ error: "Must be a member of the group to like posts" });
+    }
+
+    // Check if post exists and belongs to this group
+    const postCheck = await db.query(
+      "SELECT 1 FROM group_posts WHERE id = $1 AND group_id = $2",
+      [postId, groupId]
+    );
+    if (postCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found in this group" });
+    }
+
     await db.query(
       "INSERT INTO group_post_likes (group_post_id, user_id) VALUES ($1, $2)",
       [postId, userId],
@@ -306,7 +350,31 @@ const unlikeGroupPost = async (req, res) => {
     const { groupId, postId } = req.params;
     const userId = req.userId;
 
-    await db.query(
+    // Check if group exists
+    const groupCheck = await db.query("SELECT 1 FROM groups WHERE id = $1", [groupId]);
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    // Check if user is a member of the group
+    const memberCheck = await db.query(
+      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, userId]
+    );
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ error: "Must be a member of the group to unlike posts" });
+    }
+
+    // Check if post exists and belongs to this group
+    const postCheck = await db.query(
+      "SELECT 1 FROM group_posts WHERE id = $1 AND group_id = $2",
+      [postId, groupId]
+    );
+    if (postCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found in this group" });
+    }
+
+    const deleteResult = await db.query(
       "DELETE FROM group_post_likes WHERE group_post_id = $1 AND user_id = $2",
       [postId, userId],
     );
@@ -327,6 +395,30 @@ const createGroupPostComment = async (req, res) => {
 
     if (!content) {
       return res.status(400).json({ error: "Content is required" });
+    }
+
+    // Check if group exists
+    const groupCheck = await db.query("SELECT 1 FROM groups WHERE id = $1", [groupId]);
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    // Check if user is a member of the group
+    const memberCheck = await db.query(
+      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, userId]
+    );
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ error: "Must be a member of the group to comment" });
+    }
+
+    // Check if post exists and belongs to this group
+    const postCheck = await db.query(
+      "SELECT 1 FROM group_posts WHERE id = $1 AND group_id = $2",
+      [postId, groupId]
+    );
+    if (postCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found in this group" });
     }
 
     const query = `

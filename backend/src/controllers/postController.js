@@ -226,7 +226,7 @@ const deletePost = async (req, res) => {
   }
 };
 
-// Like post
+// Like post (idempotent)
 const likePost = async (req, res) => {
   try {
     const userId = req.userId;
@@ -242,42 +242,89 @@ const likePost = async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    // Check if already liked
-    const existingLike = await pool.query(
-      'SELECT id FROM post_likes WHERE post_id = $1 AND user_id = $2',
-      [id, userId]
-    );
-
-    if (existingLike.rows.length > 0) {
-      return res.status(400).json({ error: 'Post already liked' });
-    }
-
+    // Insert like, ignore if already exists (idempotent)
     await pool.query(
-      'INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)',
+      'INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2) ON CONFLICT (post_id, user_id) DO NOTHING',
       [id, userId]
     );
 
-    res.status(200).json({ message: 'Post liked successfully' });
+    // Get updated like count
+    const likeCountResult = await pool.query(
+      'SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1',
+      [id]
+    );
+
+    const likeCount = parseInt(likeCountResult.rows[0].count);
+
+    res.status(200).json({ liked: true, likeCount });
   } catch (error) {
     console.error('Like post error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Unlike post
+// Unlike post (idempotent)
 const unlikePost = async (req, res) => {
   try {
     const userId = req.userId;
     const { id } = req.params;
 
+    // Delete like if exists (no-op if it doesn't)
     await pool.query(
       'DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2',
       [id, userId]
     );
 
-    res.status(200).json({ message: 'Post unliked successfully' });
+    // Get updated like count
+    const likeCountResult = await pool.query(
+      'SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1',
+      [id]
+    );
+
+    const likeCount = parseInt(likeCountResult.rows[0].count);
+
+    res.status(200).json({ liked: false, likeCount });
   } catch (error) {
-    console.error('Unlike post error:', error    );
+    console.error('Unlike post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get like status for a post (for current user)
+const getLikeStatus = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
+
+    // Check if post exists
+    const postExists = await pool.query(
+      'SELECT id FROM posts WHERE id = $1',
+      [id]
+    );
+
+    if (postExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Get like count
+    const likeCountResult = await pool.query(
+      'SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1',
+      [id]
+    );
+
+    const likeCount = parseInt(likeCountResult.rows[0].count);
+
+    // Check if current user liked this post
+    const userLikeResult = await pool.query(
+      'SELECT id FROM post_likes WHERE post_id = $1 AND user_id = $2',
+      [id, userId || null]
+    );
+
+    const liked = userLikeResult.rows.length > 0;
+
+    res.status(200).json({ liked, likeCount });
+  } catch (error) {
+    console.error('Get like status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -290,4 +337,5 @@ module.exports = {
   deletePost,
   likePost,
   unlikePost,
+  getLikeStatus,
 };

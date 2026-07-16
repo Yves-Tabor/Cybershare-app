@@ -8,6 +8,10 @@ CREATE TABLE IF NOT EXISTS users (
   bio TEXT,
   avatar VARCHAR(255),
   role VARCHAR(20) DEFAULT 'user',
+  display_name VARCHAR(50) NOT NULL DEFAULT '',
+  avatar_color VARCHAR(7) DEFAULT '#6366f1',
+  password_changed_at TIMESTAMP,
+  deleted_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -231,3 +235,31 @@ CREATE TABLE IF NOT EXISTS group_post_likes (
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_group_post_likes_group_post_id ON group_post_likes(group_post_id);
 CREATE INDEX IF NOT EXISTS idx_group_post_likes_user_id ON group_post_likes(user_id);
+
+-- Sessions Table
+CREATE TABLE IF NOT EXISTS sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  refresh_token_hash TEXT NOT NULL,
+  device_label TEXT,
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_active_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_refresh_token_hash ON sessions(refresh_token_hash);
+
+-- Notification Preferences Table
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  email_marketing BOOLEAN DEFAULT true,
+  email_activity BOOLEAN DEFAULT true,
+  push_messages BOOLEAN DEFAULT true,
+  push_mentions BOOLEAN DEFAULT true
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_notification_preferences_user_id ON notification_preferences(user_id);

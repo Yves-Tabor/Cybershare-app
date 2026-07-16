@@ -11,6 +11,7 @@ const {
   getEventAttendees,
 } = require('../controllers/eventController');
 const authMiddleware = require('../middleware/authMiddleware');
+const { optionalAuth } = require('../middleware/authMiddleware');
 const { createEventSchema, updateEventSchema } = require('../validators/eventValidator');
 
 // Validation middleware
@@ -25,8 +26,8 @@ const validate = (schema) => (req, res, next) => {
   next();
 };
 
-// Public routes (no auth required)
-router.get('/', authMiddleware.optionalAuth, getAllEvents);
+// Public routes (no auth required, but optionalAuth adds userId for registration status)
+router.get('/', optionalAuth, getAllEvents);
 router.get('/:id', getEventById);
 
 // Protected routes (require authentication)

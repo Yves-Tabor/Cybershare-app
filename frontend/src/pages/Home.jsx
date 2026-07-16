@@ -1393,11 +1393,25 @@ export default function Home() {
     );
 
     try {
-      if (wasLiked) {
-        await postsAPI.unlike(id);
+      let response;
+      if (snapshot.liked) {
+        response = await postsAPI.unlike(id);
       } else {
-        await postsAPI.like(id);
+        response = await postsAPI.like(id);
       }
+
+      // Sync with server response (source of truth)
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                liked: response.liked,
+                likes: response.likeCount,
+              }
+            : p,
+        ),
+      );
     } catch (error) {
       console.error("Failed to like/unlike post:", error);
       // Revert on failure

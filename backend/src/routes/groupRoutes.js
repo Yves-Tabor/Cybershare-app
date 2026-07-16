@@ -23,6 +23,24 @@ const {
   inviteToGroup,
   deleteGroup,
 } = require("../controllers/groupController");
+const {
+  createGroupSchema,
+  createGroupPostSchema,
+  createGroupPostCommentSchema,
+  inviteToGroupSchema,
+} = require("../validators/groupValidator");
+
+// Validation middleware
+const validate = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ 
+      error: 'Validation failed', 
+      details: result.error.errors 
+    });
+  }
+  next();
+};
 
 // Get all groups
 router.get("/", optionalAuth, getAllGroups);
@@ -31,7 +49,7 @@ router.get("/", optionalAuth, getAllGroups);
 router.get("/:id", optionalAuth, getGroupById);
 
 // Create a new group (requires auth)
-router.post("/", authMiddleware, createGroup);
+router.post("/", authMiddleware, validate(createGroupSchema), createGroup);
 
 // Join a group (requires auth)
 router.post("/:id/join", authMiddleware, joinGroup);
@@ -40,7 +58,7 @@ router.post("/:id/join", authMiddleware, joinGroup);
 router.post("/:id/leave", authMiddleware, leaveGroup);
 
 // Create a post in a group (requires auth)
-router.post("/:id/posts", authMiddleware, upload.single("attachment"), createGroupPost);
+router.post("/:id/posts", authMiddleware, upload.single("attachment"), validate(createGroupPostSchema), createGroupPost);
 
 // Get attachment for a group post
 router.get("/:id/posts/:postId/attachment", optionalAuth, getGroupPostAttachment);
@@ -55,6 +73,7 @@ router.delete("/:groupId/posts/:postId/like", authMiddleware, unlikeGroupPost);
 router.post(
   "/:groupId/posts/:postId/comments",
   authMiddleware,
+  validate(createGroupPostCommentSchema),
   createGroupPostComment,
 );
 
@@ -62,7 +81,7 @@ router.post(
 router.delete("/:id/members/:userId", authMiddleware, removeMember);
 
 // Invite a user to a group (requires auth, owner only)
-router.post("/:id/invite", authMiddleware, inviteToGroup);
+router.post("/:id/invite", authMiddleware, validate(inviteToGroupSchema), inviteToGroup);
 
 // Delete a group (requires auth, owner only)
 router.delete("/:id", authMiddleware, deleteGroup);

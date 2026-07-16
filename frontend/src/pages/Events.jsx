@@ -940,6 +940,7 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState("events"); // "events" | "calendar"
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all"); // "all" | "added"
@@ -947,44 +948,51 @@ export default function Events() {
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
-  // Fetch events on mount
+  // Fetch events and current user on mount
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchData() {
       try {
-        const userRes = await authAPI.me();
-        setCurrentUser(userRes.user);
+        try {
+          const userResponse = await authAPI.me();
+          setCurrentUser(userResponse.user);
+        } catch (err) {
+          console.error("Failed to fetch user role:", err);
+        }
 
         const data = await eventsAPI.getAll();
         const categoryMap = {
-          Conference: { color: "#1D9E75", bg: "#1a2a2e" },
-          Workshop: { color: "#7F77DD", bg: "#1a1a2e" },
-          CTF: { color: "#639922", bg: "#1a2e1a" },
-          Meetup: { color: "#BA7517", bg: "#2e2a1a" },
-          Webinar: { color: "#185FA5", bg: "#16222e" },
+          conference: { label: "Conference", color: "#1D9E75", bg: "#1a2a2e" },
+          workshop: { label: "Workshop", color: "#7F77DD", bg: "#1a1a2e" },
+          ctf: { label: "CTF", color: "#639922", bg: "#1a2e1a" },
+          meetup: { label: "Meetup", color: "#BA7517", bg: "#2e2a1a" },
+          webinar: { label: "Webinar", color: "#185FA5", bg: "#16222e" },
         };
         const transformedEvents = data.events.map((e) => {
-          const cat = categoryMap[e.category] || {
+          const lowerCat = e.category ? e.category.toLowerCase() : "";
+          const cat = categoryMap[lowerCat] || {
+            label: e.category || "Workshop",
             color: "#7F77DD",
             bg: "#1a1a2e",
           };
+          // API returns camelCase: startDate, attendeeCount, createdBy.username
+          const startDateStr = e.startDate || e.start_date || "";
           return {
             id: e.id,
             title: e.title,
             description: e.description,
-            category: e.category,
+            category: cat.label,
             categoryColor: cat.color,
             categoryBg: cat.bg,
-            date: e.startDate ? e.startDate.split("T")[0] : "",
-            time: e.startDate && e.startDate.includes("T") ? e.startDate.split("T")[1].slice(0, 5) : "00:00",
+            date: startDateStr ? startDateStr.split("T")[0] : "",
+            time: startDateStr ? (startDateStr.split("T")[1]?.slice(0, 5) || "00:00") : "00:00",
             isOnline:
               e.location?.toLowerCase().includes("http") ||
               e.location?.toLowerCase().includes("discord") ||
               e.location?.toLowerCase().includes("zoom"),
             location: e.location || "TBD",
-            host: e.createdBy?.username || "Unknown",
-            hostId: e.createdBy?.id,
-            attendees: e.attendeeCount || 0,
-            addedToCalendar: e.isRegistered || false,
+            host: e.createdBy?.username || e.username || "Unknown",
+            attendees: e.attendeeCount ?? e.attendee_count ?? 0,
+            addedToCalendar: e.isRegistered || e.registered || false,
           };
         });
         setEvents(transformedEvents);
@@ -997,7 +1005,7 @@ export default function Events() {
         setLoading(false);
       }
     }
-    fetchEvents();
+    fetchData();
   }, [navigate]);
 
   function showToast(msg) {
@@ -1054,15 +1062,11 @@ export default function Events() {
   async function handleCreate(data) {
     try {
       const categoryMap = {
-        Conference: { color: "#1D9E75", bg: "#1a2a2e" },
-        Workshop: { color: "#7F77DD", bg: "#1a1a2e" },
-        CTF: { color: "#639922", bg: "#1a2e1a" },
-        Meetup: { color: "#BA7517", bg: "#2e2a1a" },
-        Webinar: { color: "#185FA5", bg: "#16222e" },
-      };
-      const cat = categoryMap[data.category] || {
-        color: "#7F77DD",
-        bg: "#1a1a2e",
+        conference: { label: "Conference", color: "#1D9E75", bg: "#1a2a2e" },
+        workshop: { label: "Workshop", color: "#7F77DD", bg: "#1a1a2e" },
+        ctf: { label: "CTF", color: "#639922", bg: "#1a2e1a" },
+        meetup: { label: "Meetup", color: "#BA7517", bg: "#2e2a1a" },
+        webinar: { label: "Webinar", color: "#185FA5", bg: "#16222e" },
       };
       await eventsAPI.create(
         data.title,
@@ -1070,35 +1074,37 @@ export default function Events() {
         data.location,
         `${data.date}T${data.time}`,
         `${data.date}T${data.time}`,
-        undefined,
+        null,
         data.category.toLowerCase(),
         "upcoming",
       );
       // Refresh events
       const response = await eventsAPI.getAll();
       const transformedEvents = response.events.map((e) => {
-        const cat = categoryMap[e.category] || {
+        const lowerCat = e.category ? e.category.toLowerCase() : "";
+        const cat = categoryMap[lowerCat] || {
+          label: e.category || "Workshop",
           color: "#7F77DD",
           bg: "#1a1a2e",
         };
+        const startDateStr = e.startDate || e.start_date || "";
         return {
           id: e.id,
           title: e.title,
           description: e.description,
-          category: e.category,
+          category: cat.label,
           categoryColor: cat.color,
           categoryBg: cat.bg,
-          date: e.startDate ? e.startDate.split("T")[0] : "",
-          time: e.startDate && e.startDate.includes("T") ? e.startDate.split("T")[1].slice(0, 5) : "00:00",
+          date: startDateStr ? startDateStr.split("T")[0] : "",
+          time: startDateStr ? (startDateStr.split("T")[1]?.slice(0, 5) || "00:00") : "00:00",
           isOnline:
             e.location?.toLowerCase().includes("http") ||
             e.location?.toLowerCase().includes("discord") ||
             e.location?.toLowerCase().includes("zoom"),
           location: e.location || "TBD",
-          host: e.createdBy?.username || "Unknown",
-          hostId: e.createdBy?.id,
-          attendees: e.attendeeCount || 0,
-          addedToCalendar: e.isRegistered || false,
+          host: e.createdBy?.username || e.username || "Unknown",
+          attendees: e.attendeeCount ?? e.attendee_count ?? 0,
+          addedToCalendar: e.isRegistered || e.registered || false,
         };
       });
       setEvents(transformedEvents);
@@ -1184,7 +1190,7 @@ export default function Events() {
                 )}
               </div>
             </div>
-            {view === "events" && (
+            {view === "events" && (currentUser?.role === "admin" || currentUser?.role === "moderator") && (
               <button
                 onClick={() => setShowCreate(true)}
                 className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
@@ -1203,7 +1209,7 @@ export default function Events() {
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Post event
+                  Post event
               </button>
             )}
           </div>
