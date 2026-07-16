@@ -14,6 +14,7 @@ const scanRoutes = require("./routes/scanRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const groupRoutes = require("./routes/groupRoutes");
+const userSettingsRoutes = require("./routes/userSettingsRoutes");
 const savedItemsRoutes = require("./routes/savedItemsRoutes");
 
 const app = express();
@@ -71,6 +72,7 @@ app.use("/api/scans", scanRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/groups", groupRoutes);
+app.use("/api/user/settings", userSettingsRoutes);
 app.use("/api/saved-items", savedItemsRoutes);
 
 // Health check endpoint
