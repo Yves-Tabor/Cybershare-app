@@ -203,6 +203,13 @@ const deleteAllSessions = async (req, res) => {
 
 // Get notification preferences
 const getNotificationPreferences = async (req, res) => {
+  const DEFAULT_PREFERENCES = {
+    email_marketing: true,
+    email_activity: true,
+    push_messages: true,
+    push_mentions: true,
+  };
+
   try {
     const userId = req.userId;
 
@@ -212,17 +219,18 @@ const getNotificationPreferences = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      // Return defaults if no preferences exist yet
-      return res.status(200).json({
-        email_marketing: true,
-        email_activity: true,
-        push_messages: true,
-        push_mentions: true
-      });
+      // Return defaults if no preferences exist yet for this user
+      return res.status(200).json(DEFAULT_PREFERENCES);
     }
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
+    // If the table doesn't exist yet in this environment, return safe defaults
+    // instead of crashing with a 500 error
+    if (error.code === '42P01') {
+      console.warn('notification_preferences table not found, returning defaults');
+      return res.status(200).json(DEFAULT_PREFERENCES);
+    }
     console.error('Get notification preferences error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

@@ -1552,7 +1552,7 @@ export default function Community() {
             return {
               ...p,
               liked: !p.liked,
-              likes: p.liked ? p.likes - 1 : p.likes + 1,
+              likes: p.liked ? Math.max(0, p.likes - 1) : p.likes + 1,
             };
           }),
         };
@@ -1560,10 +1560,31 @@ export default function Community() {
     );
 
     try {
+      let response;
       if (wasLiked) {
-        await groupsAPI.unlikePost(groupId, postId);
+        response = await groupsAPI.unlikePost(groupId, postId);
       } else {
-        await groupsAPI.likePost(groupId, postId);
+        response = await groupsAPI.likePost(groupId, postId);
+      }
+
+      // Sync with server response (source of truth)
+      if (response && typeof response.likeCount === 'number') {
+        setGroups((prev) =>
+          prev.map((g) => {
+            if (g.id !== groupId) return g;
+            return {
+              ...g,
+              posts: g.posts.map((p) => {
+                if (p.id !== postId) return p;
+                return {
+                  ...p,
+                  liked: response.liked,
+                  likes: response.likeCount,
+                };
+              }),
+            };
+          }),
+        );
       }
     } catch (error) {
       console.error("Failed to like/unlike post:", error);
@@ -1578,7 +1599,7 @@ export default function Community() {
               return {
                 ...p,
                 liked: wasLiked,
-                likes: wasLiked ? p.likes + 1 : p.likes - 1,
+                likes: wasLiked ? p.likes + 1 : Math.max(0, p.likes - 1),
               };
             }),
           };

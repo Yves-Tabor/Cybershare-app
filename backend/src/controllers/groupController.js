@@ -311,15 +311,6 @@ const likeGroupPost = async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Check if user is a member of the group
-    const memberCheck = await db.query(
-      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [groupId, userId]
-    );
-    if (memberCheck.rows.length === 0) {
-      return res.status(403).json({ error: "Must be a member of the group to like posts" });
-    }
-
     // Check if post exists and belongs to this group
     const postCheck = await db.query(
       "SELECT 1 FROM group_posts WHERE id = $1 AND group_id = $2",
@@ -329,16 +320,21 @@ const likeGroupPost = async (req, res) => {
       return res.status(404).json({ error: "Post not found in this group" });
     }
 
+    // Idempotent insert — silently ignore duplicate likes
     await db.query(
-      "INSERT INTO group_post_likes (group_post_id, user_id) VALUES ($1, $2)",
+      "INSERT INTO group_post_likes (group_post_id, user_id) VALUES ($1, $2) ON CONFLICT (group_post_id, user_id) DO NOTHING",
       [postId, userId],
     );
 
-    res.json({ message: "Post liked" });
+    // Return updated like count
+    const likeCountResult = await db.query(
+      "SELECT COUNT(*) as count FROM group_post_likes WHERE group_post_id = $1",
+      [postId]
+    );
+    const likeCount = parseInt(likeCountResult.rows[0].count);
+
+    res.json({ liked: true, likeCount });
   } catch (error) {
-    if (error.code === "23505") {
-      return res.status(400).json({ error: "Already liked" });
-    }
     console.error("Error liking post:", error);
     res.status(500).json({ error: "Failed to like post" });
   }
@@ -356,15 +352,6 @@ const unlikeGroupPost = async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Check if user is a member of the group
-    const memberCheck = await db.query(
-      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [groupId, userId]
-    );
-    if (memberCheck.rows.length === 0) {
-      return res.status(403).json({ error: "Must be a member of the group to unlike posts" });
-    }
-
     // Check if post exists and belongs to this group
     const postCheck = await db.query(
       "SELECT 1 FROM group_posts WHERE id = $1 AND group_id = $2",
@@ -374,12 +361,20 @@ const unlikeGroupPost = async (req, res) => {
       return res.status(404).json({ error: "Post not found in this group" });
     }
 
-    const deleteResult = await db.query(
+    // Idempotent delete — no-op if like doesn't exist
+    await db.query(
       "DELETE FROM group_post_likes WHERE group_post_id = $1 AND user_id = $2",
       [postId, userId],
     );
 
-    res.json({ message: "Post unliked" });
+    // Return updated like count
+    const likeCountResult = await db.query(
+      "SELECT COUNT(*) as count FROM group_post_likes WHERE group_post_id = $1",
+      [postId]
+    );
+    const likeCount = parseInt(likeCountResult.rows[0].count);
+
+    res.json({ liked: false, likeCount });
   } catch (error) {
     console.error("Error unliking post:", error);
     res.status(500).json({ error: "Failed to unlike post" });
