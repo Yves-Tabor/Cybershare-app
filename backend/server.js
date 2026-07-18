@@ -34,6 +34,12 @@ async function runMigrations() {
       )
     `);
     console.log('[migration] sessions table ready');
+
+    // Allow NULL password_hash for Google users
+    await pool.query(`
+      ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+    `);
+    console.log('[migration] password_hash dropped NOT NULL constraint');
   } catch (err) {
     console.error('[migration] Failed to run migrations:', err.message);
     // Non-fatal — server will still start

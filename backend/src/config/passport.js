@@ -22,17 +22,12 @@ passport.use(
           return done(null, existingUser.rows[0]);
         }
 
-        // Create new user
+        // Create new user (Google users don't have a password initially)
         const normalizedUsername = profile.emails[0].value.split('@')[0].toLowerCase().replace(/\s+/g, '');
-        
-        // Generate a random password for Google users
-        const randomPassword = Math.random().toString(36).slice(-8) + 'A1!';
-        const bcrypt = require('bcryptjs');
-        const passwordHash = await bcrypt.hash(randomPassword, 10);
 
         const result = await pool.query(
           'INSERT INTO users (username, email, password_hash, google_id, avatar) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, avatar, role, created_at',
-          [normalizedUsername, profile.emails[0].value, passwordHash, profile.id, profile.photos[0]?.value || null]
+          [normalizedUsername, profile.emails[0].value, null, profile.id, profile.photos[0]?.value || null]
         );
 
         return done(null, result.rows[0]);
