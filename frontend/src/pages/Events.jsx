@@ -940,7 +940,6 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState("events"); // "events" | "calendar"
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all"); // "all" | "added"

@@ -1,11 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-<<<<<<< HEAD
-import { authAPI, clearToken } from "../utils/api";
-=======
 import { authAPI, userSettingsAPI } from "../utils/api";
->>>>>>> dev
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -21,6 +17,34 @@ const AVATAR_COLORS = [
   "#993556",
   "#2a6b6b",
   "#6b2a55",
+];
+
+const INITIAL_SESSIONS = [
+  {
+    id: 1,
+    device: "MacBook Pro · Chrome",
+    location: "Kigali, RW",
+    ip: "102.89.44.12",
+    ts: Date.now() - 1000 * 60 * 2,
+    current: true,
+  },
+  {
+    id: 2,
+    device: "iPhone 16 · Safari",
+    location: "Kigali, RW",
+    ip: "102.89.44.12",
+    ts: Date.now() - 1000 * 60 * 60 * 6,
+    current: false,
+  },
+  {
+    id: 3,
+    device: "Linux · Firefox",
+    location: "Amsterdam, NL",
+    ip: "185.220.101.7",
+    ts: Date.now() - 1000 * 60 * 60 * 24 * 3,
+    current: false,
+    unfamiliar: true,
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -311,19 +335,11 @@ function SettingRow({ label, description, control }) {
   );
 }
 
-<<<<<<< HEAD
-function SaveButton({ onClick, children = "Save changes", disabled = false }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-=======
 function SaveButton({ onClick, children = "Save changes", loading = false }) {
   return (
     <button
       onClick={onClick}
       disabled={loading}
->>>>>>> dev
       className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         paddingLeft: "14px",
@@ -835,14 +851,6 @@ function CreateKeyModal({ onClose, onCreate }) {
 
 function ProfileSection({ profile, setProfile, showToast }) {
   const [local, setLocal] = useState(profile);
-<<<<<<< HEAD
-  const [saving, setSaving] = useState(false);
-
-  async function save() {
-    setSaving(true);
-    try {
-      await authAPI.updateProfile(local.displayName, local.bio, local.color);
-=======
   const [loading, setLoading] = useState(false);
 
   async function save() {
@@ -856,24 +864,13 @@ function ProfileSection({ profile, setProfile, showToast }) {
       if (local.color !== profile.color) {
         await userSettingsAPI.updateAvatarColor(local.color);
       }
->>>>>>> dev
       setProfile(local);
       showToast("Profile updated.");
     } catch (error) {
       console.error("Failed to update profile:", error);
-<<<<<<< HEAD
-      if (error.message === "Username already taken") {
-        showToast("Username already taken.");
-      } else {
-        showToast("Failed to update profile.");
-      }
-    } finally {
-      setSaving(false);
-=======
       showToast("Failed to update profile.");
     } finally {
       setLoading(false);
->>>>>>> dev
     }
   }
 
@@ -967,13 +964,7 @@ function ProfileSection({ profile, setProfile, showToast }) {
         className="flex justify-end pt-3 border-t border-white/20"
         style={{ paddingBlock: "10px" }}
       >
-<<<<<<< HEAD
-        <SaveButton onClick={save} disabled={saving}>
-          {saving ? "Saving..." : "Save changes"}
-        </SaveButton>
-=======
         <SaveButton onClick={save} loading={loading} />
->>>>>>> dev
       </div>
     </SectionCard>
   );
@@ -985,20 +976,10 @@ function SecuritySection({
   showToast,
   profile,
 }) {
-  const navigate = useNavigate();
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError] = useState("");
-<<<<<<< HEAD
-  const [pwSaving, setPwSaving] = useState(false);
-  const [revokeTarget, setRevokeTarget] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteSaving, setDeleteSaving] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-=======
   const [pwLoading, setPwLoading] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState(null);
->>>>>>> dev
 
   async function updatePassword() {
     if (!pw.current || !pw.next) {
@@ -1013,18 +994,6 @@ function SecuritySection({
       setPwError("New password must be at least 8 characters.");
       return;
     }
-<<<<<<< HEAD
-    setPwSaving(true);
-    setPwError("");
-    try {
-      await authAPI.changePassword(pw.current, pw.next);
-      setPw({ current: "", next: "", confirm: "" });
-      showToast("Password updated.");
-    } catch (err) {
-      setPwError(err.message || "Failed to update password.");
-    } finally {
-      setPwSaving(false);
-=======
     
     setPwLoading(true);
     try {
@@ -1037,40 +1006,11 @@ function SecuritySection({
       setPwError(error.message || "Failed to update password.");
     } finally {
       setPwLoading(false);
->>>>>>> dev
     }
   }
 
   async function handleRevoke() {
     try {
-<<<<<<< HEAD
-      await authAPI.revokeSession(revokeTarget.id);
-      setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
-      showToast("Session revoked.");
-    } catch (err) {
-      showToast("Failed to revoke session.");
-    } finally {
-      setRevokeTarget(null);
-    }
-  }
-
-  async function handleDelete() {
-    if (!deletePassword) {
-      setDeleteError("Password is required.");
-      return;
-    }
-    setDeleteSaving(true);
-    setDeleteError("");
-    try {
-      await authAPI.deleteAccount(deletePassword);
-      clearToken();
-      showToast("Account deleted.");
-      setTimeout(() => navigate("/"), 1200);
-    } catch (err) {
-      setDeleteError(err.message || "Failed to delete account.");
-    } finally {
-      setDeleteSaving(false);
-=======
       await userSettingsAPI.deleteSession(revokeTarget.id);
       setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
       showToast("Session revoked.");
@@ -1078,7 +1018,6 @@ function SecuritySection({
     } catch (error) {
       console.error("Failed to revoke session:", error);
       showToast("Failed to revoke session.");
->>>>>>> dev
     }
   }
 
@@ -1137,13 +1076,7 @@ function SecuritySection({
           <p className="text-[11px] text-[#E24B4A] font-mono mb-3">{pwError}</p>
         )}
         <div className="flex justify-end pt-3 border-t border-[#111]">
-<<<<<<< HEAD
-          <SaveButton onClick={updatePassword} disabled={pwSaving}>
-            {pwSaving ? "Updating..." : "Update password"}
-          </SaveButton>
-=======
           <SaveButton onClick={updatePassword} loading={pwLoading}>Update password</SaveButton>
->>>>>>> dev
         </div>
       </SectionCard>
       <br />
@@ -1289,7 +1222,7 @@ function DangerZoneSection({ profile, showToast }) {
             </p>
           </div>
           <button
-            onClick={() => { setDeletePassword(""); setDeleteError(""); setConfirmDelete(true); }}
+            onClick={() => setConfirmDelete(true)}
             className="text-[11px] font-mono rounded-lg bg-[#E24B4A] text-white hover:opacity-90 transition-all cursor-pointer border-none flex-shrink-0"
             style={{
               paddingLeft: "14px",
@@ -1302,77 +1235,6 @@ function DangerZoneSection({ profile, showToast }) {
           </button>
         </div>
       </SectionCard>
-<<<<<<< HEAD
-
-      {revokeTarget && (
-        <ConfirmModal
-          title="Revoke session"
-          message={`This will sign out "${revokeTarget.device}" immediately.`}
-          confirmLabel="Revoke session"
-          danger
-          onConfirm={handleRevoke}
-          onClose={() => setRevokeTarget(null)}
-        />
-      )}
-
-      {confirmDelete && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
-          onClick={(e) => e.target === e.currentTarget && !deleteSaving && setConfirmDelete(false)}
-          style={{ padding: "16px" }}
-        >
-          <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
-            <div
-              className="border-b border-[#141414]"
-              style={{ paddingLeft: "24px", paddingRight: "24px", paddingTop: "16px", paddingBottom: "16px" }}
-            >
-              <p className="text-[13px] font-semibold text-white">Delete account</p>
-            </div>
-            <div style={{ paddingLeft: "24px", paddingRight: "24px", paddingTop: "20px", paddingBottom: "20px" }}>
-              <p className="text-[12.5px] text-[#888] leading-relaxed">
-                This permanently deletes your profile, posts, comments, and group memberships. This cannot be undone.
-              </p>
-              <div className="mt-4">
-                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
-                  Enter your <span className="text-[#E24B4A]">password</span> to confirm
-                </label>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(""); }}
-                  disabled={deleteSaving}
-                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors font-mono"
-                  style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "10px", paddingBottom: "10px" }}
-                />
-                {deleteError && (
-                  <p className="text-[11px] text-[#E24B4A] font-mono mt-1.5">{deleteError}</p>
-                )}
-              </div>
-            </div>
-            <div
-              className="flex justify-end gap-2.5 border-t border-[#141414]"
-              style={{ paddingLeft: "24px", paddingRight: "24px", paddingTop: "16px", paddingBottom: "16px" }}
-            >
-              <button
-                onClick={() => !deleteSaving && setConfirmDelete(false)}
-                disabled={deleteSaving}
-                className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer disabled:opacity-50"
-                style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "8px", paddingBottom: "8px" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={!deletePassword || deleteSaving}
-                className="rounded-lg text-[12px] font-semibold cursor-pointer border-none bg-[#E24B4A] text-white hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "8px", paddingBottom: "8px" }}
-              >
-                {deleteSaving ? "Deleting..." : "Delete account"}
-              </button>
-            </div>
-          </div>
-        </div>
-=======
       {confirmDelete && (
         <ConfirmModal
           title="Delete account"
@@ -1405,72 +1267,11 @@ function DangerZoneSection({ profile, showToast }) {
             />
           </div>
         </ConfirmModal>
->>>>>>> dev
       )}
     </>
   );
 }
 
-<<<<<<< HEAD
-function NotificationsSection({ notifications, setNotifications, showToast }) {
-  function toggle(key) {
-    setNotifications((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      try {
-        localStorage.setItem("notif_prefs", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-    showToast("Notification preferences updated.");
-  }
-
-  return (
-    <SectionCard
-      title="Notifications"
-      icon={<IconBell />}
-      description="Choose what you hear about and how often."
-    >
-      <SettingRow
-        label="Comments on your posts"
-        description="Someone replies to something you've posted in a group."
-        control={
-          <Toggle
-            checked={notifications.comments}
-            onChange={() => toggle("comments")}
-          />
-        }
-      />
-      <SettingRow
-        label="Group invites"
-        description="An owner invites you to join their group."
-        control={
-          <Toggle
-            checked={notifications.invites}
-            onChange={() => toggle("invites")}
-          />
-        }
-      />
-      <SettingRow
-        label="Event creation"
-        description="A new event is posted to the community."
-        control={
-          <Toggle
-            checked={notifications.eventCreation}
-            onChange={() => toggle("eventCreation")}
-          />
-        }
-      />
-      <SettingRow
-        label="Security alerts"
-        description="New sign-ins, revoked sessions, and key changes. Always on."
-        control={<Toggle checked disabled onChange={() => {}} />}
-      />
-    </SectionCard>
-  );
-}
-
-=======
->>>>>>> dev
 // ─── Nav config ───────────────────────────────────────────────────────────────
 
 const SECTIONS = [
@@ -1493,27 +1294,12 @@ export default function Settings() {
     color: ME.color,
     bio: "",
   });
-<<<<<<< HEAD
-  const [security, setSecurity] = useState({ twoFactorEnabled: false });
-  const [sessions, setSessions] = useState([]);
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const stored = localStorage.getItem("notif_prefs");
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return {
-      comments: true,
-      invites: true,
-      eventCreation: true,
-    };
-=======
   const [sessions, setSessions] = useState(INITIAL_SESSIONS);
   const [notifications, setNotifications] = useState({
     email_marketing: true,
     email_activity: true,
     push_messages: true,
     push_mentions: true,
->>>>>>> dev
   });
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
@@ -1532,22 +1318,13 @@ export default function Settings() {
           handle: user.username,
           displayName: user.display_name || user.username,
           initials: user.username.slice(0, 2).toUpperCase(),
-<<<<<<< HEAD
-          color: user.color || ME.color,
-=======
           color: user.avatar_color || ME.color,
->>>>>>> dev
           bio: user.bio || "",
           email: user.email,
           avatar: user.avatar,
         });
-<<<<<<< HEAD
-        const sessData = await authAPI.getSessions();
-        setSessions(sessData.sessions || []);
-=======
         
         setNotifications(notificationData);
->>>>>>> dev
       } catch (error) {
         console.error("Failed to fetch data:", error);
         // Redirect to login if not authenticated
