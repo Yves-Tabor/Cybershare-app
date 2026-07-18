@@ -975,6 +975,7 @@ function SecuritySection({
   setSessions,
   showToast,
   profile,
+  setProfile,
 }) {
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError] = useState("");
@@ -1000,6 +1001,9 @@ function SecuritySection({
       await userSettingsAPI.changePassword(pw.current, pw.next);
       setPw({ current: "", next: "", confirm: "" });
       setPwError("");
+      if (profile?.hasPassword === false && setProfile) {
+        setProfile(prev => ({ ...prev, hasPassword: true }));
+      }
       showToast("Password updated. All other sessions have been revoked.");
     } catch (error) {
       console.error("Failed to update password:", error);
@@ -1423,6 +1427,7 @@ export default function Settings() {
                   setSessions={setSessions}
                   showToast={showToast}
                   profile={profile}
+                  setProfile={setProfile}
                 />
               )}
               {section === "notifications" && (
