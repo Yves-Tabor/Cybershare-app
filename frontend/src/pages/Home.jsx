@@ -1394,7 +1394,7 @@ export default function Home() {
 
     try {
       let response;
-      if (snapshot.liked) {
+      if (wasLiked) {
         response = await postsAPI.unlike(id);
       } else {
         response = await postsAPI.like(id);
