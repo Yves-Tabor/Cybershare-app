@@ -94,8 +94,8 @@ const changePassword = async (req, res) => {
     const userId = req.userId;
     const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current password and new password are required' });
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required' });
     }
 
     // Get current user
@@ -110,10 +110,15 @@ const changePassword = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
-    if (!isValidPassword) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
+    // Verify current password if the user has one
+    if (user.password_hash) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Current password is required' });
+      }
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
     }
 
     // Hash new password

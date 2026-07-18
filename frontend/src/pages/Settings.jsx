@@ -982,8 +982,8 @@ function SecuritySection({
   const [revokeTarget, setRevokeTarget] = useState(null);
 
   async function updatePassword() {
-    if (!pw.current || !pw.next) {
-      setPwError("All fields are required.");
+    if ((profile?.hasPassword && !pw.current) || !pw.next) {
+      setPwError("Required fields missing.");
       return;
     }
     if (pw.next !== pw.confirm) {
@@ -1026,21 +1026,23 @@ function SecuritySection({
       <br />
       <SectionCard title="Password" icon={<IconShield />}>
         <div className="grid sm:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
-              Current
-            </label>
-            <input
-              type="password"
-              value={pw.current}
-              onChange={(e) => {
-                setPw((p) => ({ ...p, current: e.target.value }));
-                setPwError("");
-              }}
-              className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors placeholder:text-white/40 bg-transparent"
-              style={{ padding: "12px 16px" }}
-            />
-          </div>
+          {profile?.hasPassword !== false && (
+            <div>
+              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+                Current
+              </label>
+              <input
+                type="password"
+                value={pw.current}
+                onChange={(e) => {
+                  setPw((p) => ({ ...p, current: e.target.value }));
+                  setPwError("");
+                }}
+                className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors placeholder:text-white/40 bg-transparent"
+                style={{ padding: "12px 16px" }}
+              />
+            </div>
+          )}
           <div>
             <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
               New
@@ -1076,7 +1078,9 @@ function SecuritySection({
           <p className="text-[11px] text-[#E24B4A] font-mono mb-3">{pwError}</p>
         )}
         <div className="flex justify-end pt-3 border-t border-[#111]">
-          <SaveButton onClick={updatePassword} loading={pwLoading}>Update password</SaveButton>
+          <SaveButton onClick={updatePassword} loading={pwLoading}>
+            {profile?.hasPassword === false ? "Create password" : "Update password"}
+          </SaveButton>
         </div>
       </SectionCard>
       <br />

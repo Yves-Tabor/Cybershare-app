@@ -153,7 +153,7 @@ const me = async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      "SELECT id, username, email, bio, avatar, color, role, created_at FROM users WHERE id = $1",
+      "SELECT id, username, email, bio, avatar, color, role, created_at, password_hash FROM users WHERE id = $1",
       [userId],
     );
 
@@ -173,6 +173,7 @@ const me = async (req, res) => {
         color: user.color,
         role: user.role,
         createdAt: user.created_at,
+        hasPassword: !!user.password_hash,
       },
     });
   } catch (error) {

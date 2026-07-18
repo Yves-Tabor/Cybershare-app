@@ -15,8 +15,7 @@ const updateAvatarColorSchema = z.object({
 
 // Password change validation
 const changePasswordSchema = z.object({
-  currentPassword: z.string()
-    .min(1, 'Current password is required'),
+  currentPassword: z.string().optional(),
   newPassword: z.string()
     .min(8, 'New password must be at least 8 characters')
     .regex(/[A-Z]/, 'New password must contain at least one uppercase letter')
