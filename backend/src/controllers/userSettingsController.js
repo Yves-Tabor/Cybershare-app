@@ -305,10 +305,6 @@ const deleteAccount = async (req, res) => {
     const userId = req.userId;
     const { password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({ error: 'Password confirmation is required' });
-    }
-
     // Get current user
     const userResult = await pool.query(
       'SELECT password_hash FROM users WHERE id = $1',
@@ -321,10 +317,15 @@ const deleteAccount = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    if (!isValidPassword) {
-      return res.status(400).json({ error: 'Password is incorrect' });
+    // If user has a password, verify it
+    if (user.password_hash) {
+      if (!password) {
+        return res.status(400).json({ error: 'Password confirmation is required' });
+      }
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Password is incorrect' });
+      }
     }
 
     // Soft delete: set deleted_at

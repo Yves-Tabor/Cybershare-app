@@ -1217,7 +1217,7 @@ function DangerZoneSection({ profile, showToast }) {
     setDeleteConfirmText("");
   }
 
-  const canDelete = deleteConfirmText === profile.handle && deletePassword.length > 0;
+  const canDelete = deleteConfirmText === profile.handle && (profile?.hasPassword !== false ? deletePassword.length > 0 : true);
 
   return (
     <>
@@ -1297,23 +1297,25 @@ function DangerZoneSection({ profile, showToast }) {
                   }}
                 />
               </div>
-              <div className="mt-4">
-                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
-                  Confirm password
-                </label>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
-                  style={{
-                    paddingLeft: "16px",
-                    paddingRight: "16px",
-                    paddingTop: "10px",
-                    paddingBottom: "10px",
-                  }}
-                />
-              </div>
+              {profile?.hasPassword !== false && (
+                <div className="mt-4">
+                  <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                    Confirm password
+                  </label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+                    style={{
+                      paddingLeft: "16px",
+                      paddingRight: "16px",
+                      paddingTop: "10px",
+                      paddingBottom: "10px",
+                    }}
+                  />
+                </div>
+              )}
             </div>
             <div
               className="flex justify-end gap-2.5 border-t border-[#141414]"
