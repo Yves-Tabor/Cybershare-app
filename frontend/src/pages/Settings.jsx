@@ -1211,6 +1211,14 @@ function DangerZoneSection({ profile, showToast }) {
     }
   }
 
+  function handleClose() {
+    setConfirmDelete(false);
+    setDeletePassword("");
+    setDeleteConfirmText("");
+  }
+
+  const canDelete = deleteConfirmText === profile.handle && deletePassword.length > 0;
+
   return (
     <>
       <SectionCard
@@ -1244,37 +1252,106 @@ function DangerZoneSection({ profile, showToast }) {
         </div>
       </SectionCard>
       {confirmDelete && (
-        <ConfirmModal
-          title="Delete account"
-          message="This permanently deletes your profile, posts, comments, and group memberships. This cannot be undone."
-          confirmLabel="Delete account"
-          requireText={profile.handle}
-          danger
-          onConfirm={handleDelete}
-          onClose={() => {
-            setConfirmDelete(false);
-            setDeletePassword("");
-            setDeleteConfirmText("");
-          }}
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+          onClick={(e) => e.target === e.currentTarget && handleClose()}
+          style={{ padding: "16px" }}
         >
-          <div className="mt-4">
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
-              Confirm password
-            </label>
-            <input
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+          <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+            <div
+              className="border-b border-[#141414]"
               style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "10px",
-                paddingBottom: "10px",
+                paddingLeft: "24px",
+                paddingRight: "24px",
+                paddingTop: "16px",
+                paddingBottom: "16px",
               }}
-            />
+            >
+              <p className="text-[13px] font-semibold text-white">Delete account</p>
+            </div>
+            <div
+              style={{
+                paddingLeft: "24px",
+                paddingRight: "24px",
+                paddingTop: "20px",
+                paddingBottom: "20px",
+              }}
+            >
+              <p className="text-[12.5px] text-[#888] leading-relaxed">
+                This permanently deletes your profile, posts, comments, and group memberships. This cannot be undone.
+              </p>
+              <div className="mt-4">
+                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                  Type <span className="text-[#E24B4A]">{profile.handle}</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors font-mono"
+                  style={{
+                    paddingLeft: "16px",
+                    paddingRight: "16px",
+                    paddingTop: "10px",
+                    paddingBottom: "10px",
+                  }}
+                />
+              </div>
+              <div className="mt-4">
+                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                  Confirm password
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+                  style={{
+                    paddingLeft: "16px",
+                    paddingRight: "16px",
+                    paddingTop: "10px",
+                    paddingBottom: "10px",
+                  }}
+                />
+              </div>
+            </div>
+            <div
+              className="flex justify-end gap-2.5 border-t border-[#141414]"
+              style={{
+                paddingLeft: "24px",
+                paddingRight: "24px",
+                paddingTop: "16px",
+                paddingBottom: "16px",
+              }}
+            >
+              <button
+                onClick={handleClose}
+                className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={!canDelete || deleteLoading}
+                className="bg-[#E24B4A] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                {deleteLoading ? "Deleting..." : "Delete account"}
+              </button>
+            </div>
           </div>
-        </ConfirmModal>
+        </div>
       )}
     </>
   );
