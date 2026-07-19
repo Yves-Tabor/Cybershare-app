@@ -924,7 +924,7 @@ function CreatePostModal({ onClose, onSubmit }) {
   );
 }
 
-function CompleteProfileModal({ onClose, onSubmit }) {
+function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -933,6 +933,8 @@ function CompleteProfileModal({ onClose, onSubmit }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const usernameRef = useRef(null);
+
+  const needsPassword = !currentUser?.hasPassword;
 
   useEffect(() => {
     usernameRef.current?.focus();
@@ -953,39 +955,42 @@ function CompleteProfileModal({ onClose, onSubmit }) {
       setError("Username must be at least 3 characters.");
       return;
     }
-    if (!password) {
-      setError("Password is required.");
-      return;
+    // Password validation only required if user doesn't have a password
+    if (needsPassword) {
+      if (!password) {
+        setError("Password is required.");
+        return;
+      }
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters.");
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setError("Password must contain at least one uppercase letter.");
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setError("Password must contain at least one lowercase letter.");
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setError("Password must contain at least one number.");
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setError("Password must contain at least one special character.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    if (!/[A-Z]/.test(password)) {
-      setError("Password must contain at least one uppercase letter.");
-      return;
-    }
-    if (!/[a-z]/.test(password)) {
-      setError("Password must contain at least one lowercase letter.");
-      return;
-    }
-    if (!/[0-9]/.test(password)) {
-      setError("Password must contain at least one number.");
-      return;
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      setError("Password must contain at least one special character.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    onSubmit({ username: username.trim(), password, bio: bio.trim() });
+    onSubmit({ username: username.trim(), password: needsPassword ? password : undefined, bio: bio.trim() });
   }
 
   function handleBackdrop(e) {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget && !needsPassword) onClose();
   }
 
   return (
@@ -1028,25 +1033,27 @@ function CompleteProfileModal({ onClose, onSubmit }) {
               Complete your profile
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
-            style={{ padding: "4px" }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {!needsPassword && (
+            <button
+              onClick={onClose}
+              className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              style={{ padding: "4px" }}
             >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
         </div>
 
         <div
@@ -1249,18 +1256,20 @@ function CompleteProfileModal({ onClose, onSubmit }) {
             paddingBottom: "16px",
           }}
         >
-          <button
-            onClick={onClose}
-            className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
-            style={{
-              paddingLeft: "16px",
-              paddingRight: "16px",
-              paddingTop: "8px",
-              paddingBottom: "8px",
-            }}
-          >
-            Skip for now
-          </button>
+          {!needsPassword && (
+            <button
+              onClick={onClose}
+              className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
+              style={{
+                paddingLeft: "16px",
+                paddingRight: "16px",
+                paddingTop: "8px",
+                paddingBottom: "8px",
+              }}
+            >
+              Skip for now
+            </button>
+          )}
           <button
             onClick={handleSubmit}
             className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
@@ -1329,18 +1338,23 @@ export default function Home() {
 
   // On mount: check for profile completion flag, then fetch data
   useEffect(() => {
-    // 1. Check URL for profile completion flag
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("complete_profile") === "true") {
-      setCompleteProfileOpen(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
     // 2. Fetch data
     async function fetchData() {
       try {
         const userResponse = await authAPI.me();
         setCurrentUser(userResponse.user);
+
+        // Auto-trigger popup if user has no password (regardless of URL params)
+        if (userResponse.user.hasPassword === false) {
+          setCompleteProfileOpen(true);
+        } else {
+          // 1. Check URL for profile completion flag (only if user has password)
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get("complete_profile") === "true") {
+            setCompleteProfileOpen(true);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
 
         const data = await postsAPI.getAll();
         const transformedPosts = data.posts
@@ -1800,6 +1814,7 @@ export default function Home() {
         <CompleteProfileModal
           onClose={() => setCompleteProfileOpen(false)}
           onSubmit={handleCompleteProfile}
+          currentUser={currentUser}
         />
       )}
 

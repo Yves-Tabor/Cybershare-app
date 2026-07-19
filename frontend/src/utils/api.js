@@ -84,10 +84,10 @@ async function apiRequest(endpoint, options = {}) {
 
 // Auth API
 export const authAPI = {
-  register: async (username, email, password) => {
+  register: async (username, email) => {
     return apiRequest("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email }),
     });
   },
 

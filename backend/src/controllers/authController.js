@@ -28,7 +28,7 @@ const recordSession = async (userId, token, req) => {
 // Register user
 const register = async (req, res) => {
   try {
-    const { username, email, password, bio } = req.body;
+    const { username, email, bio } = req.body;
 
     // Normalize username: lowercase and remove spaces
     const normalizedUsername = username.toLowerCase().replace(/\s+/g, "");
@@ -45,14 +45,10 @@ const register = async (req, res) => {
         .json({ error: "User with this email or username already exists" });
     }
 
-    // Hash password
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
-    // Insert user with normalized username
+    // Insert user with normalized username (no password initially)
     const result = await pool.query(
       "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, color, role, created_at",
-      [normalizedUsername, email, passwordHash, bio || null],
+      [normalizedUsername, email, null, bio || null],
     );
 
     const user = result.rows[0];

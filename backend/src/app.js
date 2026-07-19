@@ -30,9 +30,14 @@ const clientOrigin = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.replace(/\/$/, "") 
   : "http://localhost:5173";
 
+// Allow multiple origins for development
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? clientOrigin 
+  : [clientOrigin, "http://localhost:5174", "http://localhost:5175"];
+
 app.use(
   cors({
-    origin: clientOrigin,
+    origin: allowedOrigins,
     credentials: true,
   }),
 );

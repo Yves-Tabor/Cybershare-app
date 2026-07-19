@@ -644,12 +644,11 @@ export default function Welcome() {
   const [registerForm, setRegisterForm] = useState({
     username: "",
     email: "",
-    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+
   const [authNotice, setAuthNotice] = useState("");
   const noticeTimerRef = useRef(null);
 
@@ -690,12 +689,11 @@ export default function Welcome() {
     try {
       await authAPI.register(
         registerForm.username,
-        registerForm.email,
-        registerForm.password,
+        registerForm.email
       );
-      // Auto-login after registration
-      await authAPI.login(registerForm.email, registerForm.password);
-      navigate("/main");
+
+      // Successfully registered and logged in by backend
+      window.location.href = "/main?complete_profile=true";
     } catch (err) {
       // Handle validation errors with details
       if (err.details && Array.isArray(err.details)) {
@@ -1141,61 +1139,7 @@ export default function Welcome() {
                     }
                     required
                   />
-                  <div className="relative">
-                    <input
-                      className="ai"
-                      type={showRegisterPassword ? "text" : "password"}
-                      placeholder="Create a password"
-                      value={registerForm.password}
-                      onChange={(e) =>
-                        setRegisterForm({
-                          ...registerForm,
-                          password: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowRegisterPassword(!showRegisterPassword)
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showRegisterPassword ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.418 0 8 3.582 8 8 0 .354-.022.704-.064 1.051m-2.288 2.716A7.948 7.948 0 0 1 12 20c-4.418 0-8-3.582-8-8 0-.354.022-.704.064-1.051" />
-                          <line x1="2" x2="22" y1="2" y2="22" />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
+
                   <button
                     className="a-btn primary"
                     type="submit"
