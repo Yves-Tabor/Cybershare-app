@@ -3,15 +3,29 @@ const Redis = require('ioredis');
 require('dotenv').config();
 
 // Redis connection configuration
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT) || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
-  db: parseInt(process.env.REDIS_DB) || 0,
-  maxRetriesPerRequest: null,
-  retryDelayOnFailover: 100,
-  enableReadyCheck: false,
-};
+// Support REDIS_URL for production (Render), fall back to individual REDIS_* variables for local development
+let redisConfig;
+let redisConnectionType;
+
+if (process.env.REDIS_URL) {
+  // Production: Use REDIS_URL (e.g., from Render Key Value store)
+  redisConfig = process.env.REDIS_URL;
+  redisConnectionType = 'REDIS_URL';
+  console.log('[Queue] Using REDIS_URL for Redis connection');
+} else {
+  // Development: Use individual REDIS_* variables (local Memurai)
+  redisConfig = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT) || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    db: parseInt(process.env.REDIS_DB) || 0,
+    maxRetriesPerRequest: null,
+    retryDelayOnFailover: 100,
+    enableReadyCheck: false,
+  };
+  redisConnectionType = 'REDIS_HOST/PORT';
+  console.log(`[Queue] Using REDIS_HOST=${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379} for Redis connection`);
+}
 
 // Queue configuration
 const SCAN_QUEUE_NAME = 'scan-jobs';
@@ -31,21 +45,27 @@ let isRedisAvailable = false;
 // Initialize Redis connection and queue
 async function initializeQueue() {
   try {
+    console.log(`[Queue] Initializing Redis connection using: ${redisConnectionType}`);
     connection = new Redis(redisConfig);
 
     connection.on('connect', () => {
-      console.log('[Queue] Redis connected');
+      console.log('[Queue] Redis connected successfully');
       isRedisAvailable = true;
     });
 
     connection.on('error', (err) => {
-      console.error('[Queue] Redis connection error:', err);
+      console.error('[Queue] Redis connection error:', err.message);
       isRedisAvailable = false;
     });
 
     connection.on('ready', () => {
-      console.log('[Queue] Redis ready');
+      console.log('[Queue] Redis ready and accepting commands');
       isRedisAvailable = true;
+    });
+
+    connection.on('close', () => {
+      console.log('[Queue] Redis connection closed');
+      isRedisAvailable = false;
     });
 
     // Wait for connection with timeout
@@ -53,7 +73,7 @@ async function initializeQueue() {
       new Promise((resolve) => {
         connection.on('ready', resolve);
       }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 5000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout after 5s')), 5000))
     ]);
 
     // Create the scan queue
@@ -76,10 +96,11 @@ async function initializeQueue() {
       },
     });
 
-    console.log('[Queue] Scan queue initialized');
-    isRedisAvailable = true;
+    console.log('[Queue] Scan queue initialized successfully');
+    console.log(`[Queue] Redis is available: ${isRedisAvailable}`);
   } catch (error) {
-    console.warn('[Queue] Redis not available - scan features will be disabled:', error.message);
+    console.warn('[Queue] Redis initialization failed - scan features will be disabled');
+    console.warn('[Queue] Error:', error.message);
     isRedisAvailable = false;
     if (connection) {
       connection.disconnect();

@@ -106,6 +106,22 @@ psql -d cybershare -f sql/scan_queue_schema.sql
 
 ### 5. Set Up Redis
 
+#### Local Development (Windows with Memurai)
+
+For Windows development, use Memurai (Redis-compatible):
+
+1. Download and install Memurai from https://www.memurai.com/
+2. Start Memurai on port 6380 (or your preferred port)
+3. Configure environment variables in `backend/.env`:
+   ```
+   REDIS_HOST=127.0.0.1
+   REDIS_PORT=6380
+   REDIS_PASSWORD=
+   REDIS_DB=0
+   ```
+
+#### Local Development (macOS/Linux with Redis)
+
 ```bash
 # Using Docker
 docker run -d -p 6379:6379 --name redis redis:7-alpine
@@ -113,6 +129,14 @@ docker run -d -p 6379:6379 --name redis redis:7-alpine
 # Or install locally
 # macOS: brew install redis && brew services start redis
 # Ubuntu: sudo apt-get install redis-server && sudo systemctl start redis
+```
+
+Configure environment variables in `backend/.env`:
+```
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
 ```
 
 ### 6. Install Security Tools
@@ -295,6 +319,15 @@ docker-compose down -v
 
 #### Render Deployment
 
+**Redis Configuration for Render:**
+
+For production deployment on Render, use Render's Key Value store (Redis):
+
+1. Create a new Redis instance on Render (Key Value store)
+2. Render will provide a `REDIS_URL` environment variable automatically
+3. The application will automatically use `REDIS_URL` when available
+4. No need to configure `REDIS_HOST`, `REDIS_PORT`, etc. in production
+
 **Backend API**:
 
 1. Create a new Web Service on Render
@@ -302,13 +335,14 @@ docker-compose down -v
 3. Set build command: `cd backend && npm install`
 4. Set start command: `cd backend && node server.js`
 5. Add environment variables:
-   - `DATABASE_URL`: PostgreSQL connection string
-   - `REDIS_HOST`: Redis instance hostname
-   - `REDIS_PORT`: Redis instance port
-   - `JWT_SECRET`: Your JWT secret
+   - `DATABASE_URL`: PostgreSQL connection string (from Render PostgreSQL)
+   - `REDIS_URL`: (Auto-provided by Render Key Value store)
+   - `JWT_SECRET`: Your JWT secret (generate a strong random string)
    - `GOOGLE_CLIENT_ID`: Google OAuth client ID
    - `GOOGLE_CLIENT_SECRET`: Google OAuth client secret
-   - `CLIENT_URL`: Frontend URL
+   - `GOOGLE_CALLBACK_URL`: `https://your-backend-url.onrender.com/api/auth/google/callback`
+   - `CLIENT_URL`: Frontend URL (e.g., `https://your-frontend-url.onrender.com`)
+   - `NODE_ENV`: `production`
 
 **Worker**:
 
@@ -317,19 +351,25 @@ docker-compose down -v
 3. Set build command: `cd backend && npm install`
 4. Set start command: `cd backend && node worker/index.js`
 5. Add environment variables (same as backend plus):
+   - `DATABASE_URL`: PostgreSQL connection string (same as backend)
+   - `REDIS_URL`: (Auto-provided by Render Key Value store)
    - `WORKER_CONCURRENCY`: 2
    - `ENABLE_WORKER_HEALTH_CHECK`: true
    - `WORKER_HEALTH_CHECK_PORT`: 3001
+   - `NODE_ENV`: `production`
 
 **PostgreSQL**:
 
 1. Create a new PostgreSQL instance on Render
-2. Copy the connection string to `DATABASE_URL`
+2. Copy the internal connection string to `DATABASE_URL` environment variable
+3. Ensure SSL mode is enabled (Render provides this by default)
 
 **Redis**:
 
-1. Create a new Redis instance on Render
-2. Copy the hostname and port to environment variables
+1. Create a new Redis instance on Render (Key Value store)
+2. Render automatically provides `REDIS_URL` to connected services
+3. Connect the Redis instance to both Backend and Worker services
+4. The application will automatically detect and use `REDIS_URL`
 
 **Frontend**:
 
@@ -337,7 +377,8 @@ docker-compose down -v
 2. Connect your GitHub repository
 3. Set build command: `cd frontend && npm run build`
 4. Set publish directory: `frontend/dist`
-5. Add environment variable: `VITE_API_URL`: Backend API URL
+5. Add environment variable:
+   - `VITE_API_URL`: Backend API URL (e.g., `https://your-backend-url.onrender.com`)
 
 #### AWS Deployment
 

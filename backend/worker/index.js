@@ -5,15 +5,29 @@ const { scanLogger } = require('../src/utils/logger');
 require('dotenv').config();
 
 // Redis connection configuration
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT) || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
-  db: parseInt(process.env.REDIS_DB) || 0,
-  maxRetriesPerRequest: null,
-  retryDelayOnFailover: 100,
-  enableReadyCheck: false,
-};
+// Support REDIS_URL for production (Render), fall back to individual REDIS_* variables for local development
+let redisConfig;
+let redisConnectionType;
+
+if (process.env.REDIS_URL) {
+  // Production: Use REDIS_URL (e.g., from Render Key Value store)
+  redisConfig = process.env.REDIS_URL;
+  redisConnectionType = 'REDIS_URL';
+  scanLogger.info('[Worker] Using REDIS_URL for Redis connection');
+} else {
+  // Development: Use individual REDIS_* variables (local Memurai)
+  redisConfig = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT) || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    db: parseInt(process.env.REDIS_DB) || 0,
+    maxRetriesPerRequest: null,
+    retryDelayOnFailover: 100,
+    enableReadyCheck: false,
+  };
+  redisConnectionType = 'REDIS_HOST/PORT';
+  scanLogger.info(`[Worker] Using REDIS_HOST=${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379} for Redis connection`);
+}
 
 let connection = null;
 let scanWorker = null;
@@ -25,14 +39,23 @@ const WORKER_CONCURRENCY = parseInt(process.env.WORKER_CONCURRENCY) || 2;
 // Initialize Redis connection and worker
 async function startWorker() {
   try {
+    scanLogger.info(`[Worker] Initializing Redis connection using: ${redisConnectionType}`);
     connection = new Redis(redisConfig);
 
     connection.on('connect', () => {
-      scanLogger.info('[Worker] Redis connected');
+      scanLogger.info('[Worker] Redis connected successfully');
     });
 
     connection.on('error', (err) => {
-      scanLogger.error('[Worker] Redis connection error:', err);
+      scanLogger.error('[Worker] Redis connection error:', err.message);
+    });
+
+    connection.on('ready', () => {
+      scanLogger.info('[Worker] Redis ready and accepting commands');
+    });
+
+    connection.on('close', () => {
+      scanLogger.info('[Worker] Redis connection closed');
     });
 
     // Wait for connection with timeout
@@ -40,7 +63,7 @@ async function startWorker() {
       new Promise((resolve) => {
         connection.on('ready', resolve);
       }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 5000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout after 5s')), 5000))
     ]);
 
     // Create the scan worker
@@ -90,12 +113,14 @@ async function startWorker() {
       scanLogger.error('[Worker] Worker error:', error);
     });
 
-    scanLogger.info('[Worker] Scan worker started', {
+    scanLogger.info('[Worker] Scan worker started successfully', {
       queue: SCAN_QUEUE_NAME,
       concurrency: WORKER_CONCURRENCY,
+      redisConnectionType,
     });
   } catch (error) {
-    scanLogger.warn(`[Worker] Redis not available - worker will not start: ${error.message}`);
+    scanLogger.warn(`[Worker] Redis initialization failed - worker will not start`);
+    scanLogger.warn(`[Worker] Error: ${error.message}`);
     if (connection) {
       connection.disconnect();
       connection = null;
