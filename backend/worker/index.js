@@ -70,16 +70,30 @@ async function startWorker() {
     scanWorker = new Worker(
       SCAN_QUEUE_NAME,
       async (job) => {
-        scanLogger.info(`[Worker] Processing job ${job.id}`, {
+        const jobStartTime = Date.now();
+        scanLogger.info(`[Worker] ============================================`, { jobId: job.id });
+        scanLogger.info(`[Worker] Processing job ${job.id} STARTING`, {
           jobId: job.id,
           data: job.data,
         });
 
         try {
-          await processScanJob(job);
-          scanLogger.info(`[Worker] Job ${job.id} completed successfully`);
+          const result = await processScanJob(job);
+          const jobDuration = Date.now() - jobStartTime;
+          scanLogger.info(`[Worker] Processing job ${job.id} COMPLETED successfully in ${jobDuration}ms`, {
+            jobId: job.id,
+            durationMs: jobDuration,
+            result,
+          });
+          return result;
         } catch (error) {
-          scanLogger.error(`[Worker] Job ${job.id} failed:`, error);
+          const jobDuration = Date.now() - jobStartTime;
+          scanLogger.error(`[Worker] Processing job ${job.id} FAILED after ${jobDuration}ms`, {
+            jobId: job.id,
+            durationMs: jobDuration,
+            error: error.message,
+            stack: error.stack,
+          });
           throw error; // Re-throw to let BullMQ handle retries
         }
       },
@@ -95,14 +109,16 @@ async function startWorker() {
 
     // Worker event handlers
     scanWorker.on('completed', (job) => {
-      scanLogger.info(`[Worker] Job ${job.id} completed`, {
+      scanLogger.info(`[Worker] ============================================`, { jobId: job.id });
+      scanLogger.info(`[Worker] BullMQ Job ${job.id} ACKNOWLEDGED as COMPLETED`, {
         jobId: job.id,
         result: job.returnvalue,
       });
     });
 
     scanWorker.on('failed', (job, error) => {
-      scanLogger.error(`[Worker] Job ${job.id} failed:`, error.message, {
+      scanLogger.error(`[Worker] ============================================`, { jobId: job?.id });
+      scanLogger.error(`[Worker] BullMQ Job ${job?.id} ACKNOWLEDGED as FAILED`, {
         jobId: job?.id,
         error: error.message,
         stack: error.stack,
@@ -110,7 +126,17 @@ async function startWorker() {
     });
 
     scanWorker.on('error', (error) => {
-      scanLogger.error('[Worker] Worker error:', error);
+      scanLogger.error('[Worker] Worker error:', {
+        error: error.message,
+        stack: error.stack,
+      });
+    });
+
+    scanWorker.on('progress', (job, progress) => {
+      scanLogger.info(`[Worker] Job ${job.id} progress updated`, {
+        jobId: job.id,
+        progress,
+      });
     });
 
     scanLogger.info('[Worker] Scan worker started successfully', {
