@@ -23,6 +23,13 @@ function getCandidates(toolName) {
     ].filter(Boolean);
   }
 
+  if (toolName === "httpx") {
+    return [
+      process.env.HTTPX_PATH,
+      path.join(userProfile, "go", "bin", "httpx.exe"),
+    ].filter(Boolean);
+  }
+
   return [];
 }
 

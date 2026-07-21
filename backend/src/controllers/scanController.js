@@ -1,152 +1,52 @@
 const pool = require('../config/database');
-const { v4: uuidv4 } = require('uuid');
-const { scanHeaders } = require('../services/scanner/headerScanner');
-const { scanSSL } = require('../services/scanner/sslScanner');
-const { scanDNS } = require('../services/scanner/dnsScanner');
-const { scanCookies } = require('../services/scanner/cookieScanner');
-const { scanTechnologies } = require('../services/scanner/technologyScanner');
-const { scanNmap } = require('../services/scanner/nmapScanner');
-const { scanNuclei } = require('../services/scanner/nucleiScanner');
-const { calculateSecurityScore } = require('../services/scanner/scoreCalculator');
+const { addScanJob, JobPriority } = require('../services/queue/queueService');
+const { validateTargetUrl, validateScanOptions } = require('../utils/securityValidator');
 const { checkDependencies } = require('../services/scanner/dependencyChecker');
-const { notifyScanCompleted, notifyScanFailed, notifySecurityAlert } = require('../services/notification/notificationService');
-const { emitToUser } = require('../services/socket/socketService');
-
-async function storeScanResults(scanId, allResults) {
-  if (allResults.length === 0) return;
-
-  const values = [];
-  const params = [];
-  let paramIndex = 1;
-
-  for (const result of allResults) {
-    values.push(
-      `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5})`
-    );
-    params.push(
-      scanId,
-      result.category,
-      result.severity,
-      result.title,
-      result.description,
-      result.recommendation
-    );
-    paramIndex += 6;
-  }
-
-  await pool.query(
-    `INSERT INTO scan_results (scan_id, category, severity, title, description, recommendation)
-     VALUES ${values.join(', ')}`,
-    params
-  );
-}
+const { logger } = require('../utils/logger');
 
 // Create new scan
 const createScan = async (req, res) => {
   try {
     const userId = req.userId;
-    const { target_url } = req.body;
+    const { target_url, scan_type = 'standard', scan_options = {} } = req.body;
 
-    // Create scan record
-    const scanResult = await pool.query(
-      `INSERT INTO scans (target_url, user_id, status)
-       VALUES ($1, $2, 'running')
-       RETURNING id, target_url, user_id, status, created_at`,
-      [target_url, userId]
-    );
+    // Validate target URL
+    const urlValidation = await validateTargetUrl(target_url);
+    if (!urlValidation.valid) {
+      return res.status(400).json({ error: urlValidation.error });
+    }
 
-    const scan = scanResult.rows[0];
+    // Validate scan options
+    const optionsValidation = validateScanOptions(scan_options);
+    if (!optionsValidation.valid) {
+      return res.status(400).json({ error: optionsValidation.error });
+    }
 
-    // Run scans asynchronously (don't wait for completion)
-    runScans(scan.id, target_url, userId);
+    // Add job to queue
+    const job = await addScanJob({
+      userId,
+      targetUrl: target_url,
+      scanType: scan_type,
+      scanOptions: scan_options,
+    }, {
+      priority: JobPriority.NORMAL,
+    });
 
     res.status(201).json({
-      message: 'Scan started successfully',
-      scan: {
-        id: scan.id,
-        targetUrl: scan.target_url,
-        status: scan.status,
-        createdAt: scan.created_at,
+      message: 'Scan queued successfully',
+      job: {
+        id: job.id,
+        targetUrl: target_url,
+        status: 'queued',
+        queuedAt: new Date().toISOString(),
       },
     });
   } catch (error) {
-    console.error('Create scan error:', error);
+    logger.error('Create scan error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Run all scans and store results
-async function runScans(scanId, targetUrl, userId) {
-  try {
-    const allResults = [];
-
-    // Run all scanner modules
-    const [headerResults, sslResults, dnsResults, cookieResults, techResults, nmapResults, nucleiResults] = await Promise.all([
-      scanHeaders(targetUrl),
-      scanSSL(targetUrl),
-      scanDNS(targetUrl),
-      scanCookies(targetUrl),
-      scanTechnologies(targetUrl),
-      scanNmap(targetUrl),
-      scanNuclei(targetUrl),
-    ]);
-
-    allResults.push(...headerResults);
-    allResults.push(...sslResults);
-    allResults.push(...dnsResults);
-    allResults.push(...cookieResults);
-    allResults.push(...techResults);
-    allResults.push(...nmapResults);
-    allResults.push(...nucleiResults);
-
-    // Calculate security score
-    const scoreData = calculateSecurityScore(allResults);
-    const criticalIssues = allResults.filter((r) => r.severity === 'critical').length;
-
-    // Persist findings before marking scan complete
-    await storeScanResults(scanId, allResults);
-
-    // Mark scan complete
-    await pool.query(
-      `UPDATE scans
-       SET status = 'completed', security_score = $1, completed_at = CURRENT_TIMESTAMP
-       WHERE id = $2`,
-      [scoreData.score, scanId]
-    );
-
-    // Notify immediately
-    await Promise.all([
-      notifyScanCompleted(userId, scanId, scoreData.score, targetUrl),
-      criticalIssues > 0
-        ? notifySecurityAlert(userId, scanId, targetUrl, criticalIssues)
-        : Promise.resolve(),
-    ]);
-
-    emitToUser(userId, 'scan:completed', {
-      scanId,
-      status: 'completed',
-      securityScore: scoreData.score,
-      targetUrl,
-    });
-
-  } catch (error) {
-    console.error('Run scans error:', error);
-    // Update scan status to failed
-    await pool.query(
-      `UPDATE scans SET status = 'failed' WHERE id = $1`,
-      [scanId]
-    );
-    
-    // Notify user of scan failure
-    await notifyScanFailed(userId, scanId, targetUrl);
-
-    emitToUser(userId, 'scan:completed', {
-      scanId,
-      status: 'failed',
-      targetUrl,
-    });
-  }
-}
 
 // Get all scans for current user
 const getUserScans = async (req, res) => {
@@ -154,8 +54,9 @@ const getUserScans = async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      `SELECT id, target_url, status, security_score, created_at, completed_at
-       FROM scans
+      `SELECT id, target_url, status, security_score, created_at, completed_at,
+              total_findings, critical_findings, high_findings, medium_findings, low_findings, info_findings
+       FROM scan_jobs
        WHERE user_id = $1
        ORDER BY created_at DESC`,
       [userId]
@@ -168,11 +69,19 @@ const getUserScans = async (req, res) => {
       securityScore: row.security_score,
       createdAt: row.created_at,
       completedAt: row.completed_at,
+      totalFindings: row.total_findings,
+      severityCounts: {
+        critical: row.critical_findings,
+        high: row.high_findings,
+        medium: row.medium_findings,
+        low: row.low_findings,
+        informational: row.info_findings,
+      },
     }));
 
     res.status(200).json({ scans });
   } catch (error) {
-    console.error('Get user scans error:', error);
+    logger.error('Get user scans error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -183,10 +92,11 @@ const getScanById = async (req, res) => {
     const userId = req.userId;
     const { id } = req.params;
 
-    // Get scan
+    // Get scan job
     const scanResult = await pool.query(
-      `SELECT id, target_url, status, security_score, created_at, completed_at
-       FROM scans
+      `SELECT id, target_url, status, security_score, created_at, completed_at,
+              total_findings, critical_findings, high_findings, medium_findings, low_findings, info_findings
+       FROM scan_jobs
        WHERE id = $1 AND user_id = $2`,
       [id, userId]
     );
@@ -197,11 +107,12 @@ const getScanById = async (req, res) => {
 
     const scan = scanResult.rows[0];
 
-    // Get scan results
-    const resultsResult = await pool.query(
-      `SELECT id, category, severity, title, description, recommendation, created_at
-       FROM scan_results
-       WHERE scan_id = $1
+    // Get scan findings
+    const findingsResult = await pool.query(
+      `SELECT id, category, severity, title, description, recommendation, scanner_name, 
+              template_id, metadata, created_at
+       FROM scan_findings
+       WHERE scan_job_id = $1
        ORDER BY 
          CASE severity
            WHEN 'critical' THEN 1
@@ -213,31 +124,61 @@ const getScanById = async (req, res) => {
       [id]
     );
 
-    const results = resultsResult.rows.map(row => ({
+    const findings = findingsResult.rows.map(row => ({
       id: row.id,
       category: row.category,
       severity: row.severity,
       title: row.title,
       description: row.description,
       recommendation: row.recommendation,
+      scannerName: row.scanner_name,
+      templateId: row.template_id,
+      metadata: row.metadata ? JSON.parse(row.metadata) : null,
       createdAt: row.created_at,
     }));
 
-    // Calculate score breakdown
-    const severityCounts = {
-      critical: 0,
-      high: 0,
-      medium: 0,
-      low: 0,
-      informational: 0,
-    };
+    // Get scan progress
+    const progressResult = await pool.query(
+      `SELECT stage_name, status, progress_percentage, message, updated_at
+       FROM scan_progress
+       WHERE scan_job_id = $1
+       ORDER BY stage_name`,
+      [id]
+    );
 
-    results.forEach(result => {
-      const severity = result.severity.toLowerCase();
-      if (severityCounts.hasOwnProperty(severity)) {
-        severityCounts[severity]++;
-      }
-    });
+    const progress = progressResult.rows.map(row => ({
+      stage: row.stage_name,
+      status: row.status,
+      progress: row.progress_percentage,
+      message: row.message,
+      updatedAt: row.updated_at,
+    }));
+
+    // Get scan results summary
+    const resultsResult = await pool.query(
+      `SELECT scanner_name, scanner_stage, success, duration_ms, findings_count, completed_at
+       FROM scan_results
+       WHERE scan_job_id = $1
+       ORDER BY completed_at`,
+      [id]
+    );
+
+    const results = resultsResult.rows.map(row => ({
+      scannerName: row.scanner_name,
+      stage: row.scanner_stage,
+      success: row.success,
+      duration: row.duration_ms,
+      findingsCount: row.findings_count,
+      completedAt: row.completed_at,
+    }));
+
+    const severityCounts = {
+      critical: scan.critical_findings,
+      high: scan.high_findings,
+      medium: scan.medium_findings,
+      low: scan.low_findings,
+      informational: scan.info_findings,
+    };
 
     res.status(200).json({
       scan: {
@@ -248,12 +189,14 @@ const getScanById = async (req, res) => {
         createdAt: scan.created_at,
         completedAt: scan.completed_at,
       },
-      results,
+      findings,
       severityCounts,
-      totalFindings: results.length,
+      totalFindings: scan.total_findings,
+      progress,
+      results,
     });
   } catch (error) {
-    console.error('Get scan by ID error:', error);
+    logger.error('Get scan by ID error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -266,7 +209,7 @@ const deleteScan = async (req, res) => {
 
     // Check if scan exists and belongs to user
     const existingScan = await pool.query(
-      'SELECT id FROM scans WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM scan_jobs WHERE id = $1 AND user_id = $2',
       [id, userId]
     );
 
@@ -274,11 +217,11 @@ const deleteScan = async (req, res) => {
       return res.status(404).json({ error: 'Scan not found' });
     }
 
-    await pool.query('DELETE FROM scans WHERE id = $1', [id]);
+    await pool.query('DELETE FROM scan_jobs WHERE id = $1', [id]);
 
     res.status(200).json({ message: 'Scan deleted successfully' });
   } catch (error) {
-    console.error('Delete scan error:', error);
+    logger.error('Delete scan error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -287,10 +230,10 @@ const deleteScan = async (req, res) => {
 const deleteAllScans = async (req, res) => {
   try {
     const userId = req.userId;
-    await pool.query('DELETE FROM scans WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM scan_jobs WHERE user_id = $1', [userId]);
     res.status(200).json({ message: 'All scans deleted successfully' });
   } catch (error) {
-    console.error('Delete all scans error:', error);
+    logger.error('Delete all scans error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
