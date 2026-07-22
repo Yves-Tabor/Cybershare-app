@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { addScanJob, JobPriority } = require('../services/queue/queueService');
+const { addScanJob, JobPriority, isRedisAvailable } = require('../services/queue/queueService');
 const { validateTargetUrl, validateScanOptions } = require('../utils/securityValidator');
 const { checkDependencies } = require('../services/scanner/dependencyChecker');
 const { logger } = require('../utils/logger');
@@ -9,6 +9,14 @@ const createScan = async (req, res) => {
   try {
     const userId = req.userId;
     const { target_url, scan_type = 'standard', scan_options = {} } = req.body;
+
+    // Check if Redis is available
+    if (!isRedisAvailable) {
+      return res.status(503).json({
+        error: 'Redis is not available',
+        message: 'Scan features are currently disabled because Redis is not running. Please install and start Redis to enable scanning.',
+      });
+    }
 
     // Validate target URL
     const urlValidation = await validateTargetUrl(target_url);
@@ -43,7 +51,13 @@ const createScan = async (req, res) => {
     });
   } catch (error) {
     logger.error('Create scan error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    if (error.message.includes('Redis is not available')) {
+      return res.status(503).json({
+        error: 'Redis is not available',
+        message: 'Scan features are currently disabled because Redis is not running.',
+      });
+    }
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
 
@@ -82,7 +96,11 @@ const getUserScans = async (req, res) => {
     res.status(200).json({ scans });
   } catch (error) {
     logger.error('Get user scans error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Handle case where scan_jobs table doesn't exist
+    if (error.code === '42P01') { // PostgreSQL error for relation does not exist
+      return res.status(200).json({ scans: [] });
+    }
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
 
@@ -197,7 +215,11 @@ const getScanById = async (req, res) => {
     });
   } catch (error) {
     logger.error('Get scan by ID error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Handle case where scan tables don't exist
+    if (error.code === '42P01') {
+      return res.status(404).json({ error: 'Scan not found' });
+    }
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
 
@@ -222,7 +244,11 @@ const deleteScan = async (req, res) => {
     res.status(200).json({ message: 'Scan deleted successfully' });
   } catch (error) {
     logger.error('Delete scan error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Handle case where scan_jobs table doesn't exist
+    if (error.code === '42P01') {
+      return res.status(404).json({ error: 'Scan not found' });
+    }
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
 
@@ -234,7 +260,11 @@ const deleteAllScans = async (req, res) => {
     res.status(200).json({ message: 'All scans deleted successfully' });
   } catch (error) {
     logger.error('Delete all scans error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Handle case where scan_jobs table doesn't exist
+    if (error.code === '42P01') {
+      return res.status(200).json({ message: 'All scans deleted successfully' });
+    }
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
 
