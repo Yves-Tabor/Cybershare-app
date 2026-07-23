@@ -96,7 +96,7 @@ async function runMigrations() {
       await pool.query(`ALTER TABLE scan_jobs ADD COLUMN IF NOT EXISTS ${col} ${type}`);
     }
     // Relax NOT NULL on user_id for rows created by older pipeline code
-    await pool.query(`ALTER TABLE scan_jobs ALTER COLUMN user_id DROP NOT NULL`).catch(() => {});
+    await pool.query(`ALTER TABLE scan_jobs ALTER COLUMN user_id DROP NOT NULL`).catch(() => { });
     console.log('[migration] scan_jobs table ready');
 
     await pool.query(`
@@ -187,7 +187,7 @@ async function runMigrations() {
     // Drop obsolete columns from scan_results if they exist
     const obsoleteResultsCols = ['category', 'severity', 'title', 'description', 'recommendation'];
     for (const col of obsoleteResultsCols) {
-      await pool.query(`ALTER TABLE scan_results DROP COLUMN IF EXISTS ${col} CASCADE`).catch(() => {});
+      await pool.query(`ALTER TABLE scan_results DROP COLUMN IF EXISTS ${col} CASCADE`).catch(() => { });
     }
     console.log('[migration] scan_results table ready');
 
@@ -310,8 +310,8 @@ async function runMigrations() {
 const server = http.createServer(app);
 
 // Create Socket.IO server
-const clientOrigin = process.env.CLIENT_URL 
-  ? process.env.CLIENT_URL.replace(/\/$/, "") 
+const clientOrigin = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.replace(/\/$/, "")
   : "http://localhost:5173";
 
 const io = new Server(server, {

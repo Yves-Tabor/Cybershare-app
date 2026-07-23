@@ -109,13 +109,13 @@ startWorker();
 // Graceful shutdown
 const shutdown = async () => {
   scanLogger.info('[Worker] Shutting down gracefully...');
-  
+
   // Set a timeout for graceful shutdown
   const shutdownTimeout = setTimeout(() => {
     scanLogger.warn('[Worker] Shutdown timeout, forcing exit');
     process.exit(1);
   }, 30000); // 30 second timeout
-  
+
   try {
     if (scanWorker) {
       await scanWorker.close();
