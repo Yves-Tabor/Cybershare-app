@@ -15,7 +15,7 @@ const { runNucleiStage } = require('./stages/nucleiStage');
  * Orchestrates the scanning process through all stages
  */
 async function processScanJob(job) {
-  const { userId, targetUrl, scanType, scanOptions } = job.data;
+  const { userId, targetUrl, scanType, scanOptions, dbScanId: existingDbId } = job.data;
   const jobId = job.id;
 
   scanLogger.info(`[Pipeline] Starting scan job ${jobId} for user ${userId}`, {
@@ -34,28 +34,41 @@ async function processScanJob(job) {
       throw new Error(`Target validation failed: ${validation.error}`);
     }
 
-    // Step 2: Create scan job record in database
-    const scanJobResult = await pool.query(
-      `INSERT INTO scan_jobs 
-       (user_id, target_url, target_hostname, target_ip, queue_job_id, status, scan_type, scan_options)
-       VALUES ($1, $2, $3, $4, $5, 'validating', $6, $7)
-       RETURNING id`,
-      [userId, targetUrl, validation.hostname, validation.ip, jobId, scanType, JSON.stringify(scanOptions)]
-    );
+    // Step 2: Reuse the existing DB record created by the controller, or create one if absent
+    if (existingDbId) {
+      // Update the pre-created record with resolved network details
+      await pool.query(
+        `UPDATE scan_jobs
+         SET target_hostname = $1, target_ip = $2, status = 'validating', updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [validation.hostname, validation.ip, existingDbId]
+      );
+      scanJobId = existingDbId;
+      scanLogger.info(`[Pipeline] Using existing scan job record ${scanJobId}`);
+    } else {
+      // Fallback: create a new record (for legacy jobs queued without dbScanId)
+      const scanJobResult = await pool.query(
+        `INSERT INTO scan_jobs 
+         (user_id, target_url, target_hostname, target_ip, queue_job_id, status, scan_type, scan_options)
+         VALUES ($1, $2, $3, $4, $5, 'validating', $6, $7)
+         RETURNING id`,
+        [userId, targetUrl, validation.hostname, validation.ip, jobId, scanType, JSON.stringify(scanOptions)]
+      );
+      scanJobId = scanJobResult.rows[0].id;
+      scanLogger.info(`[Pipeline] Created scan job record ${scanJobId}`);
+    }
 
-    scanJobId = scanJobResult.rows[0].id;
-    scanLogger.info(`[Pipeline] Created scan job record ${scanJobId}`);
-
-    // Step 3: Create scan target record
+    // Step 3: Create scan target record (skip if already exists for this job)
     await pool.query(
       `INSERT INTO scan_targets 
        (scan_job_id, url, hostname, ip_address, port, protocol, is_valid, is_reachable)
-       VALUES ($1, $2, $3, $4, $5, $6, true, true)`,
+       VALUES ($1, $2, $3, $4, $5, $6, true, true)
+       ON CONFLICT DO NOTHING`,
       [scanJobId, targetUrl, validation.hostname, validation.ip, validation.port, validation.url.protocol]
     );
 
     // Step 4: Update job status to running
-    await updateJobStatus(scanJobId, 'queued');
+    await updateJobStatus(scanJobId, 'running');
     emitToUser(userId, 'scan:queued', { scanId: scanJobId, targetUrl });
 
     // Step 5: Execute pipeline stages
