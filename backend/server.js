@@ -84,6 +84,26 @@ io.on('connection', (socket) => {
 server.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Database: ${process.env.DATABASE_URL ? "connected (hidden)" : "missing"}`);
-  await runMigrations();
+  console.log(`Database: ${process.env.DATABASE_URL ? 'configured' : 'MISSING — set DATABASE_URL'}`);
+
+  // Quick connectivity check before running migrations
+  try {
+    await pool.query('SELECT 1');
+    console.log('[DB] Connection verified ✓');
+    await runMigrations();
+  } catch (err) {
+    console.error('[DB] Cannot reach database:', err.message);
+    console.error('[DB] Server will continue but DB-dependent routes will fail.');
+    console.error('[DB] Check your Neon project at https://console.neon.tech — it may be suspended or the endpoint changed.');
+  }
+
+  // In development, automatically run the scan worker in-process
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Dev] Starting scan worker in-process...');
+    try {
+      require('./worker/index');
+    } catch (err) {
+      console.error('[Dev] Failed to start scan worker:', err.message);
+    }
+  }
 });

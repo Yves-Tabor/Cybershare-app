@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { addScanJob, JobPriority, isRedisAvailable } = require('../services/queue/queueService');
+const { addScanJob, JobPriority, checkRedisStatus } = require('../services/queue/queueService');
 const { validateTargetUrl, validateScanOptions } = require('../utils/securityValidator');
 const { checkDependencies } = require('../services/scanner/dependencyChecker');
 const { logger } = require('../utils/logger');
@@ -11,7 +11,7 @@ const createScan = async (req, res) => {
     const { target_url, scan_type = 'standard', scan_options = {} } = req.body;
 
     // Check if Redis is available
-    if (!isRedisAvailable) {
+    if (!checkRedisStatus()) {
       return res.status(503).json({
         error: 'Redis is not available',
         message: 'Scan features are currently disabled because Redis is not running. Please install and start Redis to enable scanning.',
@@ -30,24 +30,45 @@ const createScan = async (req, res) => {
       return res.status(400).json({ error: optionsValidation.error });
     }
 
+    // Create database record first
+    const initialRecord = await pool.query(
+      `INSERT INTO scan_jobs 
+       (user_id, target_url, scan_type, scan_options, status)
+       VALUES ($1, $2, $3, $4, 'queued')
+       RETURNING id`,
+      [userId, target_url, scan_type, JSON.stringify(scan_options)]
+    );
+    const dbId = initialRecord.rows[0].id;
+
     // Add job to queue
     const job = await addScanJob({
       userId,
       targetUrl: target_url,
       scanType: scan_type,
       scanOptions: scan_options,
+      dbScanId: dbId,
     }, {
       priority: JobPriority.NORMAL,
     });
 
+    // Update queue_job_id on record
+    await pool.query(
+      `UPDATE scan_jobs SET queue_job_id = $1 WHERE id = $2`,
+      [job.id, dbId]
+    );
+
+    const scanPayload = {
+      id: dbId,
+      queueJobId: job.id,
+      targetUrl: target_url,
+      status: 'queued',
+      queuedAt: new Date().toISOString(),
+    };
+
     res.status(201).json({
       message: 'Scan queued successfully',
-      job: {
-        id: job.id,
-        targetUrl: target_url,
-        status: 'queued',
-        queuedAt: new Date().toISOString(),
-      },
+      scan: scanPayload,
+      job: scanPayload,
     });
   } catch (error) {
     logger.error('Create scan error:', error);
@@ -68,7 +89,7 @@ const getUserScans = async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      `SELECT id, target_url, status, security_score, created_at, completed_at,
+      `SELECT id, queue_job_id, target_url, status, security_score, created_at, completed_at,
               total_findings, critical_findings, high_findings, medium_findings, low_findings, info_findings
        FROM scan_jobs
        WHERE user_id = $1
@@ -78,6 +99,7 @@ const getUserScans = async (req, res) => {
 
     const scans = result.rows.map(row => ({
       id: row.id,
+      queueJobId: row.queue_job_id,
       targetUrl: row.target_url,
       status: row.status,
       securityScore: row.security_score,
@@ -110,12 +132,12 @@ const getScanById = async (req, res) => {
     const userId = req.userId;
     const { id } = req.params;
 
-    // Get scan job
+    // Get scan job (matching integer ID as text, or string queue_job_id)
     const scanResult = await pool.query(
-      `SELECT id, target_url, status, security_score, created_at, completed_at,
+      `SELECT id, queue_job_id, target_url, status, security_score, created_at, completed_at,
               total_findings, critical_findings, high_findings, medium_findings, low_findings, info_findings
        FROM scan_jobs
-       WHERE id = $1 AND user_id = $2`,
+       WHERE (id::text = $1 OR queue_job_id = $1) AND user_id = $2`,
       [id, userId]
     );
 
@@ -124,6 +146,7 @@ const getScanById = async (req, res) => {
     }
 
     const scan = scanResult.rows[0];
+    const dbScanId = scan.id;
 
     // Get scan findings
     const findingsResult = await pool.query(
@@ -139,7 +162,7 @@ const getScanById = async (req, res) => {
            WHEN 'low' THEN 4
            WHEN 'informational' THEN 5
          END`,
-      [id]
+      [dbScanId]
     );
 
     const findings = findingsResult.rows.map(row => ({
@@ -161,7 +184,7 @@ const getScanById = async (req, res) => {
        FROM scan_progress
        WHERE scan_job_id = $1
        ORDER BY stage_name`,
-      [id]
+      [dbScanId]
     );
 
     const progress = progressResult.rows.map(row => ({
@@ -178,7 +201,7 @@ const getScanById = async (req, res) => {
        FROM scan_results
        WHERE scan_job_id = $1
        ORDER BY completed_at`,
-      [id]
+      [dbScanId]
     );
 
     const results = resultsResult.rows.map(row => ({
@@ -201,6 +224,7 @@ const getScanById = async (req, res) => {
     res.status(200).json({
       scan: {
         id: scan.id,
+        queueJobId: scan.queue_job_id,
         targetUrl: scan.target_url,
         status: scan.status,
         securityScore: scan.security_score,
@@ -231,7 +255,7 @@ const deleteScan = async (req, res) => {
 
     // Check if scan exists and belongs to user
     const existingScan = await pool.query(
-      'SELECT id FROM scan_jobs WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM scan_jobs WHERE (id::text = $1 OR queue_job_id = $1) AND user_id = $2',
       [id, userId]
     );
 
@@ -239,7 +263,8 @@ const deleteScan = async (req, res) => {
       return res.status(404).json({ error: 'Scan not found' });
     }
 
-    await pool.query('DELETE FROM scan_jobs WHERE id = $1', [id]);
+    const dbScanId = existingScan.rows[0].id;
+    await pool.query('DELETE FROM scan_jobs WHERE id = $1', [dbScanId]);
 
     res.status(200).json({ message: 'Scan deleted successfully' });
   } catch (error) {

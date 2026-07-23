@@ -15,7 +15,7 @@ const { runNucleiStage } = require('./stages/nucleiStage');
  * Orchestrates the scanning process through all stages
  */
 async function processScanJob(job) {
-  const { userId, targetUrl, scanType, scanOptions } = job.data;
+  const { userId, targetUrl, scanType, scanOptions, dbScanId: existingDbId } = job.data;
   const jobId = job.id;
 
   scanLogger.info(`[Pipeline] Starting scan job ${jobId} for user ${userId}`, {
@@ -34,23 +34,36 @@ async function processScanJob(job) {
       throw new Error(`Target validation failed: ${validation.error}`);
     }
 
-    // Step 2: Create scan job record in database
-    const scanJobResult = await pool.query(
-      `INSERT INTO scan_jobs 
-       (user_id, target_url, target_hostname, target_ip, queue_job_id, status, scan_type, scan_options)
-       VALUES ($1, $2, $3, $4, $5, 'validating', $6, $7)
-       RETURNING id`,
-      [userId, targetUrl, validation.hostname, validation.ip, jobId, scanType, JSON.stringify(scanOptions)]
-    );
-
-    scanJobId = scanJobResult.rows[0].id;
-    scanLogger.info(`[Pipeline] Created scan job record ${scanJobId}`);
+    // Step 2: Reuse the existing DB record created by the controller, or create one if absent
+    if (existingDbId) {
+      // Update the pre-created record with resolved network details
+      await pool.query(
+        `UPDATE scan_jobs
+         SET target_hostname = $1, target_ip = $2, status = 'validating', updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [validation.hostname, validation.ip, existingDbId]
+      );
+      scanJobId = existingDbId;
+      scanLogger.info(`[Pipeline] Using existing scan job record ${scanJobId}`);
+    } else {
+      // Fallback: create a new record (for legacy jobs queued without dbScanId)
+      const scanJobResult = await pool.query(
+        `INSERT INTO scan_jobs 
+         (user_id, target_url, target_hostname, target_ip, queue_job_id, status, scan_type, scan_options)
+         VALUES ($1, $2, $3, $4, $5, 'validating', $6, $7)
+         RETURNING id`,
+        [userId, targetUrl, validation.hostname, validation.ip, jobId, scanType, JSON.stringify(scanOptions)]
+      );
+      scanJobId = scanJobResult.rows[0].id;
+      scanLogger.info(`[Pipeline] Created scan job record ${scanJobId}`);
+    }
 
     // Step 3: Create scan target record
     await pool.query(
       `INSERT INTO scan_targets 
        (scan_job_id, url, hostname, ip_address, port, protocol, is_valid, is_reachable)
-       VALUES ($1, $2, $3, $4, $5, $6, true, true)`,
+       VALUES ($1, $2, $3, $4, $5, $6, true, true)
+       ON CONFLICT (scan_job_id, url) DO NOTHING`,
       [scanJobId, targetUrl, validation.hostname, validation.ip, validation.port, validation.url.protocol]
     );
 
@@ -169,43 +182,65 @@ async function executePipeline(scanJobId, userId, targetUrl, validation, job) {
   };
 
   try {
-    // Stage 1: HTTPX - Target validation and HTTP metadata
+  // Stage 1: HTTPX - Target validation and HTTP metadata
+  try {
     await updateJobStatus(scanJobId, 'running_httpx');
     await updateProgress(scanJobId, 'httpx', 'running', 0, 'Starting HTTPX scan');
     emitToUser(userId, 'scan:running_httpx', { scanId: scanJobId });
 
     const httpxResults = await runHttpxStage(scanJobId, targetUrl, validation, job);
-    allFindings.push(...httpxResults.findings);
-    updateSeverityCounts(severityCounts, httpxResults.findings);
+    if (httpxResults && httpxResults.findings) {
+      allFindings.push(...httpxResults.findings);
+      updateSeverityCounts(severityCounts, httpxResults.findings);
+    }
 
     await updateProgress(scanJobId, 'httpx', 'completed', 25, 'HTTPX scan completed');
     scanLogger.info(`[Pipeline] HTTPX stage completed for job ${scanJobId}`);
+  } catch (error) {
+    scanLogger.error(`[Pipeline] HTTPX stage failed for job ${scanJobId}:`, error);
+    await updateProgress(scanJobId, 'httpx', 'failed', 25, `HTTPX scan failed: ${error.message}`);
+  }
 
-    // Stage 2: Nmap - Port scanning
+  // Stage 2: Nmap - Port scanning
+  try {
     await updateJobStatus(scanJobId, 'running_nmap');
     await updateProgress(scanJobId, 'nmap', 'running', 25, 'Starting Nmap scan');
     emitToUser(userId, 'scan:running_nmap', { scanId: scanJobId });
 
     const nmapResults = await runNmapStage(scanJobId, targetUrl, validation, job);
-    allFindings.push(...nmapResults.findings);
-    updateSeverityCounts(severityCounts, nmapResults.findings);
+    if (nmapResults && nmapResults.findings) {
+      allFindings.push(...nmapResults.findings);
+      updateSeverityCounts(severityCounts, nmapResults.findings);
+    }
 
     await updateProgress(scanJobId, 'nmap', 'completed', 60, 'Nmap scan completed');
     scanLogger.info(`[Pipeline] Nmap stage completed for job ${scanJobId}`);
+  } catch (error) {
+    scanLogger.error(`[Pipeline] Nmap stage failed for job ${scanJobId}:`, error);
+    await updateProgress(scanJobId, 'nmap', 'failed', 60, `Nmap scan failed: ${error.message}`);
+  }
 
-    // Stage 3: Nuclei - Vulnerability scanning
+  // Stage 3: Nuclei - Vulnerability scanning
+  try {
     await updateJobStatus(scanJobId, 'running_nuclei');
     await updateProgress(scanJobId, 'nuclei', 'running', 60, 'Starting Nuclei scan');
     emitToUser(userId, 'scan:running_nuclei', { scanId: scanJobId });
 
     const nucleiResults = await runNucleiStage(scanJobId, targetUrl, validation, job);
-    allFindings.push(...nucleiResults.findings);
-    updateSeverityCounts(severityCounts, nucleiResults.findings);
+    if (nucleiResults && nucleiResults.findings) {
+      allFindings.push(...nucleiResults.findings);
+      updateSeverityCounts(severityCounts, nucleiResults.findings);
+    }
 
     await updateProgress(scanJobId, 'nuclei', 'completed', 90, 'Nuclei scan completed');
     scanLogger.info(`[Pipeline] Nuclei stage completed for job ${scanJobId}`);
+  } catch (error) {
+    scanLogger.error(`[Pipeline] Nuclei stage failed for job ${scanJobId}:`, error);
+    await updateProgress(scanJobId, 'nuclei', 'failed', 90, `Nuclei scan failed: ${error.message}`);
+  }
 
-    // Stage 4: Parsing and finalization
+  // Stage 4: Parsing and finalization
+  try {
     await updateJobStatus(scanJobId, 'parsing');
     await updateProgress(scanJobId, 'parsing', 'running', 90, 'Parsing results');
     emitToUser(userId, 'scan:parsing', { scanId: scanJobId });
@@ -215,9 +250,8 @@ async function executePipeline(scanJobId, userId, targetUrl, validation, job) {
 
     await updateProgress(scanJobId, 'parsing', 'completed', 100, 'Parsing completed');
     scanLogger.info(`[Pipeline] Parsing stage completed for job ${scanJobId}`);
-
   } catch (error) {
-    scanLogger.error(`[Pipeline] Pipeline execution failed for job ${scanJobId}:`, error);
+    scanLogger.error(`[Pipeline] Parsing/finalization stage failed for job ${scanJobId}:`, error);
     throw error;
   }
 
