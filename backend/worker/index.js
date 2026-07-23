@@ -15,81 +15,114 @@ const redisConfig = {
   enableReadyCheck: false,
 };
 
-// Create Redis connection
-const connection = new Redis(redisConfig);
-
-connection.on('connect', () => {
-  scanLogger.info('[Worker] Redis connected');
-});
-
-connection.on('error', (err) => {
-  scanLogger.error('[Worker] Redis connection error:', err);
-});
+let connection = null;
+let scanWorker = null;
 
 // Worker configuration
 const SCAN_QUEUE_NAME = 'scan-jobs';
 const WORKER_CONCURRENCY = parseInt(process.env.WORKER_CONCURRENCY) || 2;
 
-// Create the scan worker
-const scanWorker = new Worker(
-  SCAN_QUEUE_NAME,
-  async (job) => {
-    scanLogger.info(`[Worker] Processing job ${job.id}`, {
-      jobId: job.id,
-      data: job.data,
+// Initialize Redis connection and worker
+async function startWorker() {
+  try {
+    connection = new Redis(redisConfig);
+
+    connection.on('connect', () => {
+      scanLogger.info('[Worker] Redis connected');
     });
 
-    try {
-      await processScanJob(job);
-      scanLogger.info(`[Worker] Job ${job.id} completed successfully`);
-    } catch (error) {
-      scanLogger.error(`[Worker] Job ${job.id} failed:`, error);
-      throw error; // Re-throw to let BullMQ handle retries
+    connection.on('error', (err) => {
+      scanLogger.error('[Worker] Redis connection error:', err);
+    });
+
+    // Wait for connection with timeout
+    await Promise.race([
+      new Promise((resolve) => {
+        connection.on('ready', resolve);
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 5000))
+    ]);
+
+    // Create the scan worker
+    scanWorker = new Worker(
+      SCAN_QUEUE_NAME,
+      async (job) => {
+        scanLogger.info(`[Worker] Processing job ${job.id}`, {
+          jobId: job.id,
+          data: job.data,
+        });
+
+        try {
+          await processScanJob(job);
+          scanLogger.info(`[Worker] Job ${job.id} completed successfully`);
+        } catch (error) {
+          scanLogger.error(`[Worker] Job ${job.id} failed:`, error);
+          throw error; // Re-throw to let BullMQ handle retries
+        }
+      },
+      {
+        connection,
+        concurrency: WORKER_CONCURRENCY,
+        limiter: {
+          max: parseInt(process.env.MAX_CONCURRENT_SCANS) || 5,
+          duration: 60000, // 1 minute
+        },
+      }
+    );
+
+    // Worker event handlers
+    scanWorker.on('completed', (job) => {
+      scanLogger.info(`[Worker] Job ${job.id} completed`, {
+        jobId: job.id,
+        result: job.returnvalue,
+      });
+    });
+
+    scanWorker.on('failed', (job, error) => {
+      scanLogger.error(`[Worker] Job ${job.id} failed:`, error.message, {
+        jobId: job?.id,
+        error: error.message,
+        stack: error.stack,
+      });
+    });
+
+    scanWorker.on('error', (error) => {
+      scanLogger.error('[Worker] Worker error:', error);
+    });
+
+    scanLogger.info('[Worker] Scan worker started', {
+      queue: SCAN_QUEUE_NAME,
+      concurrency: WORKER_CONCURRENCY,
+    });
+  } catch (error) {
+    scanLogger.warn(`[Worker] Redis not available - worker will not start: ${error.message}`);
+    if (connection) {
+      connection.disconnect();
+      connection = null;
     }
-  },
-  {
-    connection,
-    concurrency: WORKER_CONCURRENCY,
-    limiter: {
-      max: parseInt(process.env.MAX_CONCURRENT_SCANS) || 5,
-      duration: 60000, // 1 minute
-    },
   }
-);
+}
 
-// Worker event handlers
-scanWorker.on('completed', (job) => {
-  scanLogger.info(`[Worker] Job ${job.id} completed`, {
-    jobId: job.id,
-    result: job.returnvalue,
-  });
-});
-
-scanWorker.on('failed', (job, error) => {
-  scanLogger.error(`[Worker] Job ${job.id} failed:`, error.message, {
-    jobId: job?.id,
-    error: error.message,
-    stack: error.stack,
-  });
-});
-
-scanWorker.on('error', (error) => {
-  scanLogger.error('[Worker] Worker error:', error);
-});
+// Start worker on module load
+startWorker();
 
 // Graceful shutdown
 const shutdown = async () => {
   scanLogger.info('[Worker] Shutting down gracefully...');
-  
+
   // Set a timeout for graceful shutdown
   const shutdownTimeout = setTimeout(() => {
     scanLogger.warn('[Worker] Shutdown timeout, forcing exit');
     process.exit(1);
   }, 30000); // 30 second timeout
-  
+
   try {
-    await scanWorker.close();
-    await connection.quit();
+    if (scanWorker) {
+      await scanWorker.close();
+    }
+    if (connection) {
+      await connection.quit();
+    }
     clearTimeout(shutdownTimeout);
     scanLogger.info('[Worker] Shutdown complete');
     process.exit(0);
@@ -100,8 +133,10 @@ const shutdown = async () => {
   }
 };
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+if (require.main === module) {
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
 
 // Health check endpoint (simple HTTP server for monitoring)
 if (process.env.ENABLE_WORKER_HEALTH_CHECK === 'true') {
@@ -112,10 +147,11 @@ if (process.env.ENABLE_WORKER_HEALTH_CHECK === 'true') {
     if (req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
-        status: 'healthy',
+        status: scanWorker ? 'healthy' : 'degraded',
         timestamp: new Date().toISOString(),
         queue: SCAN_QUEUE_NAME,
         concurrency: WORKER_CONCURRENCY,
+        workerStarted: !!scanWorker,
       }));
     } else {
       res.writeHead(404);
@@ -128,9 +164,4 @@ if (process.env.ENABLE_WORKER_HEALTH_CHECK === 'true') {
   });
 }
 
-scanLogger.info('[Worker] Scan worker started', {
-  queue: SCAN_QUEUE_NAME,
-  concurrency: WORKER_CONCURRENCY,
-});
-
-module.exports = { scanWorker, connection };
+module.exports = { scanWorker, connection, startWorker };

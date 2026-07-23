@@ -257,13 +257,13 @@ function ScanResult({ scan }) {
         <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase mb-4">
           Findings ({results.totalFindings})
         </p>
-        {results.results.length === 0 ? (
+        {results.findings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
             <p className="text-[12px] text-[#555]">No findings detected</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {results.results.map((result) => (
+            {results.findings.map((result) => (
               <div
                 key={result.id}
                 className="border border-[#1a1a1a] rounded-xl p-4"
@@ -327,6 +327,7 @@ export default function Scanner() {
   const [scanHistory, setScanHistory] = useState([]);
   const [selectedScan, setSelectedScan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [serviceError, setServiceError] = useState("");
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
@@ -377,12 +378,19 @@ export default function Scanner() {
       return;
     }
     setUrlError("");
+    setServiceError("");
     setScanning(true);
     setStepIndex(0);
     setStatusText(SCAN_STEPS[0]);
 
     try {
-      const { scan } = await scansAPI.create(url);
+      const response = await scansAPI.create(url);
+      const createdScan = response?.scan || response?.job;
+      const scanId = createdScan?.id;
+
+      if (!scanId) {
+        throw new Error("Invalid response from server: scan ID missing.");
+      }
 
       // Visual progress while the real scan runs in the background
       let i = 1;
@@ -396,10 +404,11 @@ export default function Scanner() {
 
       pollRef.current = setInterval(async () => {
         try {
-          const { scan: latestScan } = await scansAPI.getById(scan.id);
+          const pollRes = await scansAPI.getById(scanId);
+          const latestScan = pollRes?.scan || pollRes;
           if (
-            latestScan.status === "completed" ||
-            latestScan.status === "failed"
+            latestScan &&
+            (latestScan.status === "completed" || latestScan.status === "failed")
           ) {
             if (timerRef.current) clearInterval(timerRef.current);
             if (pollRef.current) clearInterval(pollRef.current);
@@ -423,6 +432,12 @@ export default function Scanner() {
         } catch (error) {
           if (error?.status !== 429) {
             console.error("Failed to poll scan status:", error);
+            if (error?.status === 404 || error?.message?.toLowerCase().includes("not found")) {
+              if (timerRef.current) clearInterval(timerRef.current);
+              if (pollRef.current) clearInterval(pollRef.current);
+              setScanning(false);
+              setStatusText("Scan was cleared or deleted.");
+            }
           }
         }
       }, SCAN_POLL_INTERVAL_MS);
@@ -432,7 +447,17 @@ export default function Scanner() {
       console.error("Failed to start scan:", error);
       setScanning(false);
       setStepIndex(-1);
-      setStatusText("Scan failed. Please try again.");
+
+      if (error?.status === 503 || error?.message?.toLowerCase().includes("redis")) {
+        setServiceError(
+          error?.message ||
+          "Scan features are currently disabled because Redis is not running. Please start Redis to enable scanning."
+        );
+        setStatusText("Service Unavailable: Redis required");
+      } else {
+        setStatusText("Scan failed. Please try again.");
+      }
+
       if (error.status === 401 || error.message === "API request failed") {
         redirectToWelcomeAuth(navigate);
       }
@@ -487,16 +512,36 @@ export default function Scanner() {
               <button
                 key={v.key}
                 onClick={() => setView(v.key)}
-                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none scanner-toggle-button ${
-                  view === v.key
+                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none scanner-toggle-button ${view === v.key
                     ? "bg-white text-black"
                     : "bg-transparent text-[#aaa] hover:text-[#fff]"
-                }`}
+                  }`}
               >
                 {v.label}
               </button>
             ))}
           </div>
+
+          {/* Service Error Alert Banner */}
+          {serviceError && (
+            <div className="mb-6 p-4 rounded-xl bg-[#E24B4A]/10 border border-[#E24B4A]/30 flex items-start gap-3 text-[#E24B4A] shadow-lg">
+              <IconShield size={18} className="mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-[12px] font-mono font-bold uppercase tracking-wider">
+                  Service Unavailable (503)
+                </p>
+                <p className="text-[12px] text-[#ddd] mt-1 leading-relaxed">
+                  {serviceError}
+                </p>
+              </div>
+              <button
+                onClick={() => setServiceError("")}
+                className="text-[11px] font-mono text-[#888] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
           {/* Main card */}
           <main className="flex-1">
@@ -534,11 +579,10 @@ export default function Scanner() {
                         }
                         placeholder="https://example.com"
                         disabled={scanning}
-                        className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-silver outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 scanner-input ${
-                          urlError
+                        className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-silver outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 scanner-input ${urlError
                             ? "border-[#E24B4A]/60 focus:border-[#E24B4A]"
                             : "border-[#1e1e1e] focus:border-[#2e2e2e]"
-                        }`}
+                          }`}
                       />
                       {url && !scanning && (
                         <button
@@ -575,21 +619,19 @@ export default function Scanner() {
 
                   {/* Authorization checkbox */}
                   <div
-                    className={`border rounded-xl transition-colors cursor-pointer ${
-                      accepted
+                    className={`border rounded-xl transition-colors cursor-pointer ${accepted
                         ? "border-[#7F77DD]/30 bg-[#7F77DD]/5"
                         : "border-dashed border-[#222] hover:border-[#2e2e2e]"
-                    } scanner-checkbox`}
+                      } scanner-checkbox`}
                     onClick={() => !scanning && setAccepted((v) => !v)}
                   >
                     <div className="flex items-start gap-4">
                       {/* Custom checkbox */}
                       <div
-                        className={`mt-0.5 w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-all ${
-                          accepted
+                        className={`mt-0.5 w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-all ${accepted
                             ? "bg-[#7F77DD] border-[#7F77DD]"
                             : "bg-transparent border-[#333]"
-                        }`}
+                          }`}
                       >
                         {accepted && (
                           <svg
@@ -627,13 +669,12 @@ export default function Scanner() {
                   <button
                     onClick={startScan}
                     disabled={!canScan}
-                    className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 scanner-scan-button ${
-                      scanning
+                    className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 scanner-scan-button ${scanning
                         ? "bg-transparent border-[#1e1e1e] text-[#444] cursor-not-allowed"
                         : canScan
                           ? "bg-[#0f0f0f] border-[#7F77DD]/50 text-[#7F77DD] hover:bg-[#7F77DD]/8 hover:border-[#7F77DD] cursor-pointer active:scale-[0.99]"
                           : "bg-transparent border-[#181818] text-[#333] cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     {scanning ? (
                       <>
@@ -677,22 +718,20 @@ export default function Scanner() {
                         return (
                           <div key={i} className="flex items-center gap-3">
                             <div
-                              className={`w-1 h-1 rounded-full flex-shrink-0 transition-colors ${
-                                done
+                              className={`w-1 h-1 rounded-full flex-shrink-0 transition-colors ${done
                                   ? "bg-[#1D9E75]"
                                   : active
                                     ? "bg-[#7F77DD] animate-pulse"
                                     : "bg-[#222]"
-                              }`}
+                                }`}
                             />
                             <span
-                              className={`text-[11px] font-mono transition-colors ${
-                                done
+                              className={`text-[11px] font-mono transition-colors ${done
                                   ? "text-[#3a6b4f]"
                                   : active
                                     ? "text-[#9f99e8]"
                                     : "text-[#2a2a2a]"
-                              }`}
+                                }`}
                             >
                               {step}
                             </span>
@@ -789,13 +828,12 @@ export default function Scanner() {
                               {scan.targetUrl}
                             </span>
                             <span
-                              className={`text-[10px] font-mono rounded-md px-2 py-1 ${
-                                scan.status === "completed"
+                              className={`text-[10px] font-mono rounded-md px-2 py-1 ${scan.status === "completed"
                                   ? "bg-[#1a2e1a] text-[#639922]"
                                   : scan.status === "failed"
                                     ? "bg-[#2e1a1a] text-[#E24B4A]"
                                     : "bg-[#1a1a2e] text-[#7F77DD]"
-                              }`}
+                                }`}
                             >
                               {scan.status}
                             </span>
@@ -850,9 +888,8 @@ export default function Scanner() {
           <footer className="mt-1 flex items-center justify-center gap-2.5">
             {scanning && <IconLoader size={10} className="text-[#444]" />}
             <span
-              className={`text-[10px] font-mono tracking-[0.18em] uppercase transition-colors ${
-                isDone ? "text-[#1D9E75]" : "text-[#444]"
-              }`}
+              className={`text-[10px] font-mono tracking-[0.18em] uppercase transition-colors ${isDone ? "text-[#1D9E75]" : "text-[#444]"
+                }`}
             >
               {statusText}
             </span>

@@ -58,17 +58,25 @@ async function processScanJob(job) {
       scanLogger.info(`[Pipeline] Created scan job record ${scanJobId}`);
     }
 
+<<<<<<< HEAD
     // Step 3: Create scan target record
+=======
+    // Step 3: Create scan target record (skip if already exists for this job)
+>>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
     await pool.query(
       `INSERT INTO scan_targets 
        (scan_job_id, url, hostname, ip_address, port, protocol, is_valid, is_reachable)
        VALUES ($1, $2, $3, $4, $5, $6, true, true)
+<<<<<<< HEAD
        ON CONFLICT (scan_job_id, url) DO NOTHING`,
+=======
+       ON CONFLICT DO NOTHING`,
+>>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
       [scanJobId, targetUrl, validation.hostname, validation.ip, validation.port, validation.url.protocol]
     );
 
     // Step 4: Update job status to running
-    await updateJobStatus(scanJobId, 'queued');
+    await updateJobStatus(scanJobId, 'running');
     emitToUser(userId, 'scan:queued', { scanId: scanJobId, targetUrl });
 
     // Step 5: Execute pipeline stages
