@@ -39,9 +39,10 @@ async function scanSSL(targetUrl) {
     }
 
     // Check if certificate is self-signed
-    if (certInfo.issuer && certInfo.issuer.includes('CN=')) {
-      const issuer = certInfo.issuer.match(/CN=([^,]+)/);
-      if (issuer && issuer[1] === hostname) {
+    if (certInfo.issuer) {
+      // issuer is an object from Node.js getPeerCertificate()
+      const issuerCN = typeof certInfo.issuer === 'object' ? certInfo.issuer.CN : null;
+      if (issuerCN && issuerCN === hostname) {
         results.push({
           category: 'SSL/TLS',
           severity: 'high',
@@ -108,11 +109,14 @@ async function scanSSL(targetUrl) {
 
     // Certificate issuer information
     if (certInfo.issuer) {
+      const issuerStr = typeof certInfo.issuer === 'object'
+        ? Object.entries(certInfo.issuer).map(([k, v]) => `${k}=${v}`).join(', ')
+        : certInfo.issuer;
       results.push({
         category: 'SSL/TLS',
         severity: 'informational',
         title: 'Certificate Issuer',
-        description: `Certificate issued by: ${certInfo.issuer}`,
+        description: `Certificate issued by: ${issuerStr}`,
         recommendation: 'Ensure you are using a trusted Certificate Authority.',
       });
     }
