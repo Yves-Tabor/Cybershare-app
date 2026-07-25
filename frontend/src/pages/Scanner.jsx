@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import mainBg from "../assets/mainBg.png";
-import { scansAPI } from "../utils/api";
+import { scansAPI, authAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 import "./Scanner.css";
 
@@ -331,6 +331,7 @@ export default function Scanner() {
   const [loading, setLoading] = useState(false);
   const [serviceError, setServiceError] = useState("");
   const [redisStatus, setRedisStatus] = useState(null); // null = checking, true = ok, false = down
+  const [user, setUser] = useState(null);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
@@ -338,7 +339,7 @@ export default function Scanner() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    // Check Redis/service status on mount
+    // Check Redis/service status and fetch user on mount
     async function checkServiceStatus() {
       try {
         const status = await scansAPI.getStatus();
@@ -354,7 +355,18 @@ export default function Scanner() {
         setRedisStatus(null);
       }
     }
+
+    async function fetchUser() {
+      try {
+        const data = await authAPI.me();
+        setUser(data.user);
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    }
+
     checkServiceStatus();
+    fetchUser();
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
