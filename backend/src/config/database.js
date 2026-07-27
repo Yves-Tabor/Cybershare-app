@@ -25,7 +25,7 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 10000,  // fail fast if DB is unreachable
+  connectionTimeoutMillis: 60000,  // 60s for Neon free tier wake-up
   statement_timeout: 30000,        // kill any query that runs > 30s
   query_timeout: 30000,            // belt-and-suspenders
 });

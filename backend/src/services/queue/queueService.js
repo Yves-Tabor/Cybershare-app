@@ -89,7 +89,11 @@ async function initializeQueue() {
 }
 
 // Initialize queue on module load
-initializeQueue();
+initializeQueue().then(() => {
+  console.log('[Queue] Initialization complete, isRedisAvailable:', isRedisAvailable);
+}).catch((err) => {
+  console.error('[Queue] Initialization failed:', err);
+});
 
 // Add a scan job to the queue
 async function addScanJob(jobData, options = {}) {
@@ -241,11 +245,7 @@ async function closeQueue() {
   console.log('[Queue] Queue connection closed');
 }
 
-<<<<<<< HEAD
-function checkRedisStatus() {
-=======
 function checkRedisAvailable() {
->>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
   return isRedisAvailable;
 }
 
@@ -254,12 +254,8 @@ module.exports = {
   scanQueue,
   SCAN_QUEUE_NAME,
   JobPriority,
-<<<<<<< HEAD
   isRedisAvailable,
-  checkRedisStatus,
-=======
-  isRedisAvailable: checkRedisAvailable,
->>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
+  checkRedisAvailable,
   addScanJob,
   getJob,
   getJobState,

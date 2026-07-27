@@ -181,6 +181,7 @@ async function runMigrations() {
             -- Both exist: copy scan_id values into scan_job_id where null, then drop scan_id
             UPDATE scan_results SET scan_job_id = scan_id WHERE scan_job_id IS NULL;
             ALTER TABLE scan_results DROP COLUMN scan_id;
+          END IF;
         END IF;
       END $$;
     `);
@@ -344,7 +345,6 @@ io.on('connection', (socket) => {
 server.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
-<<<<<<< HEAD
   console.log(`Database: ${process.env.DATABASE_URL ? 'configured' : 'MISSING — set DATABASE_URL'}`);
 
   // Quick connectivity check before running migrations
@@ -357,10 +357,6 @@ server.listen(PORT, async () => {
     console.error('[DB] Server will continue but DB-dependent routes will fail.');
     console.error('[DB] Check your Neon project at https://console.neon.tech — it may be suspended or the endpoint changed.');
   }
-=======
-  console.log(`Database: ${process.env.DATABASE_URL ? "connected (hidden)" : "missing"}`);
-  await runMigrations();
->>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
 
   // In development, automatically run the scan worker in-process
   if (process.env.NODE_ENV === 'development') {

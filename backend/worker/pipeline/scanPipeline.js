@@ -58,20 +58,12 @@ async function processScanJob(job) {
       scanLogger.info(`[Pipeline] Created scan job record ${scanJobId}`);
     }
 
-<<<<<<< HEAD
-    // Step 3: Create scan target record
-=======
     // Step 3: Create scan target record (skip if already exists for this job)
->>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
     await pool.query(
       `INSERT INTO scan_targets 
        (scan_job_id, url, hostname, ip_address, port, protocol, is_valid, is_reachable)
        VALUES ($1, $2, $3, $4, $5, $6, true, true)
-<<<<<<< HEAD
        ON CONFLICT (scan_job_id, url) DO NOTHING`,
-=======
-       ON CONFLICT DO NOTHING`,
->>>>>>> 64f949f909acd8ea2e7d44c7a356bdeb4d080701
       [scanJobId, targetUrl, validation.hostname, validation.ip, validation.port, validation.url.protocol]
     );
 
@@ -189,7 +181,6 @@ async function executePipeline(scanJobId, userId, targetUrl, validation, job) {
     informational: 0,
   };
 
-  try {
   // Stage 1: HTTPX - Target validation and HTTP metadata
   try {
     await updateJobStatus(scanJobId, 'running_httpx');
@@ -254,13 +245,16 @@ async function executePipeline(scanJobId, userId, targetUrl, validation, job) {
     emitToUser(userId, 'scan:parsing', { scanId: scanJobId });
 
     // Store all findings in database
+    scanLogger.info(`[Pipeline] Storing ${allFindings.length} findings for job ${scanJobId}`);
     await storeFindings(scanJobId, allFindings);
+    scanLogger.info(`[Pipeline] Findings stored successfully for job ${scanJobId}`);
 
     await updateProgress(scanJobId, 'parsing', 'completed', 100, 'Parsing completed');
     scanLogger.info(`[Pipeline] Parsing stage completed for job ${scanJobId}`);
   } catch (error) {
     scanLogger.error(`[Pipeline] Parsing/finalization stage failed for job ${scanJobId}:`, error);
-    throw error;
+    // Don't throw - allow the scan to complete with partial results
+    await updateProgress(scanJobId, 'parsing', 'failed', 100, `Parsing failed: ${error.message}`);
   }
 
   return {
@@ -312,8 +306,12 @@ function updateSeverityCounts(severityCounts, findings) {
  * Store findings in database
  */
 async function storeFindings(scanJobId, findings) {
-  if (findings.length === 0) return;
+  if (findings.length === 0) {
+    scanLogger.info(`[Pipeline] No findings to store for job ${scanJobId}`);
+    return;
+  }
 
+  scanLogger.info(`[Pipeline] Starting to store ${findings.length} findings for job ${scanJobId}`);
   const values = [];
   const params = [];
   let paramIndex = 1;
@@ -336,11 +334,15 @@ async function storeFindings(scanJobId, findings) {
     paramIndex += 9;
   }
 
-  await pool.query(
-    `INSERT INTO scan_findings (scan_job_id, category, severity, title, description, recommendation, scanner_name, template_id, metadata)
-     VALUES ${values.join(', ')}`,
-    params
-  );
+  // Add timeout to prevent hanging
+  await Promise.race([
+    pool.query(
+      `INSERT INTO scan_findings (scan_job_id, category, severity, title, description, recommendation, scanner_name, template_id, metadata)
+       VALUES ${values.join(', ')}`,
+      params
+    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Database insert timeout')), 30000))
+  ]);
 
   scanLogger.info(`[Pipeline] Stored ${findings.length} findings for job ${scanJobId}`);
 }
