@@ -315,6 +315,22 @@ const checkScanDependencies = async (req, res) => {
   }
 };
 
+// Get scan service health (Redis status, etc.)
+const getScanServiceStatus = async (req, res) => {
+  const redisAvailable = checkRedisAvailable();
+  res.status(200).json({
+    redis: {
+      available: redisAvailable,
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+    },
+    scanningEnabled: redisAvailable,
+    message: redisAvailable
+      ? 'Scan service is operational'
+      : 'Redis is not available. Scan features are disabled. Please start Redis to enable scanning.',
+  });
+};
+
 module.exports = {
   createScan,
   getUserScans,
@@ -322,4 +338,5 @@ module.exports = {
   deleteScan,
   deleteAllScans,
   checkScanDependencies,
+  getScanServiceStatus,
 };

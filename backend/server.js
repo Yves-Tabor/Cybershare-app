@@ -1,3 +1,4 @@
+// Trigger comment for nodemon reload
 const app = require('./src/app');
 const http = require('http');
 const { Server } = require('socket.io');

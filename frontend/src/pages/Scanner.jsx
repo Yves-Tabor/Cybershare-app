@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import mainBg from "../assets/mainBg.png";
 import { scansAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 import "./Scanner.css";
 
 const SCAN_POLL_INTERVAL_MS = 2000;
+const MAX_POLL_DURATION_MS = 5 * 60 * 1000; // 5 minutes max polling
 
 const VIEWS = [
   { key: "scanner", label: "Scanner" },
@@ -328,14 +330,39 @@ export default function Scanner() {
   const [selectedScan, setSelectedScan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [serviceError, setServiceError] = useState("");
+  const [redisStatus, setRedisStatus] = useState(null); // null = checking, true = ok, false = down
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
+  const pollStartRef = useRef(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
+    // Check Redis/service status on mount
+    async function checkServiceStatus() {
+      try {
+        const status = await scansAPI.getStatus();
+        setRedisStatus(status?.redis?.available === true);
+        if (!status?.scanningEnabled) {
+          setServiceError(
+            status?.message ||
+            "Scan features are currently disabled because Redis is not running."
+          );
+        }
+      } catch {
+        // If the status endpoint fails, we'll let the actual scan attempt surface the error
+        setRedisStatus(null);
+      }
+    }
+    checkServiceStatus();
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (pollRef.current) clearInterval(pollRef.current);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
   }, []);
 
@@ -392,7 +419,7 @@ export default function Scanner() {
         throw new Error("Invalid response from server: scan ID missing.");
       }
 
-      // Visual progress while the real scan runs in the background
+      // Visual progress - sync with actual backend stages
       let i = 1;
       timerRef.current = setInterval(() => {
         if (i < SCAN_STEPS.length - 1) {
@@ -402,7 +429,57 @@ export default function Scanner() {
         }
       }, 900);
 
+      // Listen for real-time scan progress updates from backend
+      const socket = io((import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, ""), {
+        withCredentials: true,
+        transports: ["polling", "websocket"],
+      });
+
+      socket.on("connect", () => {
+        socket.emit("register-user", user?.id);
+      });
+
+      // Map backend stage events to frontend steps
+      const stageToStepIndex = {
+        "scan:running_headers": 1,      // "Fetching HTTP headers..."
+        "scan:running_ssl": 2,          // "Analysing security policies..."
+        "scan:running_dns": 3,          // "Running fingerprint checks..."
+        "scan:running_cookies": 4,      // "Checking disclosure vectors..."
+        "scan:running_tech": 4,         // "Checking disclosure vectors..."
+        "scan:parsing": 5,              // "Compiling report..."
+        "scan:completed": 6,            // "Scan complete."
+      };
+
+      Object.keys(stageToStepIndex).forEach(event => {
+        socket.on(event, (data) => {
+          const stepIdx = stageToStepIndex[event];
+          if (stepIdx !== undefined) {
+            setStepIndex(stepIdx);
+            setStatusText(SCAN_STEPS[stepIdx]);
+          }
+        });
+      });
+
+      // Store socket ref for cleanup
+      socketRef.current = socket;
+
+      // Start polling - track start time to enforce max duration
+      pollStartRef.current = Date.now();
+
       pollRef.current = setInterval(async () => {
+        // Check if we've exceeded max poll duration
+        if (Date.now() - pollStartRef.current > MAX_POLL_DURATION_MS) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          if (pollRef.current) clearInterval(pollRef.current);
+          if (socketRef.current) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+          }
+          setScanning(false);
+          setStatusText("Scan timed out. Please check History for results.");
+          return;
+        }
+
         try {
           const pollRes = await scansAPI.getById(scanId);
           const latestScan = pollRes?.scan || pollRes;
@@ -412,6 +489,10 @@ export default function Scanner() {
           ) {
             if (timerRef.current) clearInterval(timerRef.current);
             if (pollRef.current) clearInterval(pollRef.current);
+            if (socketRef.current) {
+              socketRef.current.disconnect();
+              socketRef.current = null;
+            }
 
             setStepIndex(SCAN_STEPS.length - 1);
             setStatusText(
@@ -435,6 +516,10 @@ export default function Scanner() {
             if (error?.status === 404 || error?.message?.toLowerCase().includes("not found")) {
               if (timerRef.current) clearInterval(timerRef.current);
               if (pollRef.current) clearInterval(pollRef.current);
+              if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+              }
               setScanning(false);
               setStatusText("Scan was cleared or deleted.");
             }
@@ -449,6 +534,7 @@ export default function Scanner() {
       setStepIndex(-1);
 
       if (error?.status === 503 || error?.message?.toLowerCase().includes("redis")) {
+        setRedisStatus(false);
         setServiceError(
           error?.message ||
           "Scan features are currently disabled because Redis is not running. Please start Redis to enable scanning."
@@ -498,11 +584,22 @@ export default function Scanner() {
                 Platform Security Layer
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
-              <span className="text-[10px] font-mono tracking-widest uppercase text-[#444]">
-                Online
-              </span>
+            <div className="flex items-center gap-3">
+              {/* Redis status indicator */}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    redisStatus === null
+                      ? "bg-[#555] animate-pulse"
+                      : redisStatus
+                      ? "bg-[#1D9E75] animate-pulse"
+                      : "bg-[#E24B4A]"
+                  }`}
+                />
+                <span className="text-[10px] font-mono tracking-widest uppercase text-[#444]">
+                  {redisStatus === null ? "Checking" : redisStatus ? "Online" : "Redis Offline"}
+                </span>
+              </div>
             </div>
           </header>
 

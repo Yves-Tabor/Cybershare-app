@@ -288,6 +288,10 @@ export const scansAPI = {
     return apiRequest("/scans/dependencies/check");
   },
 
+  getStatus: async () => {
+    return apiRequest("/scans/status");
+  },
+
   create: async (targetUrl) => {
     return apiRequest("/scans", {
       method: "POST",

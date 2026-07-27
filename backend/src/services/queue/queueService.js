@@ -107,6 +107,7 @@ async function addScanJob(jobData, options = {}) {
     scanType = 'standard',
     scanOptions = {},
     priority = JobPriority.NORMAL,
+    dbScanId,
   } = jobData;
 
   const job = await scanQueue.add(
@@ -116,6 +117,7 @@ async function addScanJob(jobData, options = {}) {
       targetUrl,
       scanType,
       scanOptions,
+      dbScanId,
       createdAt: new Date().toISOString(),
     },
     {

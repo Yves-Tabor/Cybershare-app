@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createScan, getUserScans, getScanById, deleteScan, deleteAllScans, checkScanDependencies } = require('../controllers/scanController');
+const { createScan, getUserScans, getScanById, deleteScan, deleteAllScans, checkScanDependencies, getScanServiceStatus } = require('../controllers/scanController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { createScanSchema } = require('../validators/scanValidator');
 
@@ -16,8 +16,9 @@ const validate = (schema) => (req, res, next) => {
   next();
 };
 
-// Public endpoint for dependency checking (no auth required)
+// Public endpoints (no auth required)
 router.get('/dependencies/check', checkScanDependencies);
+router.get('/status', getScanServiceStatus);
 
 // All other routes require authentication
 router.use(authMiddleware);
