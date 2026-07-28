@@ -4,12 +4,18 @@ require('dotenv').config();
 
 // Redis connection configuration
 // Support REDIS_URL for production (Render), fall back to individual REDIS_* variables for local development
+// BullMQ requires maxRetriesPerRequest: null for proper operation
 let redisConfig;
+let redisConfigOptions;
 let redisConnectionType;
 
 if (process.env.REDIS_URL) {
   // Production: Use REDIS_URL (e.g., from Render Key Value store)
   redisConfig = process.env.REDIS_URL;
+  redisConfigOptions = {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+  };
   redisConnectionType = 'REDIS_URL';
   console.log('[Queue] Using REDIS_URL for Redis connection');
 } else {
@@ -19,6 +25,8 @@ if (process.env.REDIS_URL) {
     port: parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB) || 0,
+  };
+  redisConfigOptions = {
     maxRetriesPerRequest: null,
     retryDelayOnFailover: 100,
     enableReadyCheck: false,
@@ -46,7 +54,7 @@ let isRedisAvailable = false;
 async function initializeQueue() {
   try {
     console.log(`[Queue] Initializing Redis connection using: ${redisConnectionType}`);
-    connection = new Redis(redisConfig);
+    connection = new Redis(redisConfig, redisConfigOptions);
 
     connection.on('connect', () => {
       console.log('[Queue] Redis connected successfully');

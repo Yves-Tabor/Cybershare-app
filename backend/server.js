@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { setIO } = require('./src/services/socket/socketService');
 const pool = require('./src/config/database');
+const { startWorker, stopWorker } = require('./src/services/workerService');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
@@ -359,13 +360,43 @@ server.listen(PORT, async () => {
     console.error('[DB] Check your Neon project at https://console.neon.tech — it may be suspended or the endpoint changed.');
   }
 
-  // In development, automatically run the scan worker in-process
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[Dev] Starting scan worker in-process...');
-    try {
-      require('./worker/index');
-    } catch (err) {
-      console.error('[Dev] Failed to start scan worker:', err.message);
-    }
+  // Start the BullMQ worker in-process
+  console.log('[Worker] Starting scan worker in-process...');
+  try {
+    await startWorker();
+    console.log('[Worker] Scan worker started successfully');
+  } catch (err) {
+    console.error('[Worker] Failed to start scan worker:', err.message);
+    console.error('[Worker] Scan features will not be available');
   }
 });
+
+// Graceful shutdown handling
+const shutdown = async (signal) => {
+  console.log(`[Server] Received ${signal}, shutting down gracefully...`);
+
+  // Set a timeout for graceful shutdown
+  const shutdownTimeout = setTimeout(() => {
+    console.error('[Server] Shutdown timeout, forcing exit');
+    process.exit(1);
+  }, 30000); // 30 second timeout
+
+  try {
+    // Stop the BullMQ worker
+    await stopWorker();
+
+    // Close database connections
+    await pool.end();
+
+    clearTimeout(shutdownTimeout);
+    console.log('[Server] Shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    console.error('[Server] Error during shutdown:', error);
+    clearTimeout(shutdownTimeout);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

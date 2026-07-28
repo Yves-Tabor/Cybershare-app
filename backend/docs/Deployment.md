@@ -328,7 +328,9 @@ For production deployment on Render, use Render's Key Value store (Redis):
 3. The application will automatically use `REDIS_URL` when available
 4. No need to configure `REDIS_HOST`, `REDIS_PORT`, etc. in production
 
-**Backend API**:
+**Backend API (Single Web Service):**
+
+For small deployments and testing, the BullMQ worker runs in the same process as the Express API. This requires only one Render Web Service.
 
 1. Create a new Web Service on Render
 2. Connect your GitHub repository
@@ -343,20 +345,14 @@ For production deployment on Render, use Render's Key Value store (Redis):
    - `GOOGLE_CALLBACK_URL`: `https://your-backend-url.onrender.com/api/auth/google/callback`
    - `CLIENT_URL`: Frontend URL (e.g., `https://your-frontend-url.onrender.com`)
    - `NODE_ENV`: `production`
+   - `WORKER_CONCURRENCY`: 2 (optional, defaults to 2)
 
-**Worker**:
+**Important**: This single-service deployment runs both the Express API and the BullMQ worker in the same Node.js process. This is suitable for:
+- Small deployments with low scan volume
+- Testing and development environments
+- Free tier deployments (requires only one Web Service)
 
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Set build command: `cd backend && npm install`
-4. Set start command: `cd backend && node worker/index.js`
-5. Add environment variables (same as backend plus):
-   - `DATABASE_URL`: PostgreSQL connection string (same as backend)
-   - `REDIS_URL`: (Auto-provided by Render Key Value store)
-   - `WORKER_CONCURRENCY`: 2
-   - `ENABLE_WORKER_HEALTH_CHECK`: true
-   - `WORKER_HEALTH_CHECK_PORT`: 3001
-   - `NODE_ENV`: `production`
+For production deployments with higher scan volume, consider deploying the worker as a separate Background Worker (requires paid plan).
 
 **PostgreSQL**:
 
