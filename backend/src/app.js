@@ -82,7 +82,16 @@ app.use("/api/saved-items", savedItemsRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK", message: "Server is running" });
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  res.status(200).json({
+    status: "OK",
+    message: "Server is running",
+    environment: process.env.NODE_ENV || "development",
+    https: isSecure,
+    timestamp: new Date().toISOString(),
+    protocol: req.protocol,
+    host: req.get('host'),
+  });
 });
 
 // 404 handler
