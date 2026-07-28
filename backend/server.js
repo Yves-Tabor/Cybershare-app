@@ -303,6 +303,12 @@ async function runMigrations() {
       ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
     `);
     console.log('[migration] password_hash dropped NOT NULL constraint');
+
+    // Add deleted_at column for soft delete
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+    `);
+    console.log('[migration] deleted_at column added to users table');
   } catch (err) {
     console.error('[migration] Failed to run migrations:', err.message);
     // Non-fatal — server will still start
