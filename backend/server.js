@@ -309,6 +309,19 @@ async function runMigrations() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
     `);
     console.log('[migration] deleted_at column added to users table');
+
+    // Add user profile columns if they don't exist
+    const userProfileCols = [
+      ['display_name', 'VARCHAR(50)'],
+      ['avatar_color', 'VARCHAR(7)'],
+      ['avatar', 'TEXT'],
+      ['bio', 'TEXT'],
+      ['password_changed_at', 'TIMESTAMP'],
+    ];
+    for (const [col, type] of userProfileCols) {
+      await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+    }
+    console.log('[migration] user profile columns added to users table');
   } catch (err) {
     console.error('[migration] Failed to run migrations:', err.message);
     // Non-fatal — server will still start

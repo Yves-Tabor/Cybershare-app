@@ -66,25 +66,11 @@ function UploadForm({ onPublish }) {
       setError("Resource title is required.");
       return;
     }
-    if (!url.trim()) {
-      setError("URL is required.");
-      return;
-    }
-    try {
-      new URL(url.trim());
-    } catch (_) {
-      setError("Please enter a valid URL (including http:// or https://).");
-      return;
-    }
-    if (!content.trim()) {
-      setError("Content is required.");
-      return;
-    }
     setError("");
     onPublish({
       title: title.trim(),
-      content: content.trim(),
-      url: url.trim(),
+      content: "",
+      url: "",
       category,
       files,
     });
@@ -147,28 +133,6 @@ function UploadForm({ onPublish }) {
           />
         </div>
 
-        {/* URL */}
-        <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            Resource URL <span className="text-[#333]">[Entry Required]</span>
-          </label>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              setError("");
-            }}
-            placeholder="https://example.com/resource"
-            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
-            style={{
-              paddingLeft: "16px",
-              paddingRight: "16px",
-              paddingTop: "14px",
-              paddingBottom: "14px",
-            }}
-          />
-        </div>
 
         {/* Category */}
         <div>
@@ -194,28 +158,6 @@ function UploadForm({ onPublish }) {
           </select>
         </div>
 
-        {/* Content */}
-        <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            Content
-          </label>
-          <textarea
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              setError("");
-            }}
-            placeholder="enter resource content..."
-            rows={4}
-            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] px-4 py-3.5 outline-none focus:border-[#2a2a2a] transition-colors resize-none placeholder:text-[#2a2a2a]"
-            style={{
-              paddingLeft: "16px",
-              paddingRight: "16px",
-              paddingTop: "14px",
-              paddingBottom: "14px",
-            }}
-          />
-        </div>
 
         {/* File attachments */}
         <div>
