@@ -1,5 +1,5 @@
 const https = require('https');
-const http = require('http');
+const axios = require('axios');
 const { URL } = require('url');
 
 /**
@@ -8,21 +8,24 @@ const { URL } = require('url');
  */
 async function scanSSL(targetUrl) {
   const results = [];
-  
-  try {
-    const url = new URL(targetUrl);
-    const hostname = url.hostname;
-    const port = url.port || (url.protocol === 'https:' ? 443 : 80);
 
-    if (url.protocol !== 'https:') {
+  try {
+    let urlString = targetUrl;
+    if (!urlString.startsWith('http://') && !urlString.startsWith('https://')) {
+      urlString = 'https://' + urlString;
+    }
+    const url = new URL(urlString);
+    const hostname = url.hostname;
+    const port = parseInt(url.port) || 443;
+
+    if (url.protocol === 'http:' && !url.port) {
       results.push({
         category: 'SSL/TLS',
-        severity: 'critical',
-        title: 'Not Using HTTPS',
-        description: 'The target is not using HTTPS. All data transmitted is unencrypted and vulnerable to interception.',
-        recommendation: 'Configure your server to use HTTPS with a valid SSL certificate.',
+        severity: 'medium',
+        title: 'Target URL Uses HTTP',
+        description: 'The target URL was specified with http://. Checking SSL/TLS configuration on default port 443.',
+        recommendation: 'Ensure your web server redirects all HTTP traffic to HTTPS.',
       });
-      return results;
     }
 
     const certInfo = await getCertificate(hostname, port);
@@ -30,17 +33,16 @@ async function scanSSL(targetUrl) {
     if (!certInfo) {
       results.push({
         category: 'SSL/TLS',
-        severity: 'critical',
+        severity: 'high',
         title: 'SSL Certificate Not Accessible',
-        description: 'Could not retrieve SSL certificate information.',
-        recommendation: 'Ensure your SSL certificate is properly configured and the server is accessible.',
+        description: `Could not retrieve SSL certificate information from ${hostname}:${port}.`,
+        recommendation: 'Ensure your SSL certificate is properly configured and port 443 is accessible.',
       });
       return results;
     }
 
     // Check if certificate is self-signed
     if (certInfo.issuer) {
-      // issuer is an object from Node.js getPeerCertificate()
       const issuerCN = typeof certInfo.issuer === 'object' ? certInfo.issuer.CN : null;
       if (issuerCN && issuerCN === hostname) {
         results.push({
@@ -48,7 +50,7 @@ async function scanSSL(targetUrl) {
           severity: 'high',
           title: 'Self-Signed Certificate',
           description: 'The SSL certificate is self-signed. Browsers will show security warnings and users may not trust the site.',
-          recommendation: 'Use a certificate from a trusted Certificate Authority (CA) like Let\'s Encrypt, DigiCert, or Comodo.',
+          recommendation: "Use a certificate from a trusted Certificate Authority (CA) like Let's Encrypt, DigiCert, or Comodo.",
         });
       }
     }
@@ -97,15 +99,45 @@ async function scanSSL(targetUrl) {
       });
     }
 
-    // Check for weak TLS versions (this is a simplified check)
-    // In production, you would check the actual TLS version negotiated
-    results.push({
-      category: 'SSL/TLS',
-      severity: 'low',
-      title: 'TLS Version Check',
-      description: 'Ensure your server supports only TLS 1.2 and TLS 1.3. Disable SSLv2, SSLv3, and TLS 1.0/1.1.',
-      recommendation: 'Configure your server to disable deprecated TLS versions and only allow TLS 1.2 and TLS 1.3.',
-    });
+    // Bug Fix #3: Real TLS version check using socket.getProtocol()
+    if (certInfo.tlsVersion) {
+      const tls = certInfo.tlsVersion; // e.g. "TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"
+      if (tls === 'TLSv1' || tls === 'TLSv1.1' || tls === 'SSLv3' || tls === 'SSLv2') {
+        results.push({
+          category: 'SSL/TLS',
+          severity: 'high',
+          title: `Deprecated TLS Version: ${tls}`,
+          description: `The server negotiated ${tls}, which is deprecated and has known vulnerabilities. Modern clients and standards require TLS 1.2 or higher.`,
+          recommendation: 'Disable TLS 1.0 and TLS 1.1 on your server and configure it to only accept TLS 1.2 and TLS 1.3.',
+        });
+      } else if (tls === 'TLSv1.2') {
+        results.push({
+          category: 'SSL/TLS',
+          severity: 'low',
+          title: 'TLS 1.2 in Use',
+          description: `The server is using ${tls}. While still acceptable, TLS 1.3 offers better security and performance.`,
+          recommendation: 'Consider enabling TLS 1.3 on your server for improved security.',
+        });
+      } else {
+        // TLSv1.3 — ideal
+        results.push({
+          category: 'SSL/TLS',
+          severity: 'informational',
+          title: `TLS Version: ${tls}`,
+          description: `The server is using ${tls}, which is the most secure TLS version currently available.`,
+          recommendation: 'No action needed. Ensure TLS 1.3 remains enabled.',
+        });
+      }
+    } else {
+      // Fallback if getProtocol() returned nothing
+      results.push({
+        category: 'SSL/TLS',
+        severity: 'low',
+        title: 'TLS Version Check',
+        description: 'Could not determine the negotiated TLS version. Ensure your server supports only TLS 1.2 and TLS 1.3.',
+        recommendation: 'Configure your server to disable deprecated TLS versions and only allow TLS 1.2 and TLS 1.3.',
+      });
+    }
 
     // Certificate issuer information
     if (certInfo.issuer) {
@@ -134,42 +166,66 @@ async function scanSSL(targetUrl) {
   return results;
 }
 
+/**
+ * Follow up to 5 redirects (including HTTP→HTTPS) and return the final URL.
+ * Uses a HEAD request to avoid downloading the body.
+ */
+async function resolveRedirects(targetUrl) {
+  try {
+    const response = await axios.head(targetUrl, {
+      timeout: 10000,
+      maxRedirects: 5,
+      validateStatus: () => true,
+    });
+    // axios resolves the final URL after redirects
+    return response.request?.res?.responseUrl || response.config?.url || targetUrl;
+  } catch {
+    // If HEAD fails (some servers don't support it), fall back to the original URL
+    return targetUrl;
+  }
+}
+
+/**
+ * Bug Fix #1: Establish an HTTPS connection, grab cert + TLS version, then
+ * cleanly close the socket — never calling req.destroy() inside the response
+ * handler (which corrupts socket state on keep-alive connections).
+ */
 function getCertificate(hostname, port) {
   return new Promise((resolve) => {
-    const options = {
-      hostname,
-      port,
-      method: 'GET',
-      path: '/',
-      rejectUnauthorized: false, // Allow self-signed certificates
-    };
+    const tls = require('tls');
+    
+    const socket = tls.connect({
+      host: hostname,
+      port: port,
+      servername: hostname, // SNI support
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1',
+    }, () => {
+      const cert = socket.getPeerCertificate(true);
+      const tlsVersion = socket.getProtocol ? socket.getProtocol() : null;
 
-    const req = https.request(options, (res) => {
-      const cert = res.socket.getPeerCertificate();
       if (cert && Object.keys(cert).length > 0) {
         resolve({
           issuer: cert.issuer,
           subject: cert.subject,
           validFrom: cert.valid_from,
           validTo: cert.valid_to,
+          tlsVersion,
         });
       } else {
         resolve(null);
       }
-      req.destroy();
+      socket.end();
     });
 
-    req.on('error', () => {
+    socket.on('error', () => {
       resolve(null);
     });
 
-    req.on('timeout', () => {
-      req.destroy();
+    socket.setTimeout(10000, () => {
+      socket.destroy();
       resolve(null);
     });
-
-    req.setTimeout(10000);
-    req.end();
   });
 }
 
