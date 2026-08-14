@@ -22,8 +22,44 @@ const app = express();
 // Trust the reverse proxy (Render load balancer) so secure cookies can be set
 app.set("trust proxy", 1);
 
-// Security middleware
-app.use(helmet());
+// Security middleware with comprehensive security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "http:", "https:", "ws:", "wss:"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: {
+      policy: "strict-origin-when-cross-origin",
+    },
+    frameguard: {
+      action: "deny",
+    },
+    noSniff: true,
+  })
+);
+
+// Additional security headers (Permissions-Policy)
+app.use((req, res, next) => {
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()"
+  );
+  next();
+});
 
 // CORS configuration
 const clientOrigin = process.env.CLIENT_URL 
