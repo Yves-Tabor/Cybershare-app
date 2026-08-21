@@ -4,6 +4,7 @@ import mainBg from "../assets/mainBg.png";
 import worldMap from "../assets/worldMap.png";
 import welcomeOwasp from "../assets/welcomeOwasp.png";
 import img1 from "../assets/img1.svg";
+import img1_1 from "../assets/img1_1.svg";
 import img2 from "../assets/img2.svg";
 import img3 from "../assets/img3.svg";
 import img4 from "../assets/img4.svg";
@@ -580,13 +581,6 @@ function Marquee({ items, dark = false, speed = 28 }) {
   );
 }
 
-/* ============================================================
-   Small-screen "See more / See less" mobile bar + icons
-   ------------------------------------------------------------
-   These are intentionally self-contained (no new deps) so they
-   match the inline-SVG style already used throughout this file.
-   ============================================================ */
-
 function ChevronIcon({ expanded }) {
   return (
     <svg
@@ -654,16 +648,6 @@ function MoonIcon() {
   );
 }
 
-/* CSS for the mobile-only behaviour. Scoped entirely under
-   max-width: 767px (Tailwind's `md` breakpoint used elsewhere in
-   this file) so medium/large screens are never touched.
-
-   NOTE: the light-mode color overrides below target the custom
-   classNames already used in this file (.hero-sub, .auth-card,
-   .ai, .a-btn, .pill, etc). They're written defensively with
-   !important since the real values of those classes live in an
-   external stylesheet this component doesn't control — tweak the
-   hex values here if they don't quite match your palette. */
 const MOBILE_TOGGLE_STYLES = `
   .mobile-toggle-bar {
     display: flex;
