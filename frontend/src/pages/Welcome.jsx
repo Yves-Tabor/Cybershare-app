@@ -669,7 +669,7 @@ const MOBILE_TOGGLE_STYLES = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 0;
     padding: 14px 20px;
     background: #0a0a0c;
     border-top: 1px solid #232326;
@@ -685,6 +685,7 @@ const MOBILE_TOGGLE_STYLES = `
   .mobile-toggle-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     background: transparent;
     border: none;
@@ -695,20 +696,24 @@ const MOBILE_TOGGLE_STYLES = `
     letter-spacing: .02em;
     font-family: inherit;
     padding: 6px 2px;
+    width: 50%;
   }
   .mobile-theme-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
+    gap: 8px;
+    width: 50%;
+    height: auto;
+    border-radius: 8px;
     border: 1px solid #2a2a2e;
     background: #141416;
     color: #f5c451;
     cursor: pointer;
     transition: background .2s ease, border-color .2s ease, color .2s ease;
-    flex-shrink: 0;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
   }
   .mobile-theme-toggle:hover {
     border-color: #f5c451;
@@ -721,6 +726,12 @@ const MOBILE_TOGGLE_STYLES = `
   }
 
   @media (max-width: 767px) {
+    /* Hide middle sections completely on mobile when collapsed */
+    #p-features.hidden-mobile,
+    #p-how-it-works.hidden-mobile {
+      display: none !important;
+    }
+
     /* Bar itself, in light mode */
     .scroll-root.mobile-light .mobile-toggle-bar {
       background: #f7f7f9 !important;
@@ -936,8 +947,8 @@ export default function Welcome() {
 
   const isMobileLightClosed = !mobileExpanded && mobileTheme === "light";
   const middleSectionVisibilityClass = mobileExpanded
-    ? "block"
-    : "hidden md:block";
+    ? ""
+    : "hidden-mobile";
   const toggleBarStickyClass = mobileExpanded ? "is-sticky" : "";
 
   const handleToggleExpand = () => {
@@ -1146,15 +1157,17 @@ export default function Welcome() {
           <button
             type="button"
             className="mobile-theme-toggle"
-            onClick={() =>
-              setMobileTheme((t) => (t === "dark" ? "light" : "dark"))
-            }
+            onClick={(e) => {
+              e.stopPropagation();
+              setMobileTheme((t) => (t === "dark" ? "light" : "dark"));
+            }}
             aria-label={
               mobileTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"
             }
             title={mobileTheme === "dark" ? "Light mode" : "Dark mode"}
           >
             {mobileTheme === "dark" ? <SunIcon /> : <MoonIcon />}
+            <span>{mobileTheme === "dark" ? "Light" : "Dark"}</span>
           </button>
         </div>
 
