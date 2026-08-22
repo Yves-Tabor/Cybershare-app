@@ -816,9 +816,13 @@ const MOBILE_TOGGLE_STYLES = `
     }
     .scroll-root.mobile-light #p-hero .glow {
       display: block !important;
+      background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.1) 100%) !important;
     }
     .scroll-root.mobile-light #p-hero .grid-ov {
       display: block !important;
+      background-image:
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px) !important;
     }
     .scroll-root.mobile-light #p-auth {
       background-color: #ffffff !important;
