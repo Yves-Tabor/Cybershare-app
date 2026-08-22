@@ -3,6 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import worldMap from "../assets/worldMap.png";
 import welcomeOwasp from "../assets/welcomeOwasp.png";
+import img1 from "../assets/img1.svg";
+import img2 from "../assets/img2.svg";
+import img3 from "../assets/img3.svg";
+import img4 from "../assets/img4.svg";
+import img5 from "../assets/img5.svg";
 import { authAPI } from "../utils/api";
 import { consumeAuthNotice } from "../utils/authRedirect";
 
@@ -399,7 +404,7 @@ const FEATURES = [
   {
     id: "reports",
     title: "Actionable\nReports",
-    body: "Clear, detailed reports with severity ratings, remediation steps, and code examples to help developers fix vulnerabilities quickly.",
+    body: "Clear, detailed reports with severity ratings and guiding recommendation.",
     stat: { value: "CVSS", label: "Severity Ratings" },
     showMap: true,
   },
@@ -414,7 +419,13 @@ const FEATURES = [
     id: "guidance",
     title: "Remediation\nGuidance",
     body: "Step-by-step remediation instructions with code examples and best practices to help developers understand and fix security issues.",
-    icons: ["IMG", "IMG", "IMG", "IMG", "IMG"],
+    icons: [
+      <img src={img1} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img2} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img3} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img4} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img5} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+    ],
     badge: "Fast Fixes",
   },
 ];
@@ -454,10 +465,16 @@ const HOW_IT_WORKS = [
   },
   {
     step: "5",
-    title: "Developer receives remediation guidance",
+    title: "Developer receives useful recommendations",
     description:
-      "Get step-by-step instructions with code examples to fix identified issues.",
+      "Get tips to upgrade your website security and the security score",
   },
+  {
+    step: "6",
+    title: "Come again",
+    description: "Come back to the website and scan again to see the changes",
+  }
+
 ];
 
 const COMMUNITY_STATS = [
@@ -820,7 +837,7 @@ export default function Welcome() {
           </div>
         </section>
 
-        <section className="panel bg-black/70" id="p-features">
+        <section className="panel bg-black/95" id="p-features">
           <div className="feat-wrap flex items-center">
             <div className="sec-head bg-black md:w-[50%]">
               <h2 className="anim-up">Features &amp; Benefits</h2>
@@ -908,7 +925,7 @@ export default function Welcome() {
         </section>
 
         <section
-          className="panel min-h-[100vh] bg-black/40"
+          className="panel min-h-[100vh] pb-3 bg-black/95"
           id="p-how-it-works"
         >
           <div className="threats-wrap flex items-center">
