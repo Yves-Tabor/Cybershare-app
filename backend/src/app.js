@@ -52,6 +52,13 @@ app.use(
   })
 );
 
+// Remove Server header and X-Powered-By to prevent version leakage
+app.use((req, res, next) => {
+  res.removeHeader('Server');
+  res.removeHeader('X-Powered-By');
+  next();
+});
+
 // Additional security headers (Permissions-Policy)
 app.use((req, res, next) => {
   res.setHeader(

@@ -78,31 +78,111 @@ async function scanHeaders(targetUrl) {
       }
     }
 
-    // Check for server information disclosure
+    // Check for server information disclosure with version detection
     const serverHeader = Object.keys(headers).find(
       key => key.toLowerCase() === 'server'
     );
     if (serverHeader && headers[serverHeader]) {
+      const serverValue = headers[serverHeader];
+      const versionPattern = /\d+\.\d+(\.\d+)?/; // Matches version numbers like 1.18.0 or 7.4.3
+      const hasVersion = versionPattern.test(serverValue);
+
       results.push({
         category: 'HTTP Headers',
-        severity: 'low',
+        severity: hasVersion ? 'medium' : 'info',
         title: 'Server Information Disclosure',
-        description: `The Server header reveals: ${headers[serverHeader]}. This can help attackers identify the server technology and potential vulnerabilities.`,
-        recommendation: 'Configure your server to hide or minimize the Server header information.',
+        description: `The Server header reveals: ${serverValue}. This can help attackers identify the server technology and potential vulnerabilities.`,
+        recommendation: hasVersion
+          ? 'Remove or generalize the Server header to prevent version fingerprinting (e.g., use "nginx" instead of "nginx/1.18.0").'
+          : 'Consider removing the Server header entirely to minimize information disclosure.',
       });
     }
 
-    // Check for X-Powered-By header
+    // Check for X-Powered-By header with version detection
     const poweredByHeader = Object.keys(headers).find(
       key => key.toLowerCase() === 'x-powered-by'
     );
     if (poweredByHeader && headers[poweredByHeader]) {
+      const poweredByValue = headers[poweredByHeader];
+      const versionPattern = /\d+\.\d+(\.\d+)?/;
+      const hasVersion = versionPattern.test(poweredByValue);
+
       results.push({
         category: 'HTTP Headers',
-        severity: 'low',
+        severity: hasVersion ? 'medium' : 'info',
         title: 'Technology Information Disclosure',
-        description: `The X-Powered-By header reveals: ${headers[poweredByHeader]}. This exposes the underlying technology stack.`,
-        recommendation: 'Remove or disable the X-Powered-By header in your application configuration.',
+        description: `The X-Powered-By header reveals: ${poweredByValue}. This exposes the underlying technology stack.`,
+        recommendation: hasVersion
+          ? 'Remove or generalize the X-Powered-By header to prevent version fingerprinting.'
+          : 'Remove the X-Powered-By header in your application configuration.',
+      });
+    }
+
+    // Check for X-AspNet-Version header
+    const aspNetVersionHeader = Object.keys(headers).find(
+      key => key.toLowerCase() === 'x-aspnet-version'
+    );
+    if (aspNetVersionHeader && headers[aspNetVersionHeader]) {
+      results.push({
+        category: 'HTTP Headers',
+        severity: 'medium',
+        title: 'ASP.NET Version Disclosure',
+        description: `The X-AspNet-Version header reveals: ${headers[aspNetVersionHeader]}. This exposes specific ASP.NET version information.`,
+        recommendation: 'Remove the X-AspNet-Version header to prevent version fingerprinting.',
+      });
+    }
+
+    // Check for X-AspNetMvc-Version header
+    const aspNetMvcVersionHeader = Object.keys(headers).find(
+      key => key.toLowerCase() === 'x-aspnetmvc-version'
+    );
+    if (aspNetMvcVersionHeader && headers[aspNetMvcVersionHeader]) {
+      results.push({
+        category: 'HTTP Headers',
+        severity: 'medium',
+        title: 'ASP.NET MVC Version Disclosure',
+        description: `The X-AspNetMvc-Version header reveals: ${headers[aspNetMvcVersionHeader]}. This exposes specific ASP.NET MVC version information.`,
+        recommendation: 'Remove the X-AspNetMvc-Version header to prevent version fingerprinting.',
+      });
+    }
+
+    // Check for Via header
+    const viaHeader = Object.keys(headers).find(
+      key => key.toLowerCase() === 'via'
+    );
+    if (viaHeader && headers[viaHeader]) {
+      const viaValue = headers[viaHeader];
+      const versionPattern = /\d+\.\d+(\.\d+)?/;
+      const hasVersion = versionPattern.test(viaValue);
+
+      results.push({
+        category: 'HTTP Headers',
+        severity: hasVersion ? 'medium' : 'info',
+        title: 'Proxy Information Disclosure',
+        description: `The Via header reveals: ${viaValue}. This can expose proxy server information and version details.`,
+        recommendation: hasVersion
+          ? 'Remove or generalize the Via header to prevent proxy version fingerprinting.'
+          : 'Consider removing the Via header if proxy information disclosure is a concern.',
+      });
+    }
+
+    // Check for X-Generator header
+    const generatorHeader = Object.keys(headers).find(
+      key => key.toLowerCase() === 'x-generator'
+    );
+    if (generatorHeader && headers[generatorHeader]) {
+      const generatorValue = headers[generatorHeader];
+      const versionPattern = /\d+\.\d+(\.\d+)?/;
+      const hasVersion = versionPattern.test(generatorValue);
+
+      results.push({
+        category: 'HTTP Headers',
+        severity: hasVersion ? 'medium' : 'info',
+        title: 'Generator Information Disclosure',
+        description: `The X-Generator header reveals: ${generatorValue}. This exposes the software or CMS used to generate the content.`,
+        recommendation: hasVersion
+          ? 'Remove or generalize the X-Generator header to prevent version fingerprinting.'
+          : 'Remove the X-Generator header to minimize technology stack disclosure.',
       });
     }
 
