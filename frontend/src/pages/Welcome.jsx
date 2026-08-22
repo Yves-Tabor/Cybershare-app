@@ -18,7 +18,7 @@ const SITE_CONFIG = {
   name: "Cybershare",
   tagline: "Know Before They Do",
   logoMark: "CS",
-  navLinks: ["Features", "How It Works", "Vulnerabilities", "Reports", "About"],
+  navLinks: ["Specially", "Designed", "For", "Your Security"],
   ctaText: "Start Scanning",
 };
 
@@ -328,79 +328,11 @@ const FEATURES = [
     title: "Automated\nScanning",
     body: "Comprehensive vulnerability scanning that detects SQL injection, XSS, CSRF, security misconfigurations, and other OWASP Top 10 vulnerabilities.",
     icons: [
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      >
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-        <line x1="12" y1="22.08" x2="12" y2="12" />
-      </svg>,
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>,
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      >
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>,
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      >
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>,
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </svg>,
+      <img src={img1} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img2} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img3} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img4} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
+      <img src={img5} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />,
     ],
     stat: null,
   },
@@ -851,7 +783,7 @@ export default function Welcome() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 dash-grid">
-              <div className="fc anim-up d100">
+              <div className="md:max-h-[60%] fc anim-up d100 md:mt-20">
                 <div className="icon-row">
                   {FEATURES[0].icons.map((ic, i) => (
                     <div className="ic" key={i}>
@@ -864,7 +796,7 @@ export default function Welcome() {
               </div>
 
               <div
-                className="fc md:fc-owasp anim-up d200"
+                className="md:max-h-[60%] fc md:fc-owasp anim-up d200"
                 style={{ position: "relative", overflow: "hidden" }}
               >
                 <h3>{FEATURES[1].title}</h3>
@@ -895,8 +827,8 @@ export default function Welcome() {
               </div>
 
               <div
-                className="fc md:fc-owasp anim-up d300"
-                style={{ position: "relative", overflow: "hidden" }}
+                className="md:max-h-[60%] fc md:fc-owasp anim-up d300 md:mt-20"
+                style={{ position: "relative", overflow: "hidden"}}
               >
                 <h3>{FEATURES[2].title}</h3>
                 <p>{FEATURES[2].body}</p>
@@ -908,20 +840,17 @@ export default function Welcome() {
                   <small>{FEATURES[2]?.stat.label}</small>
                 </div>
               </div>
+            </div>
 
-              <div className="fc anim-right d400">
-                <span className="bdg crit" style={{ alignSelf: "flex-start" }}>
-                  {FEATURES[3].badge}
-                </span>
-                <h3>{FEATURES[3].title}</h3>
-                <p>{FEATURES[3].body}</p>
-                <div className="icon-row" style={{ marginTop: "auto" }}>
-                  {FEATURES[3].icons.map((ic, i) => (
-                    <div className="ic" key={i}>
-                      {ic}
-                    </div>
-                  ))}
-                </div>
+            <div className="preview-stack anim-up d500" style={{ marginTop: "-50px" }}>
+              <div className="pv" style={{ backgroundColor: "black" }}>
+                <img src={authIMG1} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </div>
+              <div className="pv" style={{ backgroundColor: "black" }}>
+                <img src={csLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </div>
+              <div className="pv">
+                <img src={authIMG2} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               </div>
             </div>
           </div>
@@ -931,16 +860,12 @@ export default function Welcome() {
           className="panel min-h-[100vh] pb-3 bg-black/95"
           id="p-how-it-works"
         >
-          <div className="threats-wrap flex items-center">
+         <div className="threats-wrap flex items-center">
             <div className="sec-head w-full md:w-[50%]">
               <div className="bg-black rounded-lg p-4">
                 <h2 className="anim-up">How it works</h2>
-                <p className="anim-up d200 text-transparent">
-                  Get the scan just in 5 steps
-                </p>
               </div>
             </div>
-
             <div className="flex grid-cols-1 gap-4 dash-grid">
               {HOW_IT_WORKS.map((step, i) => (
                 <div
@@ -985,7 +910,7 @@ export default function Welcome() {
             <div className="auth-hd anim-up">
               <h2>
                 {AUTH_CONTENT.headline}{" "}
-                <strong>{AUTH_CONTENT.accentWord}</strong>
+                <a className="md:text-yellow-500 lg:text-black">{AUTH_CONTENT.accentWord}</a>
               </h2>
               <p>{AUTH_CONTENT.subtext}</p>
             </div>
