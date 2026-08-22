@@ -580,6 +580,252 @@ function Marquee({ items, dark = false, speed = 28 }) {
   );
 }
 
+/* ============================================================
+   Small-screen "See more / See less" mobile bar + icons
+   ------------------------------------------------------------
+   These are intentionally self-contained (no new deps) so they
+   match the inline-SVG style already used throughout this file.
+   ============================================================ */
+
+function ChevronIcon({ expanded }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{
+        transition: "transform .25s ease",
+        transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+        flexShrink: 0,
+      }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+/* CSS for the mobile-only behaviour. Scoped entirely under
+   max-width: 767px (Tailwind's `md` breakpoint used elsewhere in
+   this file) so medium/large screens are never touched.
+
+   NOTE: the light-mode color overrides below target the custom
+   classNames already used in this file (.hero-sub, .auth-card,
+   .ai, .a-btn, .pill, etc). They're written defensively with
+   !important since the real values of those classes live in an
+   external stylesheet this component doesn't control — tweak the
+   hex values here if they don't quite match your palette. */
+const MOBILE_TOGGLE_STYLES = `
+  .mobile-toggle-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #0a0a0c;
+    border-top: 1px solid #232326;
+    border-bottom: 1px solid #232326;
+    transition: background .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .mobile-toggle-bar.is-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
+  }
+  .mobile-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #f2f2f2;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    font-family: inherit;
+    padding: 6px 2px;
+  }
+  .mobile-theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid #2a2a2e;
+    background: #141416;
+    color: #f5c451;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease;
+    flex-shrink: 0;
+  }
+  .mobile-theme-toggle:hover {
+    border-color: #f5c451;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-toggle-bar {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    /* Bar itself, in light mode */
+    .scroll-root.mobile-light .mobile-toggle-bar {
+      background: #f7f7f9 !important;
+      border-color: #e5e5ea !important;
+    }
+    .scroll-root.mobile-light .mobile-toggle-btn {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light .mobile-theme-toggle {
+      background: #ffffff !important;
+      border-color: #dcdce2 !important;
+      color: #b8860b !important;
+    }
+
+    /* Hero + auth panels, in light mode (the "closed" mobile view) */
+    .scroll-root.mobile-light #p-hero {
+      background-image: none !important;
+      background-color: #ffffff !important;
+    }
+    .scroll-root.mobile-light #p-hero #starfield,
+    .scroll-root.mobile-light #p-hero .glow,
+    .scroll-root.mobile-light #p-hero .grid-ov {
+      display: none !important;
+    }
+    .scroll-root.mobile-light #p-auth {
+      background-color: #ffffff !important;
+    }
+
+    .scroll-root.mobile-light #p-hero nav a.logo {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-hero .nav-links a {
+      color: #4b4b55 !important;
+    }
+    .scroll-root.mobile-light #p-hero .hero-pills .pill {
+      background: rgba(20, 21, 26, .06) !important;
+      border: 1px solid rgba(20, 21, 26, .14) !important;
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-hero .hero-h1,
+    .scroll-root.mobile-light #p-hero .hero-h1 span {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-hero .hero-sub {
+      color: #4b4b55 !important;
+    }
+
+    .scroll-root.mobile-light #p-auth .auth-float {
+      background: #ffffff !important;
+      border: 1px solid #e5e5ea !important;
+      color: #14151a !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .06) !important;
+    }
+    .scroll-root.mobile-light #p-auth .auth-hd h2 {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-auth .auth-hd p {
+      color: #4b4b55 !important;
+    }
+    .scroll-root.mobile-light #p-auth .auth-tabs {
+      background: #f2f2f5 !important;
+      border: 1px solid #e5e5ea !important;
+    }
+    .scroll-root.mobile-light #p-auth .auth-tabs .at {
+      color: #6b6b76 !important;
+    }
+    .scroll-root.mobile-light #p-auth .auth-tabs .at.active {
+      background: #ffffff !important;
+      color: #14151a !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .08) !important;
+    }
+    .scroll-root.mobile-light #p-auth .auth-card {
+      background: #ffffff !important;
+      border: 1px solid #e5e5ea !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .06) !important;
+    }
+    .scroll-root.mobile-light #p-auth .ai {
+      background: #f7f7f9 !important;
+      border: 1px solid #dcdce2 !important;
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-auth .ai::placeholder {
+      color: #9a9aa5 !important;
+    }
+    .scroll-root.mobile-light #p-auth .a-btn.ghost {
+      background: #ffffff !important;
+      border: 1px solid #dcdce2 !important;
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-auth .a-divider {
+      color: #9a9aa5 !important;
+    }
+    .scroll-root.mobile-light #p-auth .a-link {
+      color: #4b4b55 !important;
+    }
+    .scroll-root.mobile-light #p-auth .a-link a {
+      color: #b8860b !important;
+    }
+    .scroll-root.mobile-light #p-auth .pv {
+      background: #f7f7f9 !important;
+      border: 1px solid #e5e5ea !important;
+    }
+  }
+`;
+
 export default function Welcome() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -603,6 +849,41 @@ export default function Welcome() {
 
   const [authNotice, setAuthNotice] = useState("");
   const noticeTimerRef = useRef(null);
+
+  // ---- Mobile-only "See more / See less" state ----
+  // mobileExpanded: whether the middle sections (features + how-it-works)
+  // are revealed on small screens. Desktop/tablet ignore this entirely.
+  // mobileTheme: light/dark for the collapsed ("closed") mobile view only.
+  // Defaults to "dark" so the small-screen page looks exactly like the
+  // existing design until the user opts into light mode.
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+  const [mobileTheme, setMobileTheme] = useState("dark");
+  const featuresRef = useRef(null);
+
+  const isMobileLightClosed = !mobileExpanded && mobileTheme === "light";
+  const middleSectionVisibilityClass = mobileExpanded
+    ? "block"
+    : "hidden md:block";
+  const toggleBarStickyClass = mobileExpanded ? "is-sticky" : "";
+
+  const handleToggleExpand = () => {
+    setMobileExpanded((prev) => {
+      const next = !prev;
+      if (next) {
+        // Reveal the newly-shown content on the next paint.
+        requestAnimationFrame(() => {
+          featuresRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      } else {
+        // Collapsing again: bring the user back up to the hero/bar.
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const notice = consumeAuthNotice();
@@ -681,6 +962,8 @@ export default function Welcome() {
 
   return (
     <>
+      <style>{MOBILE_TOGGLE_STYLES}</style>
+
       {authNotice && (
         <div
           className="fixed left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] whitespace-nowrap z-[300] transition-all duration-200"
@@ -696,7 +979,9 @@ export default function Welcome() {
           {authNotice}
         </div>
       )}
-      <div className="scroll-root">
+      <div
+        className={`scroll-root ${isMobileLightClosed ? "mobile-light" : ""}`}
+      >
         <section
           className="panel"
           id="p-hero"
@@ -772,7 +1057,47 @@ export default function Welcome() {
           </div>
         </section>
 
-        <section className="panel bg-black/95" id="p-features">
+        {/* ===== Mobile-only "See more / See less" toggle bar =====
+            Visible only below the md breakpoint (md:hidden). Sits
+            between the hero and auth sections. On small screens the
+            features and how-it-works sections start hidden; clicking
+            this bar reveals them and pins the bar to the top of the
+            viewport ("See less"). Clicking again hides those sections
+            and the bar returns to its normal, non-sticky position.
+            It also carries the light/dark toggle for the collapsed
+            mobile view. Medium/large screens never render this bar
+            and always show the full design, untouched by this state. */}
+        <div className={`mobile-toggle-bar md:hidden ${toggleBarStickyClass}`}>
+          <button
+            type="button"
+            className="mobile-toggle-btn"
+            onClick={handleToggleExpand}
+            aria-expanded={mobileExpanded}
+          >
+            <span>{mobileExpanded ? "See less" : "See more"}</span>
+            <ChevronIcon expanded={mobileExpanded} />
+          </button>
+
+          <button
+            type="button"
+            className="mobile-theme-toggle"
+            onClick={() =>
+              setMobileTheme((t) => (t === "dark" ? "light" : "dark"))
+            }
+            aria-label={
+              mobileTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
+            title={mobileTheme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {mobileTheme === "dark" ? <SunIcon /> : <MoonIcon />}
+          </button>
+        </div>
+
+        <section
+          ref={featuresRef}
+          className={`panel bg-black/95 ${middleSectionVisibilityClass}`}
+          id="p-features"
+        >
           <div className="feat-wrap flex items-center">
             <div className="sec-head bg-black md:w-[50%]">
               <h2 className="anim-up">Features &amp; Benefits</h2>
@@ -857,7 +1182,7 @@ export default function Welcome() {
         </section>
 
         <section
-          className="panel min-h-[100vh] pb-3 bg-black/95"
+          className={`panel min-h-[100vh] pb-3 bg-black/95 ${middleSectionVisibilityClass}`}
           id="p-how-it-works"
         >
          <div className="threats-wrap flex items-center">
