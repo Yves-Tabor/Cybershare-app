@@ -4,7 +4,6 @@ import mainBg from "../assets/mainBg.png";
 import worldMap from "../assets/worldMap.png";
 import welcomeOwasp from "../assets/welcomeOwasp.png";
 import img1 from "../assets/img1.svg";
-import img1_1 from "../assets/img1_1.svg";
 import img2 from "../assets/img2.svg";
 import img3 from "../assets/img3.svg";
 import img4 from "../assets/img4.svg";
