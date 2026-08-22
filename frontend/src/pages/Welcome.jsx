@@ -945,7 +945,7 @@ export default function Welcome() {
   const [mobileTheme, setMobileTheme] = useState("dark");
   const featuresRef = useRef(null);
 
-  const isMobileLightClosed = !mobileExpanded && mobileTheme === "light";
+  const isMobileLightMode = mobileTheme === "light";
   const middleSectionVisibilityClass = mobileExpanded
     ? ""
     : "hidden-mobile";
@@ -1065,7 +1065,7 @@ export default function Welcome() {
         </div>
       )}
       <div
-        className={`scroll-root ${isMobileLightClosed ? "mobile-light" : ""}`}
+        className={`scroll-root ${isMobileLightMode ? "mobile-light" : ""}`}
       >
         <section
           className="panel"
