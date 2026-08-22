@@ -732,6 +732,66 @@ const MOBILE_TOGGLE_STYLES = `
       display: none !important;
     }
 
+    /* Auth section dark mode defaults on mobile */
+    #p-auth {
+      background-color: #0a0a0c !important;
+    }
+    #p-auth .auth-float {
+      background: #111 !important;
+      border: 1px solid #2a2a2e !important;
+      color: #f2f2f2 !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .35) !important;
+    }
+    #p-auth .auth-hd h2 {
+      color: #f2f2f2 !important;
+    }
+    #p-auth .auth-hd p {
+      color: #ccc !important;
+    }
+    #p-auth .auth-tabs {
+      background: #141416 !important;
+      border: 1px solid #2a2a2e !important;
+    }
+    #p-auth .auth-tabs .at {
+      color: #ccc !important;
+    }
+    #p-auth .auth-tabs .at.active {
+      background: #1a1a1e !important;
+      color: #f2f2f2 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .2) !important;
+    }
+    #p-auth .auth-card {
+      background: #111 !important;
+      border: 1px solid #2a2a2e !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35) !important;
+    }
+    #p-auth .ai {
+      background: #141416 !important;
+      border: 1px solid #2a2a2e !important;
+      color: #f2f2f2 !important;
+    }
+    #p-auth .ai::placeholder {
+      color: #666 !important;
+    }
+    #p-auth .a-btn.ghost {
+      background: #141416 !important;
+      border: 1px solid #2a2a2e !important;
+      color: #f2f2f2 !important;
+    }
+    #p-auth .a-divider {
+      color: #666 !important;
+    }
+    #p-auth .a-link {
+      color: #ccc !important;
+    }
+    #p-auth .a-link a {
+      color: #f5c451 !important;
+    }
+    #p-auth .pv {
+      background: #141416 !important;
+      border: 1px solid #2a2a2e !important;
+    }
+
     /* Bar itself, in light mode */
     .scroll-root.mobile-light .mobile-toggle-bar {
       background: #f7f7f9 !important;
