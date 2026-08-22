@@ -962,9 +962,6 @@ export default function Welcome() {
             block: "start",
           });
         });
-      } else {
-        // Collapsing again: bring the user back up to the hero/bar.
-        window.scrollTo({ top: 0, behavior: "smooth" });
       }
       return next;
     });
