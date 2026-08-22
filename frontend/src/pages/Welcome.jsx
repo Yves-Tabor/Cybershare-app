@@ -823,6 +823,80 @@ const MOBILE_TOGGLE_STYLES = `
       background: #f7f7f9 !important;
       border: 1px solid #e5e5ea !important;
     }
+    .scroll-root.mobile-light #p-auth .preview-stack .pv img {
+      filter: invert(1) !important;
+    }
+
+    /* Features section, in light mode */
+    .scroll-root.mobile-light #p-features {
+      background-color: #ffffff !important;
+    }
+    .scroll-root.mobile-light #p-features .sec-head {
+      background: #ffffff !important;
+    }
+    .scroll-root.mobile-light #p-features .sec-head h2 {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-features .sec-head p {
+      color: #4b4b55 !important;
+    }
+    .scroll-root.mobile-light #p-features .fc {
+      background: #ffffff !important;
+      border: 1px solid #e5e5ea !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .06) !important;
+    }
+    .scroll-root.mobile-light #p-features .fc h3 {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-features .fc p {
+      color: #4b4b55 !important;
+    }
+    .scroll-root.mobile-light #p-features .big-stat {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-features .big-stat small {
+      color: #6b6b76 !important;
+    }
+    .scroll-root.mobile-light #p-features .bdg {
+      background: rgba(184, 134, 11, .1) !important;
+      color: #b8860b !important;
+      border: 1px solid rgba(184, 134, 11, .2) !important;
+    }
+    .scroll-root.mobile-light #p-features .pv {
+      background: #f7f7f9 !important;
+      border: 1px solid #e5e5ea !important;
+    }
+    .scroll-root.mobile-light #p-features .ic img {
+      filter: invert(1) !important;
+    }
+    .scroll-root.mobile-light #p-features .preview-stack .pv img {
+      filter: invert(1) !important;
+    }
+
+    /* How it works section, in light mode */
+    .scroll-root.mobile-light #p-how-it-works {
+      background-color: #ffffff !important;
+    }
+    .scroll-root.mobile-light #p-how-it-works .sec-head {
+      background: #ffffff !important;
+    }
+    .scroll-root.mobile-light #p-how-it-works .sec-head h2 {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-how-it-works .dc {
+      background: #ffffff !important;
+      border: 1px solid #e5e5ea !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .06) !important;
+    }
+    .scroll-root.mobile-light #p-how-it-works .dc-lbl {
+      color: #b8860b !important;
+    }
+    .scroll-root.mobile-light #p-how-it-works .dc-val {
+      color: #14151a !important;
+    }
+    .scroll-root.mobile-light #p-how-it-works .dc-sub {
+      color: #4b4b55 !important;
+    }
   }
 `;
 
@@ -1057,16 +1131,7 @@ export default function Welcome() {
           </div>
         </section>
 
-        {/* ===== Mobile-only "See more / See less" toggle bar =====
-            Visible only below the md breakpoint (md:hidden). Sits
-            between the hero and auth sections. On small screens the
-            features and how-it-works sections start hidden; clicking
-            this bar reveals them and pins the bar to the top of the
-            viewport ("See less"). Clicking again hides those sections
-            and the bar returns to its normal, non-sticky position.
-            It also carries the light/dark toggle for the collapsed
-            mobile view. Medium/large screens never render this bar
-            and always show the full design, untouched by this state. */}
+
         <div className={`mobile-toggle-bar md:hidden ${toggleBarStickyClass}`}>
           <button
             type="button"
@@ -1185,9 +1250,9 @@ export default function Welcome() {
           className={`panel min-h-[100vh] pb-3 bg-black/95 ${middleSectionVisibilityClass}`}
           id="p-how-it-works"
         >
-         <div className="threats-wrap flex items-center">
-            <div className="sec-head w-full md:w-[50%]">
-              <div className="bg-black rounded-lg p-4">
+         <div className="sec-head bg-black threats-wrap flex items-center">
+            <div className="sec-head bg-black md:w-[50%]">
+              <div className="rounded-lg p-4">
                 <h2 className="anim-up">How it works</h2>
               </div>
             </div>
