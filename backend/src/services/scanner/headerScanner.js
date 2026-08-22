@@ -71,6 +71,7 @@ async function scanHeaders(targetUrl) {
         results.push({
           category: 'HTTP Headers',
           severity: header.severity,
+          confidence: 'confirmed',
           title: header.title,
           description: header.description,
           recommendation: header.recommendation,
@@ -90,11 +91,17 @@ async function scanHeaders(targetUrl) {
       results.push({
         category: 'HTTP Headers',
         severity: hasVersion ? 'medium' : 'info',
+        confidence: 'confirmed',
         title: 'Server Information Disclosure',
-        description: `The Server header reveals: ${serverValue}. This can help attackers identify the server technology and potential vulnerabilities.`,
+        description: `The Server header reveals: ${serverValue}. This finding specifically addresses HTTP header information disclosure risks. (Note: Technology detection is handled separately by the technology scanner.)`,
         recommendation: hasVersion
-          ? 'Remove or generalize the Server header to prevent version fingerprinting (e.g., use "nginx" instead of "nginx/1.18.0").'
+          ? `Remove or generalize the Server header to prevent version fingerprinting (e.g., use "nginx" instead of "${serverValue}").`
           : 'Consider removing the Server header entirely to minimize information disclosure.',
+        metadata: {
+          headerName: 'Server',
+          headerValue: serverValue,
+          hasVersion: hasVersion
+        }
       });
     }
 
@@ -110,11 +117,17 @@ async function scanHeaders(targetUrl) {
       results.push({
         category: 'HTTP Headers',
         severity: hasVersion ? 'medium' : 'info',
+        confidence: 'confirmed',
         title: 'Technology Information Disclosure',
         description: `The X-Powered-By header reveals: ${poweredByValue}. This exposes the underlying technology stack.`,
         recommendation: hasVersion
-          ? 'Remove or generalize the X-Powered-By header to prevent version fingerprinting.'
+          ? `Remove or generalize the X-Powered-By header to prevent version fingerprinting (currently: "${poweredByValue}").`
           : 'Remove the X-Powered-By header in your application configuration.',
+        metadata: {
+          headerName: 'X-Powered-By',
+          headerValue: poweredByValue,
+          hasVersion: hasVersion
+        }
       });
     }
 
@@ -126,9 +139,14 @@ async function scanHeaders(targetUrl) {
       results.push({
         category: 'HTTP Headers',
         severity: 'medium',
+        confidence: 'confirmed',
         title: 'ASP.NET Version Disclosure',
         description: `The X-AspNet-Version header reveals: ${headers[aspNetVersionHeader]}. This exposes specific ASP.NET version information.`,
-        recommendation: 'Remove the X-AspNet-Version header to prevent version fingerprinting.',
+        recommendation: `Remove the X-AspNet-Version header to prevent version fingerprinting (currently: "${headers[aspNetVersionHeader]}").`,
+        metadata: {
+          headerName: 'X-AspNet-Version',
+          headerValue: headers[aspNetVersionHeader]
+        }
       });
     }
 
@@ -140,9 +158,14 @@ async function scanHeaders(targetUrl) {
       results.push({
         category: 'HTTP Headers',
         severity: 'medium',
+        confidence: 'confirmed',
         title: 'ASP.NET MVC Version Disclosure',
         description: `The X-AspNetMvc-Version header reveals: ${headers[aspNetMvcVersionHeader]}. This exposes specific ASP.NET MVC version information.`,
-        recommendation: 'Remove the X-AspNetMvc-Version header to prevent version fingerprinting.',
+        recommendation: `Remove the X-AspNetMvc-Version header to prevent version fingerprinting (currently: "${headers[aspNetMvcVersionHeader]}").`,
+        metadata: {
+          headerName: 'X-AspNetMvc-Version',
+          headerValue: headers[aspNetMvcVersionHeader]
+        }
       });
     }
 
@@ -158,11 +181,17 @@ async function scanHeaders(targetUrl) {
       results.push({
         category: 'HTTP Headers',
         severity: hasVersion ? 'medium' : 'info',
+        confidence: 'confirmed',
         title: 'Proxy Information Disclosure',
         description: `The Via header reveals: ${viaValue}. This can expose proxy server information and version details.`,
         recommendation: hasVersion
-          ? 'Remove or generalize the Via header to prevent proxy version fingerprinting.'
+          ? `Remove or generalize the Via header to prevent proxy version fingerprinting (currently: "${viaValue}").`
           : 'Consider removing the Via header if proxy information disclosure is a concern.',
+        metadata: {
+          headerName: 'Via',
+          headerValue: viaValue,
+          hasVersion: hasVersion
+        }
       });
     }
 
@@ -178,11 +207,17 @@ async function scanHeaders(targetUrl) {
       results.push({
         category: 'HTTP Headers',
         severity: hasVersion ? 'medium' : 'info',
+        confidence: 'confirmed',
         title: 'Generator Information Disclosure',
         description: `The X-Generator header reveals: ${generatorValue}. This exposes the software or CMS used to generate the content.`,
         recommendation: hasVersion
-          ? 'Remove or generalize the X-Generator header to prevent version fingerprinting.'
+          ? `Remove or generalize the X-Generator header to prevent version fingerprinting (currently: "${generatorValue}").`
           : 'Remove the X-Generator header to minimize technology stack disclosure.',
+        metadata: {
+          headerName: 'X-Generator',
+          headerValue: generatorValue,
+          hasVersion: hasVersion
+        }
       });
     }
 

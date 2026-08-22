@@ -30,11 +30,15 @@ async function scanNmap(targetUrl) {
       results.push({
         category: "Network",
         severity: "critical",
+        confidence: "confirmed",
         title: "Nmap Not Installed",
         description:
           "Nmap is not installed or not available in the system PATH. Network scanning requires Nmap to be installed.",
         recommendation:
           "Install Nmap from https://nmap.org/download.html and ensure it is added to your system PATH.",
+        metadata: {
+          hostname: hostname
+        }
       });
       return results;
     }
@@ -49,10 +53,15 @@ async function scanNmap(targetUrl) {
       results.push({
         category: "Network",
         severity: "medium",
+        confidence: "heuristic",
         title: "Nmap Scan Warning",
         description: `Nmap produced warnings: ${stderr}`,
         recommendation:
           "Review the warnings and ensure proper network connectivity.",
+        metadata: {
+          hostname: hostname,
+          stderr: stderr
+        }
       });
     }
 
@@ -73,11 +82,15 @@ async function scanNmap(targetUrl) {
       results.push({
         category: "Network",
         severity: "informational",
+        confidence: "confirmed",
         title: "Nmap: No Open Ports Detected",
         description:
           "Nmap fast scan did not detect open ports. This can happen if the host filters probes, blocks scans, or has no commonly exposed ports.",
         recommendation:
           "Verify the target is accessible and consider scanning all ports if needed.",
+        metadata: {
+          hostname: hostname
+        }
       });
     } else {
       // Report open ports
@@ -87,10 +100,15 @@ async function scanNmap(targetUrl) {
       results.push({
         category: "Network",
         severity: "informational",
+        confidence: "confirmed",
         title: "Nmap: Open Ports Detected",
         description: `The following open ports were detected: ${portList}.`,
         recommendation:
           "Review each open port and ensure only necessary services are exposed. Consider closing unused ports.",
+        metadata: {
+          hostname: hostname,
+          openPorts: openPorts
+        }
       });
 
       // Check for potentially risky services
@@ -109,10 +127,16 @@ async function scanNmap(targetUrl) {
           results.push({
             category: "Network",
             severity: "medium",
+            confidence: "confirmed",
             title: `Nmap: Potentially Exposed Service ${service} on Port ${port}`,
             description: `Service ${service} is exposed on port ${port}. Ensure this service is properly secured and only accessible from trusted networks.`,
             recommendation:
               "Review access controls for this service and consider using firewalls to restrict access.",
+            metadata: {
+              hostname: hostname,
+              port: port,
+              service: service
+            }
           });
         }
       });
@@ -129,10 +153,15 @@ async function scanNmap(targetUrl) {
         results.push({
           category: "Network",
           severity: "informational",
+          confidence: "confirmed",
           title: "Nmap: Web Services Detected",
           description: `Web services are running on ports: ${webPorts.map((p) => p.port).join(", ")}.`,
           recommendation:
             "Ensure web servers are properly configured with security headers and HTTPS.",
+          metadata: {
+            hostname: hostname,
+            webPorts: webPorts.map((p) => p.port)
+          }
         });
       }
     }
@@ -141,19 +170,29 @@ async function scanNmap(targetUrl) {
       results.push({
         category: "Network",
         severity: "high",
+        confidence: "confirmed",
         title: "Nmap Scan Timeout",
         description: `The Nmap scan timed out after ${Math.round(NMAP_TIMEOUT_MS / 1000)} seconds.`,
         recommendation:
           "The target may be slow to respond or filtering probes. This quick scan is capped at 30 seconds to keep scans responsive.",
+        metadata: {
+          hostname: hostname,
+          timeoutSeconds: Math.round(NMAP_TIMEOUT_MS / 1000)
+        }
       });
     } else {
       results.push({
         category: "Network",
         severity: "critical",
+        confidence: "confirmed",
         title: "Nmap Scan Failed",
         description: `Failed to run Nmap scan: ${error.message || "unknown error"}`,
         recommendation:
           "Ensure Nmap is installed and accessible. Check network connectivity to the target.",
+        metadata: {
+          hostname: hostname,
+          error: error.message
+        }
       });
     }
   }

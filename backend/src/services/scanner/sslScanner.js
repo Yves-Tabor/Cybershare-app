@@ -48,9 +48,13 @@ async function scanSSL(targetUrl) {
         results.push({
           category: 'SSL/TLS',
           severity: 'high',
+          confidence: 'confirmed',
           title: 'Self-Signed Certificate',
           description: 'The SSL certificate is self-signed. Browsers will show security warnings and users may not trust the site.',
           recommendation: "Use a certificate from a trusted Certificate Authority (CA) like Let's Encrypt, DigiCert, or Comodo.",
+          metadata: {
+            issuerCN: issuerCN
+          }
         });
       }
     }
@@ -64,25 +68,40 @@ async function scanSSL(targetUrl) {
       results.push({
         category: 'SSL/TLS',
         severity: 'critical',
+        confidence: 'confirmed',
         title: 'Expired SSL Certificate',
         description: `The SSL certificate expired ${Math.abs(daysUntilExpiry)} days ago.`,
         recommendation: 'Renew your SSL certificate immediately.',
+        metadata: {
+          daysExpired: Math.abs(daysUntilExpiry),
+          expiryDate: validTo.toISOString()
+        }
       });
     } else if (daysUntilExpiry <= 7) {
       results.push({
         category: 'SSL/TLS',
         severity: 'critical',
+        confidence: 'confirmed',
         title: 'SSL Certificate Expiring Soon',
         description: `The SSL certificate will expire in ${daysUntilExpiry} days.`,
         recommendation: 'Renew your SSL certificate as soon as possible.',
+        metadata: {
+          daysUntilExpiry: daysUntilExpiry,
+          expiryDate: validTo.toISOString()
+        }
       });
     } else if (daysUntilExpiry <= 30) {
       results.push({
         category: 'SSL/TLS',
         severity: 'high',
+        confidence: 'confirmed',
         title: 'SSL Certificate Expiring Soon',
         description: `The SSL certificate will expire in ${daysUntilExpiry} days.`,
         recommendation: 'Plan to renew your SSL certificate before expiration.',
+        metadata: {
+          daysUntilExpiry: daysUntilExpiry,
+          expiryDate: validTo.toISOString()
+        }
       });
     }
 
@@ -93,9 +112,13 @@ async function scanSSL(targetUrl) {
       results.push({
         category: 'SSL/TLS',
         severity: 'medium',
+        confidence: 'confirmed',
         title: 'Long Certificate Validity Period',
         description: `The SSL certificate has a validity period of ${certLifetime.toFixed(1)} years. Shorter validity periods improve security by limiting the window for compromised keys.`,
         recommendation: 'Consider using certificates with shorter validity periods (e.g., 90 days) and automate renewal.',
+        metadata: {
+          validityYears: certLifetime.toFixed(1)
+        }
       });
     }
 
@@ -106,26 +129,38 @@ async function scanSSL(targetUrl) {
         results.push({
           category: 'SSL/TLS',
           severity: 'high',
+          confidence: 'confirmed',
           title: `Deprecated TLS Version: ${tls}`,
           description: `The server negotiated ${tls}, which is deprecated and has known vulnerabilities. Modern clients and standards require TLS 1.2 or higher.`,
           recommendation: 'Disable TLS 1.0 and TLS 1.1 on your server and configure it to only accept TLS 1.2 and TLS 1.3.',
+          metadata: {
+            tlsVersion: tls
+          }
         });
       } else if (tls === 'TLSv1.2') {
         results.push({
           category: 'SSL/TLS',
           severity: 'low',
+          confidence: 'confirmed',
           title: 'TLS 1.2 in Use',
           description: `The server is using ${tls}. While still acceptable, TLS 1.3 offers better security and performance.`,
           recommendation: 'Consider enabling TLS 1.3 on your server for improved security.',
+          metadata: {
+            tlsVersion: tls
+          }
         });
       } else {
         // TLSv1.3 — ideal
         results.push({
           category: 'SSL/TLS',
           severity: 'informational',
+          confidence: 'confirmed',
           title: `TLS Version: ${tls}`,
           description: `The server is using ${tls}, which is the most secure TLS version currently available.`,
           recommendation: 'No action needed. Ensure TLS 1.3 remains enabled.',
+          metadata: {
+            tlsVersion: tls
+          }
         });
       }
     } else {
@@ -133,6 +168,7 @@ async function scanSSL(targetUrl) {
       results.push({
         category: 'SSL/TLS',
         severity: 'low',
+        confidence: 'heuristic',
         title: 'TLS Version Check',
         description: 'Could not determine the negotiated TLS version. Ensure your server supports only TLS 1.2 and TLS 1.3.',
         recommendation: 'Configure your server to disable deprecated TLS versions and only allow TLS 1.2 and TLS 1.3.',
@@ -147,9 +183,13 @@ async function scanSSL(targetUrl) {
       results.push({
         category: 'SSL/TLS',
         severity: 'informational',
+        confidence: 'confirmed',
         title: 'Certificate Issuer',
         description: `Certificate issued by: ${issuerStr}`,
         recommendation: 'Ensure you are using a trusted Certificate Authority.',
+        metadata: {
+          issuer: issuerStr
+        }
       });
     }
 
@@ -189,11 +229,14 @@ async function resolveRedirects(targetUrl) {
  * Bug Fix #1: Establish an HTTPS connection, grab cert + TLS version, then
  * cleanly close the socket — never calling req.destroy() inside the response
  * handler (which corrupts socket state on keep-alive connections).
+ *
+ * Bug Fix #2: Get the full certificate chain to correctly extract issuer CN
+ * from the actual issuer certificate, not the leaf certificate.
  */
 function getCertificate(hostname, port) {
   return new Promise((resolve) => {
     const tls = require('tls');
-    
+
     const socket = tls.connect({
       host: hostname,
       port: port,
@@ -205,8 +248,29 @@ function getCertificate(hostname, port) {
       const tlsVersion = socket.getProtocol ? socket.getProtocol() : null;
 
       if (cert && Object.keys(cert).length > 0) {
+        // Get the certificate chain to find the actual issuer
+        const chain = socket.getPeerCertificate(true);
+        let issuer = cert.issuer;
+
+        // If we have a certificate chain, use the issuer from the chain
+        // The chain array contains [leaf, intermediate1, intermediate2, ..., root]
+        if (chain && Array.isArray(chain) && chain.length > 1) {
+          // The second certificate in the chain is typically the immediate issuer
+          const issuerCert = chain[1];
+          if (issuerCert && issuerCert.issuer) {
+            issuer = issuerCert.issuer;
+          }
+        }
+
+        // Debug logging in development mode
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SSL === 'true') {
+          console.log('[SSL Scanner] Raw certificate object:', JSON.stringify(cert, null, 2));
+          console.log('[SSL Scanner] Certificate chain length:', chain ? chain.length : 0);
+          console.log('[SSL Scanner] Extracted issuer:', JSON.stringify(issuer, null, 2));
+        }
+
         resolve({
-          issuer: cert.issuer,
+          issuer: issuer,
           subject: cert.subject,
           validFrom: cert.valid_from,
           validTo: cert.valid_to,
