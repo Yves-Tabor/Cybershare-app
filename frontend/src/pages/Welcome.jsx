@@ -8,6 +8,9 @@ import img2 from "../assets/img2.svg";
 import img3 from "../assets/img3.svg";
 import img4 from "../assets/img4.svg";
 import img5 from "../assets/img5.svg";
+import csLogo from "../assets/cs-logo.jpg";
+import authIMG1 from "../assets/authIMG1.svg";
+import authIMG2 from "../assets/authIMG2.svg";
 import { authAPI } from "../utils/api";
 import { consumeAuthNotice } from "../utils/authRedirect";
 
@@ -777,7 +780,7 @@ export default function Welcome() {
 
           <nav>
             <a href="#" className="logo">
-              <div className="logo-mark">{SITE_CONFIG.logoMark}</div>
+              <img src={csLogo} alt="Cybershare Logo" className="logo-mark" style={{ width: "45px", height: "45px" }} />
               {SITE_CONFIG.name}
             </a>
             <ul className="nav-links">
@@ -1217,25 +1220,13 @@ export default function Welcome() {
 
             <div className="preview-stack anim-up d500">
               <div className="pv">
-                <div className="pv-line" style={{ width: "65%" }} />
-                <div className="pv-line a" style={{ width: "40%" }} />
-                <div className="pv-line" style={{ width: "80%" }} />
-                <div className="pv-line" style={{ width: "50%" }} />
-                <div className="pv-line a" style={{ width: "30%" }} />
+                <img src={authIMG1} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               </div>
               <div className="pv">
-                <div className="pv-line a" style={{ width: "75%" }} />
-                <div className="pv-line" style={{ width: "55%" }} />
-                <div className="pv-line" style={{ width: "90%" }} />
-                <div className="pv-line a" style={{ width: "60%" }} />
-                <div className="pv-line" style={{ width: "45%" }} />
+                <img src={csLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               </div>
               <div className="pv">
-                <div className="pv-line" style={{ width: "55%" }} />
-                <div className="pv-line" style={{ width: "75%" }} />
-                <div className="pv-line a" style={{ width: "38%" }} />
-                <div className="pv-line" style={{ width: "68%" }} />
-                <div className="pv-line a" style={{ width: "28%" }} />
+                <img src={authIMG2} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               </div>
             </div>
           </div>
