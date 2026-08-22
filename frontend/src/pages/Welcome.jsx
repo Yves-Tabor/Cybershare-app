@@ -811,10 +811,14 @@ const MOBILE_TOGGLE_STYLES = `
       background-image: none !important;
       background-color: #ffffff !important;
     }
-    .scroll-root.mobile-light #p-hero #starfield,
-    .scroll-root.mobile-light #p-hero .glow,
+    .scroll-root.mobile-light #p-hero #starfield {
+      display: block !important;
+    }
+    .scroll-root.mobile-light #p-hero .glow {
+      display: block !important;
+    }
     .scroll-root.mobile-light #p-hero .grid-ov {
-      display: none !important;
+      display: block !important;
     }
     .scroll-root.mobile-light #p-auth {
       background-color: #ffffff !important;
