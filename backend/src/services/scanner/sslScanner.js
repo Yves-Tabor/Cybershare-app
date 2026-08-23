@@ -293,4 +293,4 @@ function getCertificate(hostname, port) {
   });
 }
 
-module.exports = { scanSSL };
+module.exports = { scanSSL, getCertificate };

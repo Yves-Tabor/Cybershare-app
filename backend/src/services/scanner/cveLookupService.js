@@ -106,6 +106,112 @@ function queueRequest(fn) {
 }
 
 /**
+ * Parse version string to comparable number array
+ * Handles semantic versioning (e.g., "5.4.2" -> [5, 4, 2])
+ */
+function parseVersion(versionStr) {
+  if (!versionStr) return null;
+  const parts = versionStr.split('.').map(p => parseInt(p, 10));
+  return parts.every(p => !isNaN(p)) ? parts : null;
+}
+
+/**
+ * Compare two version arrays
+ * Returns: -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2
+ */
+function compareVersions(v1, v2) {
+  if (!v1 || !v2) return 0;
+  
+  const maxLength = Math.max(v1.length, v2.length);
+  for (let i = 0; i < maxLength; i++) {
+    const num1 = v1[i] || 0;
+    const num2 = v2[i] || 0;
+    if (num1 < num2) return -1;
+    if (num1 > num2) return 1;
+  }
+  return 0;
+}
+
+/**
+ * Check if a version falls within a version range from NVD CVE configuration
+ */
+function isVersionInRange(detectedVersion, config) {
+  const detected = parseVersion(detectedVersion);
+  if (!detected) return false; // Can't compare if version is unparseable
+  
+  // Check versionStartIncluding
+  if (config.versionStartIncluding) {
+    const start = parseVersion(config.versionStartIncluding);
+    if (start && compareVersions(detected, start) < 0) {
+      return false; // Detected version is before start range
+    }
+  }
+  
+  // Check versionEndExcluding
+  if (config.versionEndExcluding) {
+    const end = parseVersion(config.versionEndExcluding);
+    if (end && compareVersions(detected, end) >= 0) {
+      return false; // Detected version is at or after end range
+    }
+  }
+  
+  // Check versionEndIncluding
+  if (config.versionEndIncluding) {
+    const end = parseVersion(config.versionEndIncluding);
+    if (end && compareVersions(detected, end) > 0) {
+      return false; // Detected version is after end range
+    }
+  }
+  
+  // Check versionStartExcluding
+  if (config.versionStartExcluding) {
+    const start = parseVersion(config.versionStartExcluding);
+    if (start && compareVersions(detected, start) <= 0) {
+      return false; // Detected version is at or before start range
+    }
+  }
+  
+  return true;
+}
+
+/**
+ * Filter CVEs by version range matching
+ * Only includes CVEs where the detected version falls within the affected version range
+ */
+function filterCVEsByVersion(cveData, detectedVersion) {
+  if (!cveData || cveData.length === 0) return [];
+  
+  return cveData.filter(vuln => {
+    // Check if this CVE has configurations with version ranges
+    if (!vuln.configurations) return false;
+    
+    // Check each configuration
+    for (const config of vuln.configurations) {
+      if (!config.nodes) continue;
+      
+      // Check each node in the configuration
+      for (const node of config.nodes) {
+        if (!node.cpeMatch) continue;
+        
+        // Check if any CPE match applies to our detected version
+        for (const cpe of node.cpeMatch) {
+          // Skip if this CPE doesn't match our criteria (already filtered by API query)
+          if (!cpe.criteria) continue;
+          
+          // Check version range if specified
+          const versionInRange = isVersionInRange(detectedVersion, cpe);
+          if (versionInRange) {
+            return true; // This CVE applies to our detected version
+          }
+        }
+      }
+    }
+    
+    return false; // No configuration matched our version
+  });
+}
+
+/**
  * Generate CPE string for NVD API query
  * Format: cpe:2.3:a:vendor:product:version:*:*:*:*:*:*:*
  */
@@ -167,21 +273,26 @@ async function queryNVDAPI(cpeString) {
 
 /**
  * Extract highest CVSS score from CVE data
+ * Returns null if no valid score is found (instead of defaulting to 0)
  */
 function extractHighestCVSS(cveData) {
-  let highestScore = 0;
+  let highestScore = null;
   
   cveData.forEach(vuln => {
     if (vuln.metrics && vuln.metrics.cvssMetricV31) {
       vuln.metrics.cvssMetricV31.forEach(metric => {
-        if (metric.cvssData && metric.cvssData.baseScore) {
-          highestScore = Math.max(highestScore, metric.cvssData.baseScore);
+        if (metric.cvssData && metric.cvssData.baseScore && metric.cvssData.baseScore > 0) {
+          if (highestScore === null || metric.cvssData.baseScore > highestScore) {
+            highestScore = metric.cvssData.baseScore;
+          }
         }
       });
     } else if (vuln.metrics && vuln.metrics.cvssMetricV2) {
       vuln.metrics.cvssMetricV2.forEach(metric => {
-        if (metric.cvssData && metric.cvssData.baseScore) {
-          highestScore = Math.max(highestScore, metric.cvssData.baseScore);
+        if (metric.cvssData && metric.cvssData.baseScore && metric.cvssData.baseScore > 0) {
+          if (highestScore === null || metric.cvssData.baseScore > highestScore) {
+            highestScore = metric.cvssData.baseScore;
+          }
         }
       });
     }
@@ -252,11 +363,16 @@ async function lookupCVEs(product, version) {
       const cpeString = generateCPE(product, version);
       const cveData = await queryNVDAPI(cpeString);
       
+      // Filter CVEs by version range to exclude irrelevant CVEs
+      const filteredCVEs = filterCVEsByVersion(cveData, version);
+      
+      console.log(`[CVE Lookup] Filtered ${cveData.length} CVEs to ${filteredCVEs.length} applicable CVEs for ${product} ${version}`);
+      
       // Process results
       const result = {
-        cveIds: extractCVEIds(cveData),
-        cvssScore: extractHighestCVSS(cveData),
-        cveSummary: generateSummary(cveData),
+        cveIds: extractCVEIds(filteredCVEs),
+        cvssScore: extractHighestCVSS(filteredCVEs),
+        cveSummary: generateSummary(filteredCVEs),
         severity: null, // Will be set by caller based on CVSS
         timestamp: Date.now()
       };

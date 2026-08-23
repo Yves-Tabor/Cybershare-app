@@ -249,10 +249,11 @@ async function scanTechnologies(targetUrl) {
         
         if (cveData && cveData.cveIds && cveData.cveIds.length > 0) {
           // CVEs found - escalate severity based on CVSS score
-          const severity = cvssToSeverity(cveData.cvssScore);
+          const severity = cveData.cvssScore ? cvssToSeverity(cveData.cvssScore) : 'medium'; // Default to medium if score unavailable
           
           techInfo.severity = severity;
-          techInfo.description = `${tech.name} version ${tech.version} has known vulnerabilities. ${cveData.cveIds.length} CVE(s) found with highest CVSS score: ${cveData.cvssScore}.`;
+          const scoreText = cveData.cvssScore ? cveData.cvssScore : 'unavailable';
+          techInfo.description = `${tech.name} version ${tech.version} has known vulnerabilities. ${cveData.cveIds.length} CVE(s) found with highest CVSS score: ${scoreText}.`;
           techInfo.recommendation = `Upgrade ${tech.name} from ${tech.version} to the latest stable version to address ${cveData.cveIds[0]}${cveData.cveIds.length > 1 ? ` and ${cveData.cveIds.length - 1} other CVEs` : ''}.`;
           techInfo.metadata.cveIds = cveData.cveIds;
           techInfo.metadata.cvssScore = cveData.cvssScore;

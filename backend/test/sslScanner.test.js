@@ -1,4 +1,4 @@
-const { getCertificate } = require('./src/services/scanner/sslScanner');
+const { getCertificate } = require('../src/services/scanner/sslScanner');
 
 /**
  * Unit test for SSL certificate parsing
@@ -8,7 +8,7 @@ async function testCertificateParsing() {
   console.log('[Test] Starting certificate parsing test...');
 
   // Test with a known domain that uses Let's Encrypt (should have R3 or similar intermediate)
-  const testHostname = 'example.com';
+  const testHostname = 'letsencrypt.org';
   const testPort = 443;
 
   try {
@@ -35,10 +35,10 @@ async function testCertificateParsing() {
         return false;
       }
 
-      // For Let's Encrypt, valid intermediate CAs are R3, R10, R11, E5, E6, etc.
-      const validLetEncryptCAs = ['R3', 'R10', 'R11', 'E5', 'E6', 'E1', 'E2'];
+      // For Let's Encrypt, valid intermediate CAs are R3, R10, R11, E5, E6, E1, E2, YE1, YE2, YE3
+      const validLetEncryptCAs = ['R3', 'R10', 'R11', 'E5', 'E6', 'E1', 'E2', 'YE1', 'YE2', 'YE3'];
       if (issuerCN && validLetEncryptCAs.includes(issuerCN)) {
-        console.log('[Test] ✅ PASSED: Issuer CN is a valid Let's Encrypt intermediate CA');
+        console.log('[Test] ✅ PASSED: Issuer CN is a valid Let\'s Encrypt intermediate CA');
         return true;
       } else if (issuerCN) {
         console.log(`[Test] ⚠️  WARNING: Issuer CN is "${issuerCN}" - verify this is a valid CA`);
