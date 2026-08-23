@@ -364,6 +364,8 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, async () => {
+  // ── Deploy confirmation ── grep for this in Render logs to verify new code is live
+  console.log(`[Server] BUILD ${new Date().toISOString()} scanner-fix-v2`);
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`Database: ${process.env.DATABASE_URL ? 'configured' : 'MISSING — set DATABASE_URL'}`);

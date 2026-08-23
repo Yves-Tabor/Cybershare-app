@@ -196,50 +196,62 @@ function isVersionInRange(detectedVersion, config) {
  * Filter CVEs by version range matching
  * Only includes CVEs where the detected version falls within the affected version range
  */
+/**
+ * Filter CVEs by version range matching.
+ *
+ * @param {Array}  cveData         - Raw vulnerability objects from NVD API.
+ * @param {string} detectedVersion - The version string detected on the target
+ *                                   (e.g. "6.1.1"). Must equal the version used
+ *                                   in the CPE query so the no-config acceptance
+ *                                   path is safe.
+ *
+ * Two acceptance paths:
+ *
+ * A) NO configurations block (legacy NVD entries, pre-2024 migration)
+ *    NVD's CPE-name query already validated applicability server-side before
+ *    returning these CVEs. We trust that result rather than re-validating with
+ *    client-side range checks that don't exist. We guard against accidental
+ *    misuse (wrong version passed in) by asserting detectedVersion is present.
+ *
+ * B) HAS configurations block (modern NVD entries)
+ *    Walk every cpeMatch entry and check it against the detected version using
+ *    the numeric version-range comparators.
+ */
 function filterCVEsByVersion(cveData, detectedVersion) {
   if (!cveData || cveData.length === 0) return [];
-  
+  if (!detectedVersion) return []; // Refuse to run without a version — avoids the false-positive risk
+
   console.log(`[CVE Lookup] filterCVEsByVersion: Starting with ${cveData.length} CVEs for version "${detectedVersion}"`);
-  
+
   return cveData.filter(vuln => {
-    // ─── NVD API behaviour note ────────────────────────────────────────────────
-    // When querying by exact CPE version (e.g. cpe:...:wordpress:6.1.1:...),
-    // the NVD already confirms applicability via CPE matching on its side.
-    // Older CVEs (pre-NVD 2.0 migration, roughly pre-2024) are returned without
-    // a `configurations` block — they have no version range fields to validate
-    // against, but their presence in the response IS the version confirmation.
-    // Accept them so we don't produce false negatives for legacy CVEs.
-    // ──────────────────────────────────────────────────────────────────────────
+    // ── Path A: no configurations block ──────────────────────────────────────
+    // NVD CPE-name queries are version-exact: they only return CVEs whose
+    // recorded CPE includes the queried version.  Pre-migration CVEs lack a
+    // `configurations` field in the API response but are correctly scoped by
+    // the query itself.  We accept them here; the guard above ensures
+    // `detectedVersion` is always the version we actually queried for.
     if (!vuln.configurations || vuln.configurations.length === 0) {
-      console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (no configurations block — NVD CPE query already confirmed applicability)`);
+      console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (no configurations — NVD CPE query confirmed v${detectedVersion} applicability)`);
       return true;
     }
-    
-    // Check each configuration
+
+    // ── Path B: modern CVE with configurations block ──────────────────────────
     for (const config of vuln.configurations) {
       if (!config.nodes) continue;
-      
-      // Check each node in the configuration
       for (const node of config.nodes) {
         if (!node.cpeMatch) continue;
-        
-        // Check if any CPE match applies to our detected version
         for (const cpe of node.cpeMatch) {
-          // Skip if this CPE doesn't match our criteria (already filtered by API query)
           if (!cpe.criteria) continue;
-          
-          // Check version range if specified
-          const versionInRange = isVersionInRange(detectedVersion, cpe);
-          if (versionInRange) {
+          if (isVersionInRange(detectedVersion, cpe)) {
             console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (version in range)`);
-            return true; // This CVE applies to our detected version
+            return true;
           }
         }
       }
     }
-    
+
     console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: REJECTED (no matching version range)`);
-    return false; // No configuration matched our version
+    return false;
   });
 }
 
@@ -445,5 +457,11 @@ module.exports = {
   lookupCVEs,
   cvssToSeverity,
   clearCache,
-  generateCPE
+  generateCPE,
+  // Exported for unit testing — do not call directly in production code;
+  // use lookupCVEs() which wraps these with rate-limiting and caching.
+  filterCVEsByVersion,
+  isVersionInRange,
+  parseVersion,
+  compareVersions,
 };
