@@ -244,30 +244,36 @@ function getCertificate(hostname, port) {
       rejectUnauthorized: false,
       minVersion: 'TLSv1',
     }, () => {
+      // NOTE: getPeerCertificate(true) returns a single cert OBJECT (the leaf),
+      // NOT an array. The full chain is accessed via cert.issuerCertificate links.
       const cert = socket.getPeerCertificate(true);
       const tlsVersion = socket.getProtocol ? socket.getProtocol() : null;
 
       if (cert && Object.keys(cert).length > 0) {
-        // Get the certificate chain to find the actual issuer
-        const chain = socket.getPeerCertificate(true);
-        let issuer = cert.issuer;
+        let issuer = cert.issuer; // fallback: leaf cert's issuer field
 
-        // If we have a certificate chain, use the issuer from the chain
-        // The chain array contains [leaf, intermediate1, intermediate2, ..., root]
-        if (chain && Array.isArray(chain) && chain.length > 1) {
-          // The second certificate in the chain is typically the immediate issuer
-          const issuerCert = chain[1];
-          if (issuerCert && issuerCert.issuer) {
-            issuer = issuerCert.issuer;
+        // Walk the issuerCertificate chain to find the immediate CA.
+        // Root certs self-reference (issuerCertificate.subject === own subject),
+        // so we use fingerprint comparison to detect and stop the loop.
+        if (cert.issuerCertificate) {
+          const leafFingerprint = cert.fingerprint256 || cert.fingerprint;
+          const issuerCert = cert.issuerCertificate;
+          const issuerFingerprint = issuerCert.fingerprint256 || issuerCert.fingerprint;
+
+          // issuerCertificate.subject = the immediate CA's identity (what issued the leaf)
+          if (issuerCert.subject) {
+            // Only use it if it's not the leaf itself (self-signed case)
+            if (leafFingerprint !== issuerFingerprint) {
+              issuer = issuerCert.subject;
+            }
+            // For self-signed certs, issuer === cert.issuer is correct — keep fallback
           }
         }
 
-        // Debug logging in development mode
-        if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SSL === 'true') {
-          console.log('[SSL Scanner] Raw certificate object:', JSON.stringify(cert, null, 2));
-          console.log('[SSL Scanner] Certificate chain length:', chain ? chain.length : 0);
-          console.log('[SSL Scanner] Extracted issuer:', JSON.stringify(issuer, null, 2));
-        }
+        // Debug logging
+        console.log('[SSL Scanner] Leaf subject:', JSON.stringify(cert.subject));
+        console.log('[SSL Scanner] Leaf issuer field:', JSON.stringify(cert.issuer));
+        console.log('[SSL Scanner] Resolved issuer (from issuerCertificate.subject):', JSON.stringify(issuer));
 
         resolve({
           issuer: issuer,

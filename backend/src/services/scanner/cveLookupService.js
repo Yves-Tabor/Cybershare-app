@@ -112,7 +112,9 @@ function queueRequest(fn) {
 function parseVersion(versionStr) {
   if (!versionStr) return null;
   const parts = versionStr.split('.').map(p => parseInt(p, 10));
-  return parts.every(p => !isNaN(p)) ? parts : null;
+  const result = parts.every(p => !isNaN(p)) ? parts : null;
+  console.log(`[CVE Lookup] parseVersion("${versionStr}") ->`, result);
+  return result;
 }
 
 /**
@@ -129,6 +131,7 @@ function compareVersions(v1, v2) {
     if (num1 < num2) return -1;
     if (num1 > num2) return 1;
   }
+  console.log(`[CVE Lookup] compareVersions([${v1}], [${v2}]) -> 0 (equal)`);
   return 0;
 }
 
@@ -139,10 +142,15 @@ function isVersionInRange(detectedVersion, config) {
   const detected = parseVersion(detectedVersion);
   if (!detected) return false; // Can't compare if version is unparseable
   
+  console.log(`[CVE Lookup] isVersionInRange("${detectedVersion}", config):`, JSON.stringify(config, null, 2));
+  
   // Check versionStartIncluding
   if (config.versionStartIncluding) {
     const start = parseVersion(config.versionStartIncluding);
-    if (start && compareVersions(detected, start) < 0) {
+    const cmp = compareVersions(detected, start);
+    console.log(`[CVE Lookup] versionStartIncluding="${config.versionStartIncluding}" -> compare=${cmp}`);
+    if (start && cmp < 0) {
+      console.log(`[CVE Lookup] REJECTED: detected version before start range`);
       return false; // Detected version is before start range
     }
   }
@@ -150,7 +158,10 @@ function isVersionInRange(detectedVersion, config) {
   // Check versionEndExcluding
   if (config.versionEndExcluding) {
     const end = parseVersion(config.versionEndExcluding);
-    if (end && compareVersions(detected, end) >= 0) {
+    const cmp = compareVersions(detected, end);
+    console.log(`[CVE Lookup] versionEndExcluding="${config.versionEndExcluding}" -> compare=${cmp}`);
+    if (end && cmp >= 0) {
+      console.log(`[CVE Lookup] REJECTED: detected version at or after end range`);
       return false; // Detected version is at or after end range
     }
   }
@@ -158,7 +169,10 @@ function isVersionInRange(detectedVersion, config) {
   // Check versionEndIncluding
   if (config.versionEndIncluding) {
     const end = parseVersion(config.versionEndIncluding);
-    if (end && compareVersions(detected, end) > 0) {
+    const cmp = compareVersions(detected, end);
+    console.log(`[CVE Lookup] versionEndIncluding="${config.versionEndIncluding}" -> compare=${cmp}`);
+    if (end && cmp > 0) {
+      console.log(`[CVE Lookup] REJECTED: detected version after end range`);
       return false; // Detected version is after end range
     }
   }
@@ -166,11 +180,15 @@ function isVersionInRange(detectedVersion, config) {
   // Check versionStartExcluding
   if (config.versionStartExcluding) {
     const start = parseVersion(config.versionStartExcluding);
-    if (start && compareVersions(detected, start) <= 0) {
+    const cmp = compareVersions(detected, start);
+    console.log(`[CVE Lookup] versionStartExcluding="${config.versionStartExcluding}" -> compare=${cmp}`);
+    if (start && cmp <= 0) {
+      console.log(`[CVE Lookup] REJECTED: detected version at or before start range`);
       return false; // Detected version is at or before start range
     }
   }
   
+  console.log(`[CVE Lookup] ACCEPTED: version in range`);
   return true;
 }
 
@@ -181,9 +199,21 @@ function isVersionInRange(detectedVersion, config) {
 function filterCVEsByVersion(cveData, detectedVersion) {
   if (!cveData || cveData.length === 0) return [];
   
+  console.log(`[CVE Lookup] filterCVEsByVersion: Starting with ${cveData.length} CVEs for version "${detectedVersion}"`);
+  
   return cveData.filter(vuln => {
-    // Check if this CVE has configurations with version ranges
-    if (!vuln.configurations) return false;
+    // ─── NVD API behaviour note ────────────────────────────────────────────────
+    // When querying by exact CPE version (e.g. cpe:...:wordpress:6.1.1:...),
+    // the NVD already confirms applicability via CPE matching on its side.
+    // Older CVEs (pre-NVD 2.0 migration, roughly pre-2024) are returned without
+    // a `configurations` block — they have no version range fields to validate
+    // against, but their presence in the response IS the version confirmation.
+    // Accept them so we don't produce false negatives for legacy CVEs.
+    // ──────────────────────────────────────────────────────────────────────────
+    if (!vuln.configurations || vuln.configurations.length === 0) {
+      console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (no configurations block — NVD CPE query already confirmed applicability)`);
+      return true;
+    }
     
     // Check each configuration
     for (const config of vuln.configurations) {
@@ -201,12 +231,14 @@ function filterCVEsByVersion(cveData, detectedVersion) {
           // Check version range if specified
           const versionInRange = isVersionInRange(detectedVersion, cpe);
           if (versionInRange) {
+            console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (version in range)`);
             return true; // This CVE applies to our detected version
           }
         }
       }
     }
     
+    console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: REJECTED (no matching version range)`);
     return false; // No configuration matched our version
   });
 }
