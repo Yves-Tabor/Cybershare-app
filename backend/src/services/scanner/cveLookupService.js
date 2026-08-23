@@ -135,6 +135,15 @@ function compareVersions(v1, v2) {
   return 0;
 }
 
+function getCpeVersion(criteria) {
+  if (!criteria) return null;
+  const parts = criteria.split(':');
+  if (parts.length > 5) {
+    return parts[5];
+  }
+  return null;
+}
+
 /**
  * Check if a version falls within a version range from NVD CVE configuration
  */
@@ -144,6 +153,38 @@ function isVersionInRange(detectedVersion, config) {
   
   console.log(`[CVE Lookup] isVersionInRange("${detectedVersion}", config):`, JSON.stringify(config, null, 2));
   
+  // Extract version from criteria if available and verify it matches
+  if (config.criteria) {
+    const cpeVersion = getCpeVersion(config.criteria);
+    if (cpeVersion && cpeVersion !== '*' && cpeVersion !== '-') {
+      const cpeVerParsed = parseVersion(cpeVersion);
+      if (cpeVerParsed) {
+        let match = true;
+        for (let i = 0; i < cpeVerParsed.length; i++) {
+          if (detected[i] !== cpeVerParsed[i]) {
+            match = false;
+            break;
+          }
+        }
+        if (!match) {
+          console.log(`[CVE Lookup] REJECTED: criteria version "${cpeVersion}" does not match detected "${detectedVersion}"`);
+          return false;
+        }
+      }
+    }
+  }
+
+  const hasRangeFields = config.versionStartIncluding || config.versionEndExcluding || config.versionEndIncluding || config.versionStartExcluding;
+  if (!hasRangeFields) {
+    // If criteria version is '*' and there are no range fields, reject
+    const parts = (config.criteria || '').split(':');
+    const cpeVer = parts[5];
+    if (cpeVer === '*') {
+      console.log(`[CVE Lookup] REJECTED: wildcard criteria version with no range fields`);
+      return false;
+    }
+  }
+
   // Check versionStartIncluding
   if (config.versionStartIncluding) {
     const start = parseVersion(config.versionStartIncluding);
@@ -217,11 +258,32 @@ function isVersionInRange(detectedVersion, config) {
  *    Walk every cpeMatch entry and check it against the detected version using
  *    the numeric version-range comparators.
  */
-function filterCVEsByVersion(cveData, detectedVersion) {
+function filterCVEsByVersion(cveData, detectedVersion, product) {
   if (!cveData || cveData.length === 0) return [];
   if (!detectedVersion) return []; // Refuse to run without a version — avoids the false-positive risk
 
   console.log(`[CVE Lookup] filterCVEsByVersion: Starting with ${cveData.length} CVEs for version "${detectedVersion}"`);
+
+  // Product normalization to check against CPE vendor/product
+  let expectedVendor = null;
+  let expectedProduct = null;
+  if (product) {
+    const vendorMap = {
+      'WordPress': 'wordpress',
+      'React': 'facebook',
+      'Vue': 'vuejs',
+      'Angular': 'angularjs',
+      'jQuery': 'jquery',
+      'Bootstrap': 'getbootstrap',
+      'PHP': 'php',
+      'Apache': 'apache',
+      'Nginx': 'nginx',
+      'Next.js': 'vercel',
+      'Laravel': 'laravel',
+    };
+    expectedVendor = vendorMap[product] || product.toLowerCase();
+    expectedProduct = product.toLowerCase().replace(/\s+/g, '');
+  }
 
   return cveData.filter(vuln => {
     // ── Path A: no configurations block ──────────────────────────────────────
@@ -230,18 +292,31 @@ function filterCVEsByVersion(cveData, detectedVersion) {
     // `configurations` field in the API response but are correctly scoped by
     // the query itself.  We accept them here; the guard above ensures
     // `detectedVersion` is always the version we actually queried for.
-    if (!vuln.configurations || vuln.configurations.length === 0) {
+    const configs = vuln.cve?.configurations || vuln.configurations || [];
+    if (!configs || configs.length === 0) {
       console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (no configurations — NVD CPE query confirmed v${detectedVersion} applicability)`);
       return true;
     }
 
     // ── Path B: modern CVE with configurations block ──────────────────────────
-    for (const config of vuln.configurations) {
+    for (const config of configs) {
       if (!config.nodes) continue;
       for (const node of config.nodes) {
         if (!node.cpeMatch) continue;
         for (const cpe of node.cpeMatch) {
           if (!cpe.criteria) continue;
+          
+          // Rule 1: The component must be vulnerable
+          if (cpe.vulnerable !== true) continue;
+
+          // Rule 2: The component must be our scanned product (if product is specified)
+          if (expectedVendor && expectedProduct) {
+            const parts = cpe.criteria.split(':');
+            const cpeVendor = parts[3];
+            const cpeProduct = parts[4];
+            if (cpeVendor !== expectedVendor || cpeProduct !== expectedProduct) continue;
+          }
+
           if (isVersionInRange(detectedVersion, cpe)) {
             console.log(`[CVE Lookup] CVE ${vuln.cve?.id}: ACCEPTED (version in range)`);
             return true;
@@ -408,7 +483,7 @@ async function lookupCVEs(product, version) {
       const cveData = await queryNVDAPI(cpeString);
       
       // Filter CVEs by version range to exclude irrelevant CVEs
-      const filteredCVEs = filterCVEsByVersion(cveData, version);
+      const filteredCVEs = filterCVEsByVersion(cveData, version, product);
       
       console.log(`[CVE Lookup] Filtered ${cveData.length} CVEs to ${filteredCVEs.length} applicable CVEs for ${product} ${version}`);
       

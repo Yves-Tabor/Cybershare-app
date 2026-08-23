@@ -25,10 +25,25 @@ const {
 
 /** Build a minimal fake NVD vulnerability object with a configurations block. */
 function makeCVEWithRange(id, versionStartIncluding, versionEndExcluding, versionEndIncluding) {
-  const cpeEntry = { criteria: 'cpe:2.3:a:wordpress:wordpress:*:*:*:*:*:*:*:*' };
+  const cpeEntry = {
+    vulnerable: true,
+    criteria: 'cpe:2.3:a:wordpress:wordpress:*:*:*:*:*:*:*:*'
+  };
   if (versionStartIncluding !== undefined) cpeEntry.versionStartIncluding = versionStartIncluding;
   if (versionEndExcluding !== undefined)   cpeEntry.versionEndExcluding   = versionEndExcluding;
   if (versionEndIncluding !== undefined)   cpeEntry.versionEndIncluding   = versionEndIncluding;
+  return {
+    cve: { id },
+    configurations: [{ nodes: [{ cpeMatch: [cpeEntry] }] }],
+  };
+}
+
+/** Build a fake NVD vulnerability with a specific criteria version. */
+function makeCVEWithCriteriaVersion(id, criteriaVersion, vulnerable = true, product = 'wordpress') {
+  const cpeEntry = {
+    vulnerable,
+    criteria: `cpe:2.3:a:${product === 'wordpress' ? 'wordpress' : 'yellowswordfish'}:${product}:${criteriaVersion}:*:*:*:*:*:*:*`
+  };
   return {
     cve: { id },
     configurations: [{ nodes: [{ cpeMatch: [cpeEntry] }] }],
@@ -265,7 +280,7 @@ async function testCVELookup() {
       makeCVEWithRange('CVE-MODERN-FAR', '6.4', undefined, '6.9'),   // [6.4, 6.9] — 6.1.1 is OUT
     ];
 
-    const result = filterCVEsByVersion(fakeCVEs, '6.1.1');
+    const result = filterCVEsByVersion(fakeCVEs, '6.1.1', 'WordPress');
     const ids = result.map(v => v.cve.id);
 
     assert(ids.includes('CVE-LEGACY-A'),   'Legacy-A accepted');
@@ -301,6 +316,66 @@ async function testCVELookup() {
 
     pass('Semantic version edge cases');
   } catch (e) { fail('Semantic version edge cases', e.message); }
+
+  // ─── Test 13: Product / Vulnerable dependency matching ─────────────────
+  console.log('\n[Test 13] Product and vulnerable dependency matching...');
+  try {
+    const fakeCVEs = [
+      // CVE-VULN-CORE: WordPress is vulnerable (should be accepted)
+      makeCVEWithCriteriaVersion('CVE-VULN-CORE', '6.1.1', true, 'wordpress'),
+      
+      // CVE-DEP-ONLY: WordPress is NOT vulnerable itself (vulnerable=false), but is a dependency
+      // of simple_forum which is vulnerable (should be rejected when scanning WordPress core)
+      {
+        cve: { id: 'CVE-DEP-ONLY' },
+        configurations: [{
+          nodes: [
+            {
+              operator: 'OR',
+              negate: false,
+              cpeMatch: [
+                { vulnerable: false, criteria: 'cpe:2.3:a:wordpress:wordpress:*:*:*:*:*:*:*:*' }
+              ]
+            },
+            {
+              operator: 'OR',
+              negate: false,
+              cpeMatch: [
+                { vulnerable: true, criteria: 'cpe:2.3:a:yellowswordfish:simple_forum:1.0:*:*:*:*:*:*:*' }
+              ]
+            }
+          ]
+        }]
+      },
+
+      // CVE-WRONG-PROD: Criteria version matches but for a different product entirely (should be rejected)
+      makeCVEWithCriteriaVersion('CVE-WRONG-PROD', '6.1.1', true, 'some_other_product')
+    ];
+
+    const result = filterCVEsByVersion(fakeCVEs, '6.1.1', 'WordPress');
+    const ids = result.map(v => v.cve.id);
+
+    assert(ids.includes('CVE-VULN-CORE'),   'WordPress core vulnerability accepted');
+    assert(!ids.includes('CVE-DEP-ONLY'),   'Dependency-only vulnerability rejected');
+    assert(!ids.includes('CVE-WRONG-PROD'),  'Wrong product vulnerability rejected');
+    assert(result.length === 1,             'Only the exact core WordPress vulnerability matches');
+
+    pass('Product and vulnerable dependency matching');
+  } catch (e) { fail('Product/vulnerable matching', e.message); }
+
+  // ─── Test 14: Wildcard criteria with no range fields rejection ─────────
+  console.log('\n[Test 14] Wildcard criteria with no range fields...');
+  try {
+    const fakeCVEs = [
+      // Wildcard version in criteria, and no ranges (should be rejected)
+      makeCVEWithCriteriaVersion('CVE-WILDCARD-NO-RANGE', '*', true, 'wordpress')
+    ];
+
+    const result = filterCVEsByVersion(fakeCVEs, '6.1.1', 'WordPress');
+    assert(result.length === 0, 'Wildcard criteria with no range fields must be rejected to prevent legacy false-positives');
+
+    pass('Wildcard criteria with no range fields rejection');
+  } catch (e) { fail('Wildcard no range rejection', e.message); }
 
   // ─── Summary ─────────────────────────────────────────────────────────────
   console.log('\n====================');
