@@ -220,7 +220,8 @@ async function executePipeline(scanJobId, userId, targetUrl, validation) {
     informational: 0,
   };
 
-  const STAGE_TIMEOUT_MS = 30000; // 30s per stage
+  const STAGE_TIMEOUT_MS = 30000; // 30s per stage (default)
+  const TECH_STAGE_TIMEOUT_MS = 120000; // 120s for technology detection (CVE lookups can take longer)
   const pipelineStartTime = Date.now();
 
   scanLogger.info(`[Pipeline] executePipeline started`, { scanJobId, targetUrl });
@@ -346,7 +347,7 @@ async function executePipeline(scanJobId, userId, targetUrl, validation) {
 
     const techFindings = await runWithTimeout(
       () => scanTechnologies(targetUrl),
-      STAGE_TIMEOUT_MS,
+      TECH_STAGE_TIMEOUT_MS,
       'Technology Detection'
     );
     const tagged = techFindings.map(f => ({ ...f, scannerName: f.scannerName || 'tech-scanner' }));

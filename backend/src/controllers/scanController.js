@@ -175,7 +175,14 @@ const getScanById = async (req, res) => {
         recommendation: row.recommendation,
         scannerName: row.scanner_name,
         templateId: row.template_id,
-        metadata: row.metadata ? JSON.parse(row.metadata) : null,
+        metadata: row.metadata ? (() => {
+          try {
+            return JSON.parse(row.metadata);
+          } catch (e) {
+            logger.error('Failed to parse metadata for finding:', { id: row.id, error: e.message, metadata: row.metadata });
+            return null;
+          }
+        })() : null,
         createdAt: row.created_at,
       }));
     } catch (e) {
