@@ -5,15 +5,15 @@ const {
   getVulnerabilityType,
   submitFeedback,
 } = require('../controllers/cascadeController');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Get related groups for a finding
-router.get('/findings/:resultId/related-groups', authenticateToken, getRelatedGroups);
+router.get('/findings/:resultId/related-groups', authMiddleware, getRelatedGroups);
 
 // Get vulnerability type by slug
-router.get('/vulnerability-types/:typeSlug', authenticateToken, getVulnerabilityType);
+router.get('/vulnerability-types/:typeSlug', authMiddleware, getVulnerabilityType);
 
 // Submit feedback for a scan report
-router.post('/feedback', authenticateToken, submitFeedback);
+router.post('/feedback', authMiddleware, submitFeedback);
 
 module.exports = router;
