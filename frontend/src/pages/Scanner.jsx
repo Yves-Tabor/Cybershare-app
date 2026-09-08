@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import mainBg from "../assets/mainBg.png";
 import { scansAPI, authAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
+import FindingInsightModal from "../components/FindingInsightModal";
+import CascadePanel from "../components/CascadePanel";
+import EndOfReviewFeedback from "../components/EndOfReviewFeedback";
 import "./Scanner.css";
 
 const SCAN_POLL_INTERVAL_MS = 2000;
@@ -142,6 +145,11 @@ function DisclosureModal({ onClose }) {
 function ScanResult({ scan }) {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedFinding, setSelectedFinding] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [viewedFindings, setViewedFindings] = useState(new Set());
+  const findingsEndRef = useRef(null);
 
   useEffect(() => {
     async function fetchResults() {
@@ -156,6 +164,44 @@ function ScanResult({ scan }) {
     }
     fetchResults();
   }, [scan.id]);
+
+  // Intersection observer for end-of-review feedback
+  useEffect(() => {
+    if (!results || results.findings.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && viewedFindings.size >= results.findings.length) {
+          setShowFeedback(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (findingsEndRef.current) {
+      observer.observe(findingsEndRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [results, viewedFindings.size]);
+
+  const handleFindingClick = useCallback((finding) => {
+    setSelectedFinding(finding);
+    setIsModalOpen(true);
+    setViewedFindings(prev => new Set([...prev, finding.id]));
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const handleFeedbackDismiss = useCallback(() => {
+    setShowFeedback(false);
+  }, []);
+
+  const handleFeedbackSubmit = useCallback(() => {
+    setShowFeedback(false);
+  }, []);
 
   if (loading) {
     return (
@@ -268,7 +314,17 @@ function ScanResult({ scan }) {
             {results.findings.map((result) => (
               <div
                 key={result.id}
-                className="border border-[#1a1a1a] rounded-xl p-4"
+                onClick={() => handleFindingClick(result)}
+                className="border border-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:border-[#2a2a2a] transition-colors"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleFindingClick(result);
+                  }
+                }}
+                aria-label={`View details for ${result.title}`}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
@@ -308,9 +364,35 @@ function ScanResult({ scan }) {
                 </div>
               </div>
             ))}
+            <div ref={findingsEndRef} />
           </div>
         )}
       </div>
+
+      {/* Cascade Components */}
+      {selectedFinding && (
+        <>
+          <FindingInsightModal
+            finding={selectedFinding}
+            isOpen={isModalOpen}
+            onClose={handleModalClose}
+            scanId={scan.id}
+          />
+          <CascadePanel
+            finding={selectedFinding}
+            scanId={scan.id}
+            onDismiss={() => setSelectedFinding(null)}
+          />
+        </>
+      )}
+
+      {showFeedback && (
+        <EndOfReviewFeedback
+          scanId={scan.id}
+          onDismiss={handleFeedbackDismiss}
+          onSubmit={handleFeedbackSubmit}
+        />
+      )}
     </div>
   );
 }

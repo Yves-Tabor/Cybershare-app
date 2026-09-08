@@ -16,6 +16,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const userSettingsRoutes = require("./routes/userSettingsRoutes");
 const savedItemsRoutes = require("./routes/savedItemsRoutes");
+const cascadeRoutes = require("./routes/cascadeRoutes");
 
 const app = express();
 
@@ -122,6 +123,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/user/settings", userSettingsRoutes);
 app.use("/api/saved-items", savedItemsRoutes);
+app.use("/api/cascade", cascadeRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

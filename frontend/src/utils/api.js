@@ -630,4 +630,22 @@ export const userSettingsAPI = {
   },
 };
 
+// Cascade API
+export const cascadeAPI = {
+  getRelatedGroups: async (resultId) => {
+    return apiRequest(`/cascade/findings/${resultId}/related-groups`);
+  },
+
+  getVulnerabilityType: async (typeSlug) => {
+    return apiRequest(`/cascade/vulnerability-types/${typeSlug}`);
+  },
+
+  submitFeedback: async (scanId, rating, comment) => {
+    return apiRequest('/cascade/feedback', {
+      method: 'POST',
+      body: JSON.stringify({ scan_id: scanId, rating, comment }),
+    });
+  },
+};
+
 export default apiRequest;

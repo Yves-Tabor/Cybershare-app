@@ -4,6 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Cascade Panel Responsive Styles */
+@media (max-width: 640px) {
+  .cascade-panel {
+    position: fixed !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+  }
+}
+
 *,
 *::before,
 *::after {
