@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const pool = require('../config/database');
 const { logger } = require('../utils/logger');
 
 // Get related groups for a finding based on vulnerability type tags
@@ -13,7 +13,7 @@ const getRelatedGroups = async (req, res) => {
       FROM scan_findings sf
       WHERE sf.id = $1
     `;
-    const findingResult = await db.query(findingQuery, [resultId]);
+    const findingResult = await pool.query(findingQuery, [resultId]);
 
     if (findingResult.rows.length === 0) {
       return res.status(404).json({ error: 'Finding not found' });
@@ -30,7 +30,7 @@ const getRelatedGroups = async (req, res) => {
     const typeQuery = `
       SELECT tags FROM vulnerability_types WHERE type_slug = $1
     `;
-    const typeResult = await db.query(typeQuery, [finding.type_slug]);
+    const typeResult = await pool.query(typeQuery, [finding.type_slug]);
 
     if (typeResult.rows.length === 0 || !typeResult.rows[0].tags || typeResult.rows[0].tags.length === 0) {
       return res.json({ groups: [], findingId: resultId });
@@ -61,7 +61,7 @@ const getRelatedGroups = async (req, res) => {
       LIMIT 5
     `;
 
-    const groupsResult = await db.query(groupsQuery, [userId || null, tags]);
+    const groupsResult = await pool.query(groupsQuery, [userId || null, tags]);
 
     res.json({
       groups: groupsResult.rows,
@@ -84,7 +84,7 @@ const getVulnerabilityType = async (req, res) => {
       FROM vulnerability_types
       WHERE type_slug = $1
     `;
-    const result = await db.query(query, [typeSlug]);
+    const result = await pool.query(query, [typeSlug]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Vulnerability type not found' });
@@ -112,7 +112,7 @@ const submitFeedback = async (req, res) => {
     }
 
     // Check if scan exists and belongs to user
-    const scanCheck = await db.query(
+    const scanCheck = await pool.query(
       'SELECT id FROM scan_jobs WHERE id = $1 AND user_id = $2',
       [scan_id, userId]
     );
@@ -122,7 +122,7 @@ const submitFeedback = async (req, res) => {
     }
 
     // Check if user already submitted feedback for this scan
-    const existingFeedback = await db.query(
+    const existingFeedback = await pool.query(
       'SELECT id FROM feedback WHERE scan_id = $1 AND user_id = $2',
       [scan_id, userId]
     );
@@ -135,7 +135,7 @@ const submitFeedback = async (req, res) => {
         WHERE scan_id = $3 AND user_id = $4
         RETURNING *
       `;
-      const result = await db.query(updateQuery, [rating, comment || null, scan_id, userId]);
+      const result = await pool.query(updateQuery, [rating, comment || null, scan_id, userId]);
       return res.json({ feedback: result.rows[0] });
     }
 
@@ -145,7 +145,7 @@ const submitFeedback = async (req, res) => {
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
-    const result = await db.query(insertQuery, [scan_id, userId, rating, comment || null]);
+    const result = await pool.query(insertQuery, [scan_id, userId, rating, comment || null]);
 
     res.status(201).json({ feedback: result.rows[0] });
   } catch (error) {
