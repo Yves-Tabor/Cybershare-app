@@ -465,7 +465,7 @@ async function storeFindings(scanJobId, findings) {
 
     for (const finding of batch) {
       values.push(
-        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8})`
+        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9})`
       );
       params.push(
         scanJobId,
@@ -476,15 +476,16 @@ async function storeFindings(scanJobId, findings) {
         finding.recommendation || null,
         finding.scannerName || 'unknown',
         finding.templateId || null,
+        finding.typeSlug || null,
         finding.metadata ? JSON.stringify(finding.metadata) : null
       );
-      paramIndex += 9;
+      paramIndex += 10;
     }
 
     try {
       await Promise.race([
         pool.query(
-          `INSERT INTO scan_findings (scan_job_id, category, severity, title, description, recommendation, scanner_name, template_id, metadata)
+          `INSERT INTO scan_findings (scan_job_id, category, severity, title, description, recommendation, scanner_name, template_id, type_slug, metadata)
            VALUES ${values.join(', ')}`,
           params
         ),

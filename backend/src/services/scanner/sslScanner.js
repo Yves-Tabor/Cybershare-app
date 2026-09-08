@@ -133,6 +133,7 @@ async function scanSSL(targetUrl) {
           title: `Deprecated TLS Version: ${tls}`,
           description: `The server negotiated ${tls}, which is deprecated and has known vulnerabilities. Modern clients and standards require TLS 1.2 or higher.`,
           recommendation: 'Disable TLS 1.0 and TLS 1.1 on your server and configure it to only accept TLS 1.2 and TLS 1.3.',
+          typeSlug: 'weak-tls',
           metadata: {
             tlsVersion: tls
           }

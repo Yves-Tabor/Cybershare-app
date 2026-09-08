@@ -23,6 +23,7 @@ async function scanHeaders(targetUrl) {
         title: 'Missing Content-Security-Policy Header',
         description: 'The Content-Security-Policy (CSP) header is missing. CSP helps prevent cross-site scripting (XSS) attacks by controlling which resources the browser can load.',
         recommendation: 'Implement a Content-Security-Policy header that restricts resource loading to trusted sources.',
+        typeSlug: 'missing-csp',
       },
       {
         name: 'Strict-Transport-Security',
@@ -30,6 +31,7 @@ async function scanHeaders(targetUrl) {
         title: 'Missing Strict-Transport-Security Header',
         description: 'The Strict-Transport-Security (HSTS) header is missing. HSTS instructs browsers to only communicate over HTTPS, preventing protocol downgrade attacks.',
         recommendation: 'Add Strict-Transport-Security header with a reasonable max-age (e.g., 31536000 seconds for 1 year).',
+        typeSlug: 'missing-hsts',
       },
       {
         name: 'X-Frame-Options',
@@ -75,6 +77,7 @@ async function scanHeaders(targetUrl) {
           title: header.title,
           description: header.description,
           recommendation: header.recommendation,
+          typeSlug: header.typeSlug || null,
         });
       }
     }

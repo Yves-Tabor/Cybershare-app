@@ -43,6 +43,7 @@ async function scanCookies(targetUrl) {
           title: `Missing Secure Flag on Cookie: ${cookie.name}`,
           description: `The cookie "${cookie.name}" is missing the Secure flag. Without this flag, the cookie can be transmitted over unencrypted HTTP connections, making it vulnerable to interception.`,
           recommendation: 'Add the Secure flag to this cookie to ensure it is only transmitted over HTTPS.',
+          typeSlug: 'insecure-cookies',
           metadata: {
             cookieName: cookie.name
           }
@@ -58,6 +59,7 @@ async function scanCookies(targetUrl) {
           title: `Missing HttpOnly Flag on Cookie: ${cookie.name}`,
           description: `The cookie "${cookie.name}" is missing the HttpOnly flag. Without this flag, JavaScript can access the cookie, making it vulnerable to XSS attacks.`,
           recommendation: 'Add the HttpOnly flag to this cookie to prevent JavaScript access.',
+          typeSlug: 'insecure-cookies',
           metadata: {
             cookieName: cookie.name
           }
@@ -73,6 +75,7 @@ async function scanCookies(targetUrl) {
           title: `Missing SameSite Flag on Cookie: ${cookie.name}`,
           description: `The cookie "${cookie.name}" is missing the SameSite flag. This flag controls whether cookies are sent with cross-site requests, helping prevent CSRF attacks.`,
           recommendation: 'Add the SameSite flag with value "Strict" or "Lax" to control cross-site cookie behavior.',
+          typeSlug: 'insecure-cookies',
           metadata: {
             cookieName: cookie.name
           }

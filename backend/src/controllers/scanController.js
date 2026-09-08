@@ -152,11 +152,11 @@ const getScanById = async (req, res) => {
     let findings = [];
     try {
       const findingsResult = await pool.query(
-        `SELECT id, category, severity, title, description, recommendation, scanner_name, 
-                template_id, metadata, created_at
+        `SELECT id, category, severity, title, description, recommendation, scanner_name,
+                template_id, metadata, type_slug, created_at
          FROM scan_findings
          WHERE scan_job_id = $1
-         ORDER BY 
+         ORDER BY
            CASE severity
              WHEN 'critical' THEN 1
              WHEN 'high' THEN 2
@@ -175,6 +175,7 @@ const getScanById = async (req, res) => {
         recommendation: row.recommendation,
         scannerName: row.scanner_name,
         templateId: row.template_id,
+        typeSlug: row.type_slug,
         metadata: row.metadata ? (() => {
           try {
             return JSON.parse(row.metadata);
