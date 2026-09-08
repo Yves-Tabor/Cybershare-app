@@ -62,7 +62,7 @@ function CascadePanel({ finding, scanId, onDismiss }) {
   const tags = getTags();
 
   return (
-    <div className="cascade-panel fixed bottom-4 right-4 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-right-4 duration-300">
+    <div className="cascade-panel absolute bottom-4 right-4 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-right-4 duration-300">
       <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e1e1e]">
@@ -136,6 +136,16 @@ function CascadePanel({ finding, scanId, onDismiss }) {
               </a>
             </div>
           )}
+
+          {/* Automated Thread Button */}
+          <div className="pt-3 border-t border-[#1e1e1e]">
+            <a
+              href={tags.length > 0 ? `/community?tags=${tags.join(',')}` : '/community'}
+              className="block w-full	bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2.5 px-3 text-center hover:bg-[#7F77DD]/20 transition-colors no-underline"
+            >
+              Get automated explanations
+            </a>
+          </div>
 
           {/* Quick Rating */}
           {!ratingSubmitted && (

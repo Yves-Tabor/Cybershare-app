@@ -302,8 +302,11 @@ function ScanResult({ scan }) {
 
       {/* Findings */}
       <div>
-        <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase mb-4">
+        <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase mb-2">
           Findings ({results.totalFindings})
+        </p>
+        <p className="text-[12px] text-[#888] mb-4">
+          Click on any finding to view a plain-language explanation and related community discussions.
         </p>
         {results.findings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
