@@ -8,7 +8,7 @@ const SEVERITY_DEDUCTIONS = {
   high: 10,
   medium: 5,
   low: 2,
-  informational: 0,
+  'good-news': 0,
 };
 
 const SCORE_RATINGS = {
@@ -25,12 +25,12 @@ function calculateSecurityScore(results) {
     high: 0,
     medium: 0,
     low: 0,
-    informational: 0,
+    'good-news': 0,
   };
 
   // Count findings by severity and deduct points
   results.forEach(result => {
-    const severity = result.severity?.toLowerCase() || 'informational';
+    const severity = result.severity?.toLowerCase() || 'good-news';
     if (severityCounts.hasOwnProperty(severity)) {
       severityCounts[severity]++;
       score -= SEVERITY_DEDUCTIONS[severity];

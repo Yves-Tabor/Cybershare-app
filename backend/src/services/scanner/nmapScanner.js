@@ -81,7 +81,7 @@ async function scanNmap(targetUrl) {
     if (openPorts.length === 0) {
       results.push({
         category: "Network",
-        severity: "informational",
+        severity: "good-news",
         confidence: "confirmed",
         title: "Nmap: No Open Ports Detected",
         description:
@@ -99,14 +99,15 @@ async function scanNmap(targetUrl) {
         .join(", ");
       results.push({
         category: "Network",
-        severity: "informational",
+        severity: "good-news",
         confidence: "confirmed",
         title: "Nmap: Open Ports Detected",
         description: `The following open ports were detected: ${portList}.`,
         recommendation:
           "Review each open port and ensure only necessary services are exposed. Consider closing unused ports.",
+        typeSlug: 'open-ports-detected',
         metadata: {
-          hostname: hostname,
+          domain: hostname,
           openPorts: openPorts
         }
       });
@@ -132,11 +133,11 @@ async function scanNmap(targetUrl) {
             description: `Service ${service} is exposed on port ${port}. Ensure this service is properly secured and only accessible from trusted networks.`,
             recommendation:
               "Review access controls for this service and consider using firewalls to restrict access.",
-            typeSlug: 'risky-service',
+            typeSlug: 'risky-service-detected',
             metadata: {
-              hostname: hostname,
-              port: port,
-              service: service
+              domain: hostname,
+              service_name: service,
+              port: port
             }
           });
         }
@@ -153,7 +154,7 @@ async function scanNmap(targetUrl) {
       if (webPorts.length > 0) {
         results.push({
           category: "Network",
-          severity: "informational",
+          severity: "good-news",
           confidence: "confirmed",
           title: "Nmap: Web Services Detected",
           description: `Web services are running on ports: ${webPorts.map((p) => p.port).join(", ")}.`,

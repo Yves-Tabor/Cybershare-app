@@ -52,7 +52,7 @@ async function scanSSL(targetUrl) {
           title: 'Self-Signed Certificate',
           description: 'The SSL certificate is self-signed. Browsers will show security warnings and users may not trust the site.',
           recommendation: "Use a certificate from a trusted Certificate Authority (CA) like Let's Encrypt, DigiCert, or Comodo.",
-          typeSlug: 'self-signed-certificate',
+          typeSlug: 'self-signed-cert',
           metadata: {
             issuerCN: issuerCN
           }
@@ -73,9 +73,10 @@ async function scanSSL(targetUrl) {
         title: 'Expired SSL Certificate',
         description: `The SSL certificate expired ${Math.abs(daysUntilExpiry)} days ago.`,
         recommendation: 'Renew your SSL certificate immediately.',
-        typeSlug: 'expired-certificate',
+        typeSlug: 'expired-ssl-cert',
         metadata: {
-          daysExpired: Math.abs(daysUntilExpiry),
+          domain: hostname,
+          days_expired: Math.abs(daysUntilExpiry),
           expiryDate: validTo.toISOString()
         }
       });
@@ -87,9 +88,10 @@ async function scanSSL(targetUrl) {
         title: 'SSL Certificate Expiring Soon',
         description: `The SSL certificate will expire in ${daysUntilExpiry} days.`,
         recommendation: 'Renew your SSL certificate as soon as possible.',
-        typeSlug: 'certificate-expiring-soon',
+        typeSlug: 'ssl-cert-expiring-soon',
         metadata: {
-          daysUntilExpiry: daysUntilExpiry,
+          domain: hostname,
+          days_remaining: daysUntilExpiry,
           expiryDate: validTo.toISOString()
         }
       });
@@ -101,9 +103,10 @@ async function scanSSL(targetUrl) {
         title: 'SSL Certificate Expiring Soon',
         description: `The SSL certificate will expire in ${daysUntilExpiry} days.`,
         recommendation: 'Plan to renew your SSL certificate before expiration.',
-        typeSlug: 'certificate-expiring-soon',
+        typeSlug: 'ssl-cert-expiring-soon',
         metadata: {
-          daysUntilExpiry: daysUntilExpiry,
+          domain: hostname,
+          days_remaining: daysUntilExpiry,
           expiryDate: validTo.toISOString()
         }
       });
@@ -120,9 +123,10 @@ async function scanSSL(targetUrl) {
         title: 'Long Certificate Validity Period',
         description: `The SSL certificate has a validity period of ${certLifetime.toFixed(1)} years. Shorter validity periods improve security by limiting the window for compromised keys.`,
         recommendation: 'Consider using certificates with shorter validity periods (e.g., 90 days) and automate renewal.',
-        typeSlug: 'long-certificate-validity',
+        typeSlug: 'long-cert-validity',
         metadata: {
-          validityYears: certLifetime.toFixed(1)
+          domain: hostname,
+          validity_years: certLifetime.toFixed(1)
         }
       });
     }
@@ -140,7 +144,8 @@ async function scanSSL(targetUrl) {
           recommendation: 'Disable TLS 1.0 and TLS 1.1 on your server and configure it to only accept TLS 1.2 and TLS 1.3.',
           typeSlug: 'weak-tls',
           metadata: {
-            tlsVersion: tls
+            domain: hostname,
+            tls_version: tls
           }
         });
       } else if (tls === 'TLSv1.2') {
@@ -159,7 +164,7 @@ async function scanSSL(targetUrl) {
         // TLSv1.3 — ideal
         results.push({
           category: 'SSL/TLS',
-          severity: 'informational',
+          severity: 'good-news',
           confidence: 'confirmed',
           title: `TLS Version: ${tls}`,
           description: `The server is using ${tls}, which is the most secure TLS version currently available.`,
@@ -188,7 +193,7 @@ async function scanSSL(targetUrl) {
         : certInfo.issuer;
       results.push({
         category: 'SSL/TLS',
-        severity: 'informational',
+        severity: 'good-news',
         confidence: 'confirmed',
         title: 'Certificate Issuer',
         description: `Certificate issued by: ${issuerStr}`,

@@ -75,7 +75,8 @@ async function scanNuclei(targetUrl) {
   const results = [];
 
   try {
-    new URL(targetUrl);
+    const url = new URL(targetUrl);
+    const hostname = url.hostname;
     const nucleiExecutable = unquotePath(resolveToolExecutable("nuclei"));
     const nucleiTemplatesDir = resolveNucleiTemplatesDir();
 
@@ -160,7 +161,7 @@ async function scanNuclei(targetUrl) {
             else if (nucleiSeverity === "high") severity = "high";
             else if (nucleiSeverity === "medium") severity = "medium";
             else if (nucleiSeverity === "low") severity = "low";
-            else severity = "informational";
+            else severity = "good-news";
           }
 
           results.push({
@@ -178,7 +179,8 @@ async function scanNuclei(targetUrl) {
               templateName: finding.info?.name || finding.templateID || "Unknown",
               templateId: finding.templateID,
               referenceUrl: finding.info?.reference || finding.info?.tags?.reference || null,
-              severity: finding.info?.severity
+              severity: finding.info?.severity,
+              domain: hostname
             }
           });
         } catch (parseError) {
@@ -189,7 +191,7 @@ async function scanNuclei(targetUrl) {
       if (results.length === 0) {
         results.push({
           category: "Vulnerability",
-          severity: "informational",
+          severity: "good-news",
           title: "Nuclei: No Vulnerabilities Detected",
           description:
             "Nuclei did not detect any critical or high severity vulnerabilities with the current template set.",
@@ -200,7 +202,7 @@ async function scanNuclei(targetUrl) {
     } else {
       results.push({
         category: "Vulnerability",
-        severity: "informational",
+        severity: "good-news",
         title: "Nuclei: No Vulnerabilities Detected",
         description:
           "Nuclei did not detect any vulnerabilities with the current template set.",

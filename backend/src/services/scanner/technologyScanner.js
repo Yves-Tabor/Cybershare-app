@@ -18,6 +18,8 @@ async function scanTechnologies(targetUrl) {
 
     const headers = response.headers;
     const html = response.data;
+    const url = new URL(targetUrl);
+    const hostname = url.hostname;
 
     // Detect via headers with confidence scoring and version extraction
     const headerPatterns = {
@@ -178,7 +180,7 @@ async function scanTechnologies(targetUrl) {
 
       results.push({
         category: 'Technology Detection',
-        severity: 'informational',
+        severity: 'good-news',
         confidence: 'heuristic',
         title: 'Detected Technologies',
         description: `The following technologies were detected: ${techDetails}. This finding covers broad technology stack fingerprinting. (Note: HTTP header information disclosure is handled separately by the header scanner.)`,
@@ -190,7 +192,7 @@ async function scanTechnologies(targetUrl) {
     } else {
       results.push({
         category: 'Technology Detection',
-        severity: 'informational',
+        severity: 'good-news',
         confidence: 'confirmed',
         title: 'No Technologies Detected',
         description: 'No specific technologies could be identified from headers or HTML content.',
@@ -255,7 +257,9 @@ async function scanTechnologies(targetUrl) {
           const scoreText = cveData.cvssScore ? cveData.cvssScore : 'unavailable';
           techInfo.description = `${tech.name} version ${tech.version} has known vulnerabilities. ${cveData.cveIds.length} CVE(s) found with highest CVSS score: ${scoreText}.`;
           techInfo.recommendation = `Upgrade ${tech.name} from ${tech.version} to the latest stable version to address ${cveData.cveIds[0]}${cveData.cveIds.length > 1 ? ` and ${cveData.cveIds.length - 1} other CVEs` : ''}.`;
-          techInfo.typeSlug = 'outdated-technology';
+          techInfo.typeSlug = 'tech-with-cve';
+          techInfo.metadata.domain = hostname;
+          techInfo.metadata.technology_name = tech.name;
           techInfo.metadata.cveIds = cveData.cveIds;
           techInfo.metadata.cvssScore = cveData.cvssScore;
           techInfo.metadata.cveSummary = cveData.cveSummary;
@@ -269,8 +273,8 @@ async function scanTechnologies(targetUrl) {
           techInfo.metadata.cvssScore = 0;
         }
       } else {
-        // No version detected - keep as INFO
-        techInfo.severity = 'info';
+        // No version detected - keep as good-news
+        techInfo.severity = 'good-news';
         techInfo.description = `${tech.name} was detected but version could not be determined. This is informational only - using ${tech.name} is not inherently a vulnerability.`;
         techInfo.recommendation = `Keep ${tech.name} updated with the latest security patches. Monitor for vulnerabilities in detected frameworks and libraries.`;
       }

@@ -130,9 +130,9 @@ async function scanHeaders(targetUrl) {
         recommendation: hasVersion
           ? `Remove or generalize the X-Powered-By header to prevent version fingerprinting (currently: "${poweredByValue}").`
           : 'Remove the X-Powered-By header in your application configuration.',
-        typeSlug: 'technology-disclosure',
+        typeSlug: 'info-disclosure-headers',
         metadata: {
-          headerName: 'X-Powered-By',
+          header_name: 'X-Powered-By',
           headerValue: poweredByValue,
           hasVersion: hasVersion
         }
@@ -151,9 +151,9 @@ async function scanHeaders(targetUrl) {
         title: 'ASP.NET Version Disclosure',
         description: `The X-AspNet-Version header reveals: ${headers[aspNetVersionHeader]}. This exposes specific ASP.NET version information.`,
         recommendation: `Remove the X-AspNet-Version header to prevent version fingerprinting (currently: "${headers[aspNetVersionHeader]}").`,
-        typeSlug: 'aspnet-version-disclosure',
+        typeSlug: 'info-disclosure-headers',
         metadata: {
-          headerName: 'X-AspNet-Version',
+          header_name: 'X-AspNet-Version',
           headerValue: headers[aspNetVersionHeader]
         }
       });
@@ -171,9 +171,9 @@ async function scanHeaders(targetUrl) {
         title: 'ASP.NET MVC Version Disclosure',
         description: `The X-AspNetMvc-Version header reveals: ${headers[aspNetMvcVersionHeader]}. This exposes specific ASP.NET MVC version information.`,
         recommendation: `Remove the X-AspNetMvc-Version header to prevent version fingerprinting (currently: "${headers[aspNetMvcVersionHeader]}").`,
-        typeSlug: 'aspnetmvc-version-disclosure',
+        typeSlug: 'info-disclosure-headers',
         metadata: {
-          headerName: 'X-AspNetMvc-Version',
+          header_name: 'X-AspNetMvc-Version',
           headerValue: headers[aspNetMvcVersionHeader]
         }
       });
@@ -197,9 +197,9 @@ async function scanHeaders(targetUrl) {
         recommendation: hasVersion
           ? `Remove or generalize the Via header to prevent proxy version fingerprinting (currently: "${viaValue}").`
           : 'Consider removing the Via header if proxy information disclosure is a concern.',
-        typeSlug: 'proxy-disclosure',
+        typeSlug: 'info-disclosure-headers',
         metadata: {
-          headerName: 'Via',
+          header_name: 'Via',
           headerValue: viaValue,
           hasVersion: hasVersion
         }
@@ -224,9 +224,9 @@ async function scanHeaders(targetUrl) {
         recommendation: hasVersion
           ? `Remove or generalize the X-Generator header to prevent version fingerprinting (currently: "${generatorValue}").`
           : 'Remove the X-Generator header to minimize technology stack disclosure.',
-        typeSlug: 'generator-disclosure',
+        typeSlug: 'info-disclosure-headers',
         metadata: {
-          headerName: 'X-Generator',
+          header_name: 'X-Generator',
           headerValue: generatorValue,
           hasVersion: hasVersion
         }

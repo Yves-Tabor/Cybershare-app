@@ -19,7 +19,7 @@ async function scanCookies(targetUrl) {
     if (!cookies || cookies.length === 0) {
       results.push({
         category: 'Cookies',
-        severity: 'informational',
+        severity: 'good-news',
         confidence: 'confirmed',
         title: 'No Cookies Set',
         description: 'No cookies were set in the HTTP response. This may be expected if the site does not use cookies.',
@@ -45,7 +45,9 @@ async function scanCookies(targetUrl) {
           recommendation: 'Add the Secure flag to this cookie to ensure it is only transmitted over HTTPS.',
           typeSlug: 'insecure-cookies',
           metadata: {
-            cookieName: cookie.name
+            domain: hostname,
+            cookie_name: cookie.name,
+            flag_name: 'Secure'
           }
         });
       }
@@ -61,7 +63,9 @@ async function scanCookies(targetUrl) {
           recommendation: 'Add the HttpOnly flag to this cookie to prevent JavaScript access.',
           typeSlug: 'insecure-cookies',
           metadata: {
-            cookieName: cookie.name
+            domain: hostname,
+            cookie_name: cookie.name,
+            flag_name: 'HttpOnly'
           }
         });
       }
@@ -77,7 +81,9 @@ async function scanCookies(targetUrl) {
           recommendation: 'Add the SameSite flag with value "Strict" or "Lax" to control cross-site cookie behavior.',
           typeSlug: 'insecure-cookies',
           metadata: {
-            cookieName: cookie.name
+            domain: hostname,
+            cookie_name: cookie.name,
+            flag_name: 'SameSite'
           }
         });
       } else if (cookie.samesite === 'None' && !cookie.secure) {
@@ -89,7 +95,9 @@ async function scanCookies(targetUrl) {
           description: `The cookie "${cookie.name}" has SameSite=None but is missing the Secure flag. Modern browsers require Secure flag when SameSite=None is used.`,
           recommendation: 'Add the Secure flag when using SameSite=None.',
           metadata: {
-            cookieName: cookie.name,
+            domain: hostname,
+            cookie_name: cookie.name,
+            flag_name: 'SameSite',
             sameSiteValue: 'None'
           }
         });
@@ -111,8 +119,9 @@ async function scanCookies(targetUrl) {
             recommendation: 'Consider using shorter expiration times for session cookies and implement proper session management.',
             typeSlug: 'long-cookie-expiration',
             metadata: {
-              cookieName: cookie.name,
-              daysUntilExpiry: Math.round(daysUntilExpiry)
+              domain: hostname,
+              cookie_name: cookie.name,
+              days_until_expiry: Math.round(daysUntilExpiry)
             }
           });
         }

@@ -40,7 +40,7 @@ async function scanDNS(targetUrl) {
             title: 'SPF Record Not Ending with all',
             description: 'The SPF record does not end with ~all or -all. This means the SPF policy does not explicitly reject unauthorized senders.',
             recommendation: 'Update your SPF record to end with ~all (soft fail) or -all (hard fail) for better protection.',
-            typeSlug: 'spf-no-all',
+            typeSlug: 'weak-spf',
             metadata: {
               domain: hostname,
               spfRecord: spfRecord
@@ -93,7 +93,7 @@ async function scanDNS(targetUrl) {
             title: 'DMARC Policy Set to None',
             description: 'The DMARC policy is set to "none", which means no action is taken on failing emails. This is typically used for monitoring only.',
             recommendation: 'Consider changing the DMARC policy to "quarantine" or "reject" once you are confident in your email authentication setup.',
-            typeSlug: 'dmarc-policy-none',
+            typeSlug: 'weak-dmarc-policy',
             metadata: {
               domain: hostname,
               dmarcRecord: dmarcRecord
@@ -121,11 +121,12 @@ async function scanDNS(targetUrl) {
     // Check for DNSSEC (basic check - DNSSEC validation is complex)
     results.push({
       category: 'DNS',
-      severity: 'informational',
+      severity: 'good-news',
       confidence: 'heuristic',
       title: 'DNSSEC Configuration',
       description: 'DNSSEC (DNS Security Extensions) adds cryptographic signatures to DNS records. This scanner performs a basic check. Full DNSSEC validation requires recursive resolver support.',
       recommendation: 'Consider implementing DNSSEC to protect against DNS spoofing and cache poisoning attacks.',
+      typeSlug: 'missing-dnssec',
       metadata: {
         domain: hostname
       }
