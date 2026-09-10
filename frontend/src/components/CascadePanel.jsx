@@ -103,7 +103,7 @@ function CascadePanel({ finding, scanId, onDismiss }) {
               {relatedGroups.slice(0, 3).map((group) => (
                 <a
                   key={group.id}
-                  href={`/community?group=${group.id}`}
+                  href={`/main/community?group=${group.id}`}
                   className="block bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 hover:border-[#3a3a3a] transition-colors no-underline"
                 >
                   <p className="text-[12px] font-semibold text-[#ccc] mb-1">
@@ -116,7 +116,7 @@ function CascadePanel({ finding, scanId, onDismiss }) {
               ))}
               {tags.length > 0 && (
                 <a
-                  href={`/community?tags=${tags.join(',')}`}
+                  href={`/main/community?tags=${tags.join(',')}`}
                   className="block text-[11px] text-[#7F77DD] hover:text-[#9f99e8] text-center py-2 no-underline transition-colors"
                 >
                   Browse all discussions about {tags[0]}
@@ -129,23 +129,13 @@ function CascadePanel({ finding, scanId, onDismiss }) {
                 No related discussions yet
               </p>
               <a
-                href="/community"
+                href="/main/community"
                 className="text-[11px] text-[#7F77DD] hover:text-[#9f99e8] no-underline transition-colors"
               >
                 Browse the community
               </a>
             </div>
           )}
-
-          {/* Automated Thread Button */}
-          <div className="pt-3 border-t border-[#1e1e1e]">
-            <a
-              href={tags.length > 0 ? `/community?tags=${tags.join(',')}` : '/community'}
-              className="block w-full	bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2.5 px-3 text-center hover:bg-[#7F77DD]/20 transition-colors no-underline"
-            >
-              Get automated explanations
-            </a>
-          </div>
 
           {/* Quick Rating */}
           {!ratingSubmitted && (
