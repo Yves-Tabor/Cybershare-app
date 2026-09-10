@@ -25,6 +25,7 @@ async function scanDNS(targetUrl) {
           title: 'Missing SPF Record',
           description: 'No SPF (Sender Policy Framework) record found for the domain. SPF helps prevent email spoofing by specifying which mail servers are authorized to send email for your domain.',
           recommendation: 'Add an SPF record to your DNS configuration. Example: v=spf1 include:_spf.google.com ~all',
+          typeSlug: 'missing-spf',
           metadata: {
             domain: hostname
           }
@@ -39,6 +40,7 @@ async function scanDNS(targetUrl) {
             title: 'SPF Record Not Ending with all',
             description: 'The SPF record does not end with ~all or -all. This means the SPF policy does not explicitly reject unauthorized senders.',
             recommendation: 'Update your SPF record to end with ~all (soft fail) or -all (hard fail) for better protection.',
+            typeSlug: 'spf-no-all',
             metadata: {
               domain: hostname,
               spfRecord: spfRecord
@@ -55,6 +57,7 @@ async function scanDNS(targetUrl) {
           title: 'Missing SPF Record',
           description: 'No SPF record found for the domain.',
           recommendation: 'Add an SPF record to your DNS configuration.',
+          typeSlug: 'missing-spf',
           metadata: {
             domain: hostname
           }
@@ -75,6 +78,7 @@ async function scanDNS(targetUrl) {
           title: 'Missing DMARC Record',
           description: 'No DMARC (Domain-based Message Authentication, Reporting, and Conformance) record found. DMARC builds on SPF and DKIM to provide email authentication and reporting.',
           recommendation: 'Add a DMARC record to your DNS configuration. Example: v=DMARC1; p=none; rua=mailto:dmarc@example.com',
+          typeSlug: 'missing-dmarc',
           metadata: {
             domain: hostname
           }
@@ -89,6 +93,7 @@ async function scanDNS(targetUrl) {
             title: 'DMARC Policy Set to None',
             description: 'The DMARC policy is set to "none", which means no action is taken on failing emails. This is typically used for monitoring only.',
             recommendation: 'Consider changing the DMARC policy to "quarantine" or "reject" once you are confident in your email authentication setup.',
+            typeSlug: 'dmarc-policy-none',
             metadata: {
               domain: hostname,
               dmarcRecord: dmarcRecord
@@ -105,6 +110,7 @@ async function scanDNS(targetUrl) {
           title: 'Missing DMARC Record',
           description: 'No DMARC record found for the domain.',
           recommendation: 'Add a DMARC record to your DNS configuration.',
+          typeSlug: 'missing-dmarc',
           metadata: {
             domain: hostname
           }

@@ -173,6 +173,13 @@ async function scanNuclei(targetUrl) {
             recommendation:
               finding.info?.remediation ||
               "Review the finding and apply appropriate security measures.",
+            typeSlug: 'nuclei-generic-finding',
+            metadata: {
+              templateName: finding.info?.name || finding.templateID || "Unknown",
+              templateId: finding.templateID,
+              referenceUrl: finding.info?.reference || finding.info?.tags?.reference || null,
+              severity: finding.info?.severity
+            }
           });
         } catch (parseError) {
           // Skip lines that can't be parsed as JSON

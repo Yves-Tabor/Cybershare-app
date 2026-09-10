@@ -132,6 +132,7 @@ async function scanNmap(targetUrl) {
             description: `Service ${service} is exposed on port ${port}. Ensure this service is properly secured and only accessible from trusted networks.`,
             recommendation:
               "Review access controls for this service and consider using firewalls to restrict access.",
+            typeSlug: 'risky-service',
             metadata: {
               hostname: hostname,
               port: port,

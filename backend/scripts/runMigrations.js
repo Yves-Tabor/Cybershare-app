@@ -30,6 +30,7 @@ async function main() {
   const migrations = [
     path.join(__dirname, '../sql/cascade_migration.sql'),
     path.join(__dirname, '../sql/backfill_group_tags.sql'),
+    path.join(__dirname, '../sql/cascade_vulnerability_types_seed.sql'),
   ];
 
   let allSuccess = true;

@@ -109,6 +109,7 @@ async function scanCookies(targetUrl) {
             title: `Long Expiration on Cookie: ${cookie.name}`,
             description: `The cookie "${cookie.name}" has an expiration time more than 1 year in the future. Long-lived cookies increase the risk if the cookie is compromised.`,
             recommendation: 'Consider using shorter expiration times for session cookies and implement proper session management.',
+            typeSlug: 'long-cookie-expiration',
             metadata: {
               cookieName: cookie.name,
               daysUntilExpiry: Math.round(daysUntilExpiry)

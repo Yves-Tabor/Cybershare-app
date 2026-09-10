@@ -52,6 +52,7 @@ async function scanSSL(targetUrl) {
           title: 'Self-Signed Certificate',
           description: 'The SSL certificate is self-signed. Browsers will show security warnings and users may not trust the site.',
           recommendation: "Use a certificate from a trusted Certificate Authority (CA) like Let's Encrypt, DigiCert, or Comodo.",
+          typeSlug: 'self-signed-certificate',
           metadata: {
             issuerCN: issuerCN
           }
@@ -72,6 +73,7 @@ async function scanSSL(targetUrl) {
         title: 'Expired SSL Certificate',
         description: `The SSL certificate expired ${Math.abs(daysUntilExpiry)} days ago.`,
         recommendation: 'Renew your SSL certificate immediately.',
+        typeSlug: 'expired-certificate',
         metadata: {
           daysExpired: Math.abs(daysUntilExpiry),
           expiryDate: validTo.toISOString()
@@ -85,6 +87,7 @@ async function scanSSL(targetUrl) {
         title: 'SSL Certificate Expiring Soon',
         description: `The SSL certificate will expire in ${daysUntilExpiry} days.`,
         recommendation: 'Renew your SSL certificate as soon as possible.',
+        typeSlug: 'certificate-expiring-soon',
         metadata: {
           daysUntilExpiry: daysUntilExpiry,
           expiryDate: validTo.toISOString()
@@ -98,6 +101,7 @@ async function scanSSL(targetUrl) {
         title: 'SSL Certificate Expiring Soon',
         description: `The SSL certificate will expire in ${daysUntilExpiry} days.`,
         recommendation: 'Plan to renew your SSL certificate before expiration.',
+        typeSlug: 'certificate-expiring-soon',
         metadata: {
           daysUntilExpiry: daysUntilExpiry,
           expiryDate: validTo.toISOString()
@@ -116,6 +120,7 @@ async function scanSSL(targetUrl) {
         title: 'Long Certificate Validity Period',
         description: `The SSL certificate has a validity period of ${certLifetime.toFixed(1)} years. Shorter validity periods improve security by limiting the window for compromised keys.`,
         recommendation: 'Consider using certificates with shorter validity periods (e.g., 90 days) and automate renewal.',
+        typeSlug: 'long-certificate-validity',
         metadata: {
           validityYears: certLifetime.toFixed(1)
         }

@@ -255,9 +255,11 @@ async function scanTechnologies(targetUrl) {
           const scoreText = cveData.cvssScore ? cveData.cvssScore : 'unavailable';
           techInfo.description = `${tech.name} version ${tech.version} has known vulnerabilities. ${cveData.cveIds.length} CVE(s) found with highest CVSS score: ${scoreText}.`;
           techInfo.recommendation = `Upgrade ${tech.name} from ${tech.version} to the latest stable version to address ${cveData.cveIds[0]}${cveData.cveIds.length > 1 ? ` and ${cveData.cveIds.length - 1} other CVEs` : ''}.`;
+          techInfo.typeSlug = 'outdated-technology';
           techInfo.metadata.cveIds = cveData.cveIds;
           techInfo.metadata.cvssScore = cveData.cvssScore;
           techInfo.metadata.cveSummary = cveData.cveSummary;
+          techInfo.metadata.cveCount = cveData.cveIds.length;
         } else {
           // No CVEs found - version is clean/patched
           techInfo.severity = 'info';

@@ -39,6 +39,7 @@ async function scanHeaders(targetUrl) {
         title: 'Missing X-Frame-Options Header',
         description: 'The X-Frame-Options header is missing. This header protects against clickjacking attacks by preventing the site from being embedded in frames.',
         recommendation: 'Add X-Frame-Options header with value "DENY" or "SAMEORIGIN".',
+        typeSlug: 'missing-x-frame-options',
       },
       {
         name: 'X-Content-Type-Options',
@@ -46,6 +47,7 @@ async function scanHeaders(targetUrl) {
         title: 'Missing X-Content-Type-Options Header',
         description: 'The X-Content-Type-Options header is missing. This header prevents MIME-sniffing attacks by forcing the browser to respect the declared content type.',
         recommendation: 'Add X-Content-Type-Options header with value "nosniff".',
+        typeSlug: 'missing-x-content-type-options',
       },
       {
         name: 'Referrer-Policy',
@@ -53,6 +55,7 @@ async function scanHeaders(targetUrl) {
         title: 'Missing Referrer-Policy Header',
         description: 'The Referrer-Policy header is missing. This header controls how much referrer information is sent with navigation requests.',
         recommendation: 'Add Referrer-Policy header with value "strict-origin-when-cross-origin" or "no-referrer".',
+        typeSlug: 'missing-referrer-policy',
       },
       {
         name: 'Permissions-Policy',
@@ -60,6 +63,7 @@ async function scanHeaders(targetUrl) {
         title: 'Missing Permissions-Policy Header',
         description: 'The Permissions-Policy (formerly Feature-Policy) header is missing. This header controls which browser features and APIs can be used.',
         recommendation: 'Add Permissions-Policy header to restrict access to sensitive features like geolocation, camera, microphone, etc.',
+        typeSlug: 'missing-permissions-policy',
       },
     ];
 
@@ -126,6 +130,7 @@ async function scanHeaders(targetUrl) {
         recommendation: hasVersion
           ? `Remove or generalize the X-Powered-By header to prevent version fingerprinting (currently: "${poweredByValue}").`
           : 'Remove the X-Powered-By header in your application configuration.',
+        typeSlug: 'technology-disclosure',
         metadata: {
           headerName: 'X-Powered-By',
           headerValue: poweredByValue,
@@ -146,6 +151,7 @@ async function scanHeaders(targetUrl) {
         title: 'ASP.NET Version Disclosure',
         description: `The X-AspNet-Version header reveals: ${headers[aspNetVersionHeader]}. This exposes specific ASP.NET version information.`,
         recommendation: `Remove the X-AspNet-Version header to prevent version fingerprinting (currently: "${headers[aspNetVersionHeader]}").`,
+        typeSlug: 'aspnet-version-disclosure',
         metadata: {
           headerName: 'X-AspNet-Version',
           headerValue: headers[aspNetVersionHeader]
@@ -165,6 +171,7 @@ async function scanHeaders(targetUrl) {
         title: 'ASP.NET MVC Version Disclosure',
         description: `The X-AspNetMvc-Version header reveals: ${headers[aspNetMvcVersionHeader]}. This exposes specific ASP.NET MVC version information.`,
         recommendation: `Remove the X-AspNetMvc-Version header to prevent version fingerprinting (currently: "${headers[aspNetMvcVersionHeader]}").`,
+        typeSlug: 'aspnetmvc-version-disclosure',
         metadata: {
           headerName: 'X-AspNetMvc-Version',
           headerValue: headers[aspNetMvcVersionHeader]
@@ -190,6 +197,7 @@ async function scanHeaders(targetUrl) {
         recommendation: hasVersion
           ? `Remove or generalize the Via header to prevent proxy version fingerprinting (currently: "${viaValue}").`
           : 'Consider removing the Via header if proxy information disclosure is a concern.',
+        typeSlug: 'proxy-disclosure',
         metadata: {
           headerName: 'Via',
           headerValue: viaValue,
@@ -216,6 +224,7 @@ async function scanHeaders(targetUrl) {
         recommendation: hasVersion
           ? `Remove or generalize the X-Generator header to prevent version fingerprinting (currently: "${generatorValue}").`
           : 'Remove the X-Generator header to minimize technology stack disclosure.',
+        typeSlug: 'generator-disclosure',
         metadata: {
           headerName: 'X-Generator',
           headerValue: generatorValue,
