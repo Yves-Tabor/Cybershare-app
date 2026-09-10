@@ -507,7 +507,7 @@ function UserPanel({
                 // Mark as read
                 try {
                   await notificationsAPI.markAsRead(notif.id);
-                } catch (e) {
+                } catch {
                   // non-critical
                 }
                 onClose();

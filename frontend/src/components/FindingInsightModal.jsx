@@ -10,13 +10,12 @@ const severityColors = {
   'good-news': '#7F77DD',
 };
 
-function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
+function FindingInsightModal({ finding, isOpen, onClose }) {
   const [showExplanation, setShowExplanation] = useState(false);
   const [userChoice, setUserChoice] = useState(null); // 'explain' | 'skip' | null
   const modalRef = useRef(null);
 
   const {
-    vulnerabilityType,
     loading,
     error,
     getExplanation,
@@ -75,14 +74,22 @@ function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
   useEffect(() => {
     if (!isOpen) return;
 
-    const sessionKey = `cascade_choice_${finding?.id}`;
-    const savedChoice = sessionStorage.getItem(sessionKey);
-    if (savedChoice) {
-      setUserChoice(savedChoice);
-      if (savedChoice === 'explain') {
-        setShowExplanation(true);
+    const timer = setTimeout(() => {
+      try {
+        const sessionKey = `cascade_choice_${finding?.id}`;
+        const savedChoice = sessionStorage.getItem(sessionKey);
+        if (savedChoice) {
+          setUserChoice(savedChoice);
+          if (savedChoice === 'explain') {
+            setShowExplanation(true);
+          }
+        }
+      } catch {
+        // ignore storage error
       }
-    }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [isOpen, finding?.id]);
 
   // Save user choice to session storage

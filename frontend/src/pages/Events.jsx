@@ -41,11 +41,6 @@ function todayISO() {
   const d = new Date();
   return toISO(d.getFullYear(), d.getMonth(), d.getDate());
 }
-function addDays(iso, n) {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return toISO(d.getFullYear(), d.getMonth(), d.getDate());
-}
 function parseISO(iso) {
   return new Date(iso + "T00:00:00");
 }
@@ -714,7 +709,7 @@ function getDots(dayEvents) {
   return [0, 1, 2].map((i) => colors[i % colors.length]);
 }
 
-function CalendarView({ events, onToggleCalendar, onDelete, currentUser }) {
+function CalendarView({ events, onToggleCalendar }) {
   const now = new Date();
   const [cursor, setCursor] = useState({
     year: now.getFullYear(),

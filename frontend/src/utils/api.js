@@ -496,7 +496,7 @@ export const groupsAPI = {
         let errorData;
         try {
           errorData = await response.json();
-        } catch (e) {
+        } catch {
           throw new Error("API request failed");
         }
         const error = new Error(errorData.error || "API request failed");

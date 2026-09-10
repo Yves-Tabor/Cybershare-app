@@ -4,7 +4,13 @@ import { cascadeAPI } from '../utils/api';
 import { CASCADE_ENABLED } from '../utils/cascadeUtils';
 
 function CascadePanel({ finding, scanId, onDismiss }) {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('cascade_panel_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [quickRating, setQuickRating] = useState(null);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
   const [ratingLoading, setRatingLoading] = useState(false);
@@ -16,17 +22,13 @@ function CascadePanel({ finding, scanId, onDismiss }) {
     getTags,
   } = useFindingInsight(finding?.id, finding);
 
-  // Check if panel was dismissed in this session
-  useEffect(() => {
-    const dismissedState = sessionStorage.getItem('cascade_panel_dismissed');
-    if (dismissedState === 'true') {
-      setDismissed(true);
-    }
-  }, []);
-
   const handleDismiss = useCallback(() => {
     setDismissed(true);
-    sessionStorage.setItem('cascade_panel_dismissed', 'true');
+    try {
+      sessionStorage.setItem('cascade_panel_dismissed', 'true');
+    } catch {
+      // ignore storage error
+    }
     onDismiss?.();
   }, [onDismiss]);
 
@@ -48,10 +50,17 @@ function CascadePanel({ finding, scanId, onDismiss }) {
   // Reset dismissed state when finding changes
   useEffect(() => {
     if (finding?.id) {
-      const dismissedState = sessionStorage.getItem('cascade_panel_dismissed');
-      if (dismissedState !== 'true') {
-        setDismissed(false);
-      }
+      const timer = setTimeout(() => {
+        try {
+          const dismissedState = sessionStorage.getItem('cascade_panel_dismissed');
+          if (dismissedState !== 'true') {
+            setDismissed(false);
+          }
+        } catch {
+          setDismissed(false);
+        }
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [finding?.id]);
 

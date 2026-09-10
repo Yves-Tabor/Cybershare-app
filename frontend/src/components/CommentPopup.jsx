@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const AVATAR_COLORS = [
   "#534AB7", "#0F6E56", "#993C1D",
@@ -97,23 +97,9 @@ function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  // Fetch comments when popup opens
-  useEffect(() => {
-    if (isOpen && postId) {
-      fetchComments();
-    }
-  }, [isOpen, postId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await fetch(`http://localhost:5000/api/posts/${postId}/comments`, {
-      //   credentials: 'include'
-      // });
-      // const data = await response.json();
-      // setComments(data.comments);
-      
       // Mock data for now
       setComments([
         {
@@ -136,7 +122,15 @@ function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch comments when popup opens
+  useEffect(() => {
+    if (isOpen && postId) {
+      const id = setTimeout(fetchComments, 0);
+      return () => clearTimeout(id);
+    }
+  }, [isOpen, postId, fetchComments]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();

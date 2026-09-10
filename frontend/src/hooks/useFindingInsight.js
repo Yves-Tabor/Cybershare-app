@@ -14,6 +14,7 @@ export function useFindingInsight(resultId, findingData) {
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
   const debounceTimerRef = useRef(null);
+  const findingTypeSlug = findingData?.type_slug;
 
   const fetchInsightData = useCallback(async () => {
     if (!CASCADE_ENABLED || !resultId) {
@@ -42,9 +43,9 @@ export function useFindingInsight(resultId, findingData) {
         setRelatedGroups(groupsData.groups || []);
 
         // If finding has type_slug, fetch vulnerability type
-        if (findingData?.type_slug) {
+        if (findingTypeSlug) {
           try {
-            const typeData = await cascadeAPI.getVulnerabilityType(findingData.type_slug);
+            const typeData = await cascadeAPI.getVulnerabilityType(findingTypeSlug);
             setVulnerabilityType(typeData.vulnerabilityType);
           } catch (typeError) {
             // Graceful degradation - if type fetch fails, continue without it
@@ -65,7 +66,7 @@ export function useFindingInsight(resultId, findingData) {
         abortControllerRef.current = null;
       }
     }, 300); // 300ms debounce
-  }, [resultId, findingData?.type_slug]);
+  }, [resultId, findingTypeSlug]);
 
   useEffect(() => {
     fetchInsightData();

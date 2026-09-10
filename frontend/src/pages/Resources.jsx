@@ -12,20 +12,19 @@ const AVATAR_COLORS = {
   default: "#2a2a3a",
 };
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
+
 function UploadForm({ onPublish }) {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [url, setUrl] = useState("");
   const [category, setCategory] = useState("Guides");
   const [files, setFiles] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-  const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
 
-  const addFiles = (incoming) => {
+  const addFiles = useCallback((incoming) => {
     const arr = Array.from(incoming);
     const oversized = arr.filter((f) => f.size > MAX_FILE_SIZE);
     if (oversized.length > 0) {
@@ -38,13 +37,13 @@ function UploadForm({ onPublish }) {
       const names = new Set(prev.map((f) => f.name));
       return [...prev, ...arr.filter((f) => !names.has(f.name))];
     });
-  };
+  }, []);
 
   const onDrop = useCallback((e) => {
     e.preventDefault();
     setDragging(false);
     addFiles(e.dataTransfer.files);
-  }, []);
+  }, [addFiles]);
 
   const onDragOver = (e) => {
     e.preventDefault();
@@ -75,8 +74,6 @@ function UploadForm({ onPublish }) {
       files,
     });
     setTitle("");
-    setContent("");
-    setUrl("");
     setCategory("Guides");
     setFiles([]);
   }

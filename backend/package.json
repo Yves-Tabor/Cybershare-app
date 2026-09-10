@@ -37,10 +37,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.22.0",
-    "pino": "^9.4.0",
     "socket.io": "^4.8.3",
     "uuid": "^14.0.1",
-    "wappalyzer": "^7.0.3",
     "winston": "^3.19.0",
     "xml2js": "^0.6.2",
     "zod": "^4.4.3"

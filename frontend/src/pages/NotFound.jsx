@@ -43,7 +43,7 @@ function Btn({ href, onClick, primary, children, className }) {
     <a
       href={href}
       onClick={onClick}
-      className={primary ? "notfound-btn" : "notfound-btn-secondary"}
+      className={`${primary ? "notfound-btn" : "notfound-btn-secondary"}${className ? ` ${className}` : ""}`}
     >
       {children}
     </a>

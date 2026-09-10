@@ -52,11 +52,6 @@ function todayISO() {
   const d = new Date();
   return toISO(d.getFullYear(), d.getMonth(), d.getDate());
 }
-function addDays(iso, n) {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return toISO(d.getFullYear(), d.getMonth(), d.getDate());
-}
 function formatShort(iso) {
   return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
     weekday: "short",
@@ -70,13 +65,6 @@ function formatTime(t) {
   const period = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${pad(m)} ${period}`;
-}
-
-function avatarColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++)
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 function extractDomain(url) {
@@ -754,7 +742,16 @@ export default function SavedItems() {
           <br />
 
           {/* List */}
-          {filteredItems.length > 0 ? (
+          {loading ? (
+            <div
+              className="flex flex-col items-center justify-center gap-3"
+              style={{ padding: "64px 0" }}
+            >
+              <p className="text-[12px] font-mono text-[#666] text-center">
+                Loading saved items…
+              </p>
+            </div>
+          ) : filteredItems.length > 0 ? (
             <div className="flex flex-col gap-3">
               {filteredItems.map((item) => (
                 <SavedItemCard

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { postsAPI, groupsAPI, authAPI } from "../utils/api";
+import { groupsAPI, authAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -1662,8 +1662,6 @@ export default function Community() {
     name,
     description,
     category,
-    categoryColor,
-    categoryBg,
     invites,
   }) {
     try {

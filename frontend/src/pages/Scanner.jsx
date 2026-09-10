@@ -18,17 +18,6 @@ const VIEWS = [
   { key: "result", label: "Results" },
 ];
 
-function timeAgo(ts) {
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff / 60000);
-  const h = Math.floor(m / 60);
-  const d = Math.floor(h / 24);
-  if (d > 0) return `${d}d ago`;
-  if (h > 0) return `${h}h ago`;
-  if (m > 0) return `${m}m ago`;
-  return "just now";
-}
-
 // ─── BG image placeholder ─────────────────────────────────────────────────────
 // Replace SCANNER_BG_IMAGE with your actual image URL or import.
 // e.g. import scannerBg from "./assets/scanner-bg.jpg";
@@ -545,7 +534,7 @@ export default function Scanner() {
       };
 
       Object.keys(stageToStepIndex).forEach(event => {
-        socket.on(event, (data) => {
+        socket.on(event, () => {
           const stepIdx = stageToStepIndex[event];
           if (stepIdx !== undefined) {
             setStepIndex(stepIdx);
@@ -905,7 +894,6 @@ export default function Scanner() {
                       {SCAN_STEPS.map((step, i) => {
                         const done = i < stepIndex || isDone;
                         const active = i === stepIndex && scanning;
-                        const pending = i > stepIndex && !isDone;
                         return (
                           <div key={i} className="flex items-center gap-3">
                             <div

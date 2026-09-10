@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
-import { postsAPI, authAPI, commentsAPI, saveToken } from "../utils/api";
+import { postsAPI, authAPI, commentsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const TAGS = {
@@ -49,10 +49,6 @@ function timeAgo(ts) {
   if (m > 0) return `${m}m ago`;
 
   return "just now";
-}
-
-function formatPostContent({ title, body, cat }) {
-  return `[${cat}] ${title} — ${body}`;
 }
 
 function transformPost(p) {
@@ -1330,11 +1326,9 @@ export default function Home() {
   const [completeProfileOpen, setCompleteProfileOpen] = useState(false);
   const [view, setView] = useState("all");
   const [toast, setToast] = useState({ message: "", visible: false });
-  const [pendingLikes, setPendingLikes] = useState({});
   const [profilePopupUser, setProfilePopupUser] = useState(null);
   const feedRef = useRef(null);
   const toastTimer = useRef(null);
-  const pendingLikeIdsRef = useRef(new Set());
 
   // On mount: check for profile completion flag, then fetch data
   useEffect(() => {
@@ -1459,11 +1453,11 @@ export default function Home() {
     );
   }
 
-  function handleReport(postId) {
+  function handleReport() {
     showToast("Post reported");
   }
 
-  function handleSave(postId) {
+  function handleSave() {
     showToast("Post saved");
   }
 
@@ -1778,7 +1772,7 @@ export default function Home() {
                     key={post.id}
                     post={post}
                     onLike={handleLike}
-                    likePending={!!pendingLikes[post.id]}
+                    likePending={false}
                     currentUser={currentUser}
                     onReport={handleReport}
                     onSave={handleSave}

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import worldMap from "../assets/worldMap.png";
-import welcomeOwasp from "../assets/welcomeOwasp.png";
 import img1 from "../assets/img1.svg";
 import img2 from "../assets/img2.svg";
 import img3 from "../assets/img3.svg";
@@ -1022,14 +1021,19 @@ export default function Welcome() {
     const notice = consumeAuthNotice();
     if (!notice) return;
 
-    setActiveTab("register");
-    setAuthNotice(notice);
-    clearTimeout(noticeTimerRef.current);
-    noticeTimerRef.current = setTimeout(() => {
-      setAuthNotice("");
-    }, 3000);
+    const timer = setTimeout(() => {
+      setActiveTab("register");
+      setAuthNotice(notice);
+      clearTimeout(noticeTimerRef.current);
+      noticeTimerRef.current = setTimeout(() => {
+        setAuthNotice("");
+      }, 3000);
+    }, 0);
 
-    return () => clearTimeout(noticeTimerRef.current);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(noticeTimerRef.current);
+    };
   }, [location.key]);
 
   const handleLogin = async (e) => {

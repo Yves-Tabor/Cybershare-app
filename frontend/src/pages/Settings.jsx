@@ -60,10 +60,6 @@ function timeAgo(ts) {
   return "just now";
 }
 
-function maskKey(key) {
-  return key.slice(0, 8) + "••••••••" + key.slice(-4);
-}
-
 function generateKey() {
   const chars = "abcdef0123456789";
   let s = "sk_live_";
