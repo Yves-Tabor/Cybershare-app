@@ -7,7 +7,7 @@ const severityColors = {
   high: '#E24B4A',
   medium: '#BA7517',
   low: '#639922',
-  informational: '#7F77DD',
+  'good-news': '#7F77DD',
 };
 
 function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
