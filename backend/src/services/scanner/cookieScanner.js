@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { URL } = require('url');
 
 /**
  * Cookie Security Scanner
@@ -6,8 +7,11 @@ const axios = require('axios');
  */
 async function scanCookies(targetUrl) {
   const results = [];
-  
+
   try {
+    const url = new URL(targetUrl);
+    const hostname = url.hostname;
+
     const response = await axios.get(targetUrl, {
       timeout: 10000,
       validateStatus: () => true,
