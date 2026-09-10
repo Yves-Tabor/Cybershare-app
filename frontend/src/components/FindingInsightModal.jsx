@@ -21,6 +21,7 @@ function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
     error,
     getExplanation,
     getRemediationSteps,
+    getTags,
     hasInsight,
   } = useFindingInsight(finding?.id, finding);
 
@@ -98,11 +99,6 @@ function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
   };
 
   if (!CASCADE_ENABLED || !isOpen || !finding) {
-    return null;
-  }
-
-  // If no type_slug, don't show the modal (graceful degradation)
-  if (!finding.type_slug && !hasInsight) {
     return null;
   }
 
@@ -187,9 +183,31 @@ function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
               </div>
             ) : error ? (
               <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 rounded-lg p-4">
-                <p className="text-[12px] text-[#E24B4A]">
-                  Failed to load explanation. Showing raw finding instead.
+                <p className="text-[12px] text-[#E24B4A] mb-3">
+                  Failed to load explanation.
                 </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-[11px] text-[#E24B4A] underline cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : !hasInsight ? (
+              <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+                <p className="text-[12px] text-[#b0b3b8] mb-3">
+                  No automated explanation available for this finding yet.
+                </p>
+                {finding.recommendation && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-[#ccc] mb-2">
+                      Scanner recommendation
+                    </p>
+                    <p className="text-[11px] text-[#b0b3b8]">
+                      {finding.recommendation}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -237,6 +255,20 @@ function FindingInsightModal({ finding, isOpen, onClose, scanId }) {
                       {finding.recommendation}
                     </p>
                   </div>
+                )}
+
+                {/* Discuss in community button */}
+                {getTags().length > 0 && (
+                  <a
+                    href={`/main/community?tags=${getTags().join(',')}`}
+                    className="block w-full bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2.5 px-3 text-center hover:bg-[#7F77DD]/20 transition-colors no-underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClose();
+                    }}
+                  >
+                    Discuss in community
+                  </a>
                 )}
               </>
             )}

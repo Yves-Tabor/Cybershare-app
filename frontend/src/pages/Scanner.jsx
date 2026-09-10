@@ -317,17 +317,7 @@ function ScanResult({ scan }) {
             {results.findings.map((result) => (
               <div
                 key={result.id}
-                onClick={() => handleFindingClick(result)}
-                className="border border-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:border-[#2a2a2a] transition-colors"
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleFindingClick(result);
-                  }
-                }}
-                aria-label={`View details for ${result.title}`}
+                className="border border-[#1a1a1a] rounded-xl p-4"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
@@ -365,6 +355,13 @@ function ScanResult({ scan }) {
                     )}
                   </div>
                 </div>
+                <button
+                  onClick={() => handleFindingClick(result)}
+                  className="mt-3 w-full bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2 px-3 hover:bg-[#7F77DD]/20 transition-colors cursor-pointer"
+                  aria-label={`Get automated explanation for ${result.title}`}
+                >
+                  Get automated explanation
+                </button>
               </div>
             ))}
             <div ref={findingsEndRef} />
