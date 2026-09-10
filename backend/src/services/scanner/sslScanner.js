@@ -54,6 +54,7 @@ async function scanSSL(targetUrl) {
           recommendation: "Use a certificate from a trusted Certificate Authority (CA) like Let's Encrypt, DigiCert, or Comodo.",
           typeSlug: 'self-signed-cert',
           metadata: {
+            domain: hostname,
             issuerCN: issuerCN
           }
         });

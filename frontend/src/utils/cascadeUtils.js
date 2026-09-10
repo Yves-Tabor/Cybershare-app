@@ -36,13 +36,23 @@ export function interpolateTemplate(template, findingData = {}) {
 
   // Common placeholders to replace - all values are HTML-escaped
   const placeholders = {
-    domain: escapeHtml(findingData.target_url || findingData.domain || 'the target'),
-    header_name: escapeHtml(findingData.metadata?.headerName || findingData.header_name || 'the header'),
+    domain: escapeHtml(findingData.target_url || findingData.metadata?.domain || findingData.domain || 'the target'),
+    header_name: escapeHtml(findingData.metadata?.header_name || findingData.metadata?.headerName || findingData.header_name || 'the header'),
     severity: escapeHtml(findingData.severity || 'unknown'),
     title: escapeHtml(findingData.title || 'this finding'),
     category: escapeHtml(findingData.category || 'security'),
-    port: escapeHtml(String(findingData.port || 'unknown')),
-    path: escapeHtml(findingData.path || 'unknown'),
+    port: escapeHtml(String(findingData.metadata?.port || findingData.port || 'unknown')),
+    path: escapeHtml(findingData.metadata?.path || findingData.path || 'unknown'),
+    tls_version: escapeHtml(findingData.metadata?.tls_version || findingData.metadata?.tlsVersion || 'unknown'),
+    days_remaining: escapeHtml(String(findingData.metadata?.days_remaining || findingData.metadata?.daysRemaining || 'unknown')),
+    days_expired: escapeHtml(String(findingData.metadata?.days_expired || findingData.metadata?.daysExpired || 'unknown')),
+    validity_years: escapeHtml(String(findingData.metadata?.validity_years || findingData.metadata?.validityYears || 'unknown')),
+    cookie_name: escapeHtml(findingData.metadata?.cookie_name || findingData.metadata?.cookieName || 'the cookie'),
+    flag_name: escapeHtml(findingData.metadata?.flag_name || findingData.metadata?.flagName || 'the flag'),
+    days_until_expiry: escapeHtml(String(findingData.metadata?.days_until_expiry || findingData.metadata?.daysUntilExpiry || 'unknown')),
+    technology_name: escapeHtml(findingData.metadata?.technology_name || findingData.metadata?.technologyName || 'the technology'),
+    service_name: escapeHtml(findingData.metadata?.service_name || findingData.metadata?.serviceName || 'the service'),
+    template_name: escapeHtml(findingData.metadata?.template_name || findingData.metadata?.templateName || 'the template'),
   };
 
   // Replace each placeholder in the template

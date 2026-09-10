@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { URL } = require('url');
 
 /**
  * HTTP Security Header Scanner
@@ -6,8 +7,11 @@ const axios = require('axios');
  */
 async function scanHeaders(targetUrl) {
   const results = [];
-  
+
   try {
+    const url = new URL(targetUrl);
+    const hostname = url.hostname;
+
     const response = await axios.get(targetUrl, {
       timeout: 10000,
       validateStatus: () => true,
@@ -82,6 +86,9 @@ async function scanHeaders(targetUrl) {
           description: header.description,
           recommendation: header.recommendation,
           typeSlug: header.typeSlug || null,
+          metadata: {
+            domain: hostname
+          }
         });
       }
     }
@@ -97,15 +104,17 @@ async function scanHeaders(targetUrl) {
 
       results.push({
         category: 'HTTP Headers',
-        severity: hasVersion ? 'medium' : 'info',
+        severity: hasVersion ? 'medium' : 'good-news',
         confidence: 'confirmed',
         title: 'Server Information Disclosure',
         description: `The Server header reveals: ${serverValue}. This finding specifically addresses HTTP header information disclosure risks. (Note: Technology detection is handled separately by the technology scanner.)`,
         recommendation: hasVersion
           ? `Remove or generalize the Server header to prevent version fingerprinting (e.g., use "nginx" instead of "${serverValue}").`
           : 'Consider removing the Server header entirely to minimize information disclosure.',
+        typeSlug: hasVersion ? 'info-disclosure-headers' : null,
         metadata: {
-          headerName: 'Server',
+          domain: hostname,
+          header_name: 'Server',
           headerValue: serverValue,
           hasVersion: hasVersion
         }
