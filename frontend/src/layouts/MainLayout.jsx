@@ -43,8 +43,17 @@ const MainLayout = () => {
 
     verifyAuth();
 
+    const handleUnauthorized = (e) => {
+      redirectToWelcomeAuth(
+        navigate,
+        e?.detail?.message || "Session revoked. Please log in again."
+      );
+    };
+    window.addEventListener("cybershare:unauthorized", handleUnauthorized);
+
     return () => {
       active = false;
+      window.removeEventListener("cybershare:unauthorized", handleUnauthorized);
     };
   }, [navigate]);
 

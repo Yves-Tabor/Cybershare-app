@@ -786,6 +786,10 @@ export default function Navbar() {
 
     socket.on("connect", () => {
       socket.emit("register-user", user.id);
+      const localToken = getToken();
+      if (localToken) {
+        socket.emit("register-session", localToken);
+      }
     });
 
     socket.on("notification:new", (notification) => {
@@ -815,14 +819,29 @@ export default function Navbar() {
       return hashHex;
     };
 
+    socket.on("session:force_logout", (data) => {
+      clearToken();
+      redirectToWelcomeAuth(navigate, data?.message || "Your session has been revoked.");
+    });
+
     socket.on("session:revoked", async (data) => {
       const localToken = getToken();
       if (localToken) {
         const localHash = await sha256(localToken);
         if (localHash === data.tokenHash) {
           clearToken();
-          // We can also redirect
-          redirectToWelcomeAuth(navigate);
+          redirectToWelcomeAuth(navigate, "Your session has been revoked.");
+        }
+      }
+    });
+
+    socket.on("session:revoked_others", async (data) => {
+      const localToken = getToken();
+      if (localToken) {
+        const localHash = await sha256(localToken);
+        if (localHash !== data.exceptTokenHash) {
+          clearToken();
+          redirectToWelcomeAuth(navigate, "Your session has been revoked.");
         }
       }
     });

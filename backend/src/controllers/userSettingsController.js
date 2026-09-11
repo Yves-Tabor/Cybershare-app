@@ -147,17 +147,21 @@ const changePassword = async (req, res) => {
 const getSessions = async (req, res) => {
   try {
     const userId = req.userId;
+    const currentTokenHash = req.tokenHash;
 
     const result = await pool.query(
-      'SELECT id, device_label, ip_address, user_agent, created_at, last_active_at FROM sessions WHERE user_id = $1 ORDER BY last_active_at DESC',
+      "SELECT id, device, ip_address, created_at, last_seen, token_hash FROM user_sessions WHERE user_id = $1 AND is_revoked = false ORDER BY last_seen DESC",
       [userId]
     );
 
-    // For now, we'll mark all sessions as "current" since we don't have session tracking in JWT
-    // In a full implementation, you'd compare the session ID from the request
-    const sessions = result.rows.map(session => ({
-      ...session,
-      isCurrent: false, // This would be determined by comparing with current session ID
+    const sessions = result.rows.map(row => ({
+      id: row.id,
+      device: row.device || "Unknown Device",
+      ip: row.ip_address || "Unknown",
+      ts: new Date(row.last_seen || row.created_at).getTime(),
+      createdAt: new Date(row.created_at).getTime(),
+      current: row.token_hash === currentTokenHash,
+      isCurrent: row.token_hash === currentTokenHash,
     }));
 
     res.status(200).json({ sessions });
@@ -173,14 +177,31 @@ const deleteSession = async (req, res) => {
     const userId = req.userId;
     const { sessionId } = req.params;
 
-    const result = await pool.query(
-      'DELETE FROM sessions WHERE id = $1 AND user_id = $2 RETURNING id',
+    const sessionResult = await pool.query(
+      "SELECT token_hash FROM user_sessions WHERE id = $1 AND user_id = $2 AND is_revoked = false",
       [sessionId, userId]
     );
 
-    if (result.rows.length === 0) {
+    if (sessionResult.rows.length === 0) {
       return res.status(404).json({ error: 'Session not found' });
     }
+
+    const targetTokenHash = sessionResult.rows[0].token_hash;
+
+    await pool.query(
+      "UPDATE user_sessions SET is_revoked = true WHERE id = $1",
+      [sessionId]
+    );
+
+    const { emitToUser, getIO } = require("../services/socket/socketService");
+    const io = getIO();
+    if (io) {
+      io.to(`session:${targetTokenHash}`).emit("session:force_logout", {
+        sessionId,
+        message: "Your session was revoked from another device.",
+      });
+    }
+    emitToUser(userId, "session:revoked", { tokenHash: targetTokenHash, sessionId });
 
     res.status(200).json({ message: 'Session revoked successfully' });
   } catch (error) {
@@ -193,11 +214,29 @@ const deleteSession = async (req, res) => {
 const deleteAllSessions = async (req, res) => {
   try {
     const userId = req.userId;
+    const currentTokenHash = req.tokenHash;
+
+    const result = await pool.query(
+      "SELECT id, token_hash FROM user_sessions WHERE user_id = $1 AND token_hash != $2 AND is_revoked = false",
+      [userId, currentTokenHash]
+    );
 
     await pool.query(
-      'DELETE FROM sessions WHERE user_id = $1',
-      [userId]
+      "UPDATE user_sessions SET is_revoked = true WHERE user_id = $1 AND token_hash != $2 AND is_revoked = false",
+      [userId, currentTokenHash]
     );
+
+    const { emitToUser, getIO } = require("../services/socket/socketService");
+    const io = getIO();
+    for (const row of result.rows) {
+      if (io) {
+        io.to(`session:${row.token_hash}`).emit("session:force_logout", {
+          sessionId: row.id,
+          message: "All other sessions were revoked.",
+        });
+      }
+    }
+    emitToUser(userId, "session:revoked_others", { exceptTokenHash: currentTokenHash });
 
     res.status(200).json({ message: 'All sessions revoked successfully' });
   } catch (error) {

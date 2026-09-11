@@ -60,6 +60,16 @@ async function apiRequest(endpoint, options = {}) {
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        clearToken();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("cybershare:unauthorized", {
+              detail: { message: data?.error || "Session expired or revoked" },
+            })
+          );
+        }
+      }
       const error = new Error(
         data?.error ||
           data?.message ||
@@ -142,6 +152,12 @@ export const authAPI = {
 
   revokeSession: async (id) => {
     return apiRequest(`/auth/sessions/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  revokeOtherSessions: async () => {
+    return apiRequest("/auth/sessions", {
       method: "DELETE",
     });
   },

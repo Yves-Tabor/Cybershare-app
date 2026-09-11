@@ -1057,7 +1057,7 @@ function SecuritySection({
             <button
               onClick={async () => {
                 try {
-                  await userSettingsAPI.deleteAllSessions();
+                  await authAPI.revokeOtherSessions();
                   setSessions(prev => prev.filter(s => s.current));
                   showToast("All other sessions revoked.");
                 } catch {

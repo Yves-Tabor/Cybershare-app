@@ -198,7 +198,11 @@ const logout = async (req, res) => {
         [tokenHash]
       );
     }
-    res.clearCookie("token");
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("Logout error:", error);
@@ -506,13 +510,55 @@ const revokeSession = async (req, res) => {
       [id]
     );
 
-    // Emit socket event to notify client to sign out if it matches
-    const { emitToUser } = require("../services/socket/socketService");
-    emitToUser(userId, "session:revoked", { tokenHash: targetTokenHash });
+    // Emit socket event to notify client to sign out immediately
+    const { emitToUser, getIO } = require("../services/socket/socketService");
+    const io = getIO();
+    if (io) {
+      io.to(`session:${targetTokenHash}`).emit("session:force_logout", {
+        sessionId: id,
+        message: "Your session was revoked from another device.",
+      });
+    }
+    emitToUser(userId, "session:revoked", { tokenHash: targetTokenHash, sessionId: id });
 
     res.status(200).json({ message: "Session revoked successfully" });
   } catch (error) {
     console.error("Revoke session error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Revoke all other sessions except current
+const revokeOtherSessions = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const currentTokenHash = req.tokenHash;
+
+    const result = await pool.query(
+      "SELECT id, token_hash FROM user_sessions WHERE user_id = $1 AND token_hash != $2 AND is_revoked = false",
+      [userId, currentTokenHash]
+    );
+
+    await pool.query(
+      "UPDATE user_sessions SET is_revoked = true WHERE user_id = $1 AND token_hash != $2 AND is_revoked = false",
+      [userId, currentTokenHash]
+    );
+
+    const { emitToUser, getIO } = require("../services/socket/socketService");
+    const io = getIO();
+    for (const row of result.rows) {
+      if (io) {
+        io.to(`session:${row.token_hash}`).emit("session:force_logout", {
+          sessionId: row.id,
+          message: "All other sessions were revoked.",
+        });
+      }
+    }
+    emitToUser(userId, "session:revoked_others", { exceptTokenHash: currentTokenHash });
+
+    res.status(200).json({ message: "All other sessions revoked successfully" });
+  } catch (error) {
+    console.error("Revoke other sessions error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -529,4 +575,5 @@ module.exports = {
   deleteAccount,
   getSessions,
   revokeSession,
+  revokeOtherSessions,
 };

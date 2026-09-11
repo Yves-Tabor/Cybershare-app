@@ -21,16 +21,20 @@ function parseDevice(ua = '') {
   else if (/iphone/i.test(ua)) os = 'iPhone';
   else if (/ipad/i.test(ua)) os = 'iPad';
   else if (/android/i.test(ua)) os = 'Android';
+  else if (/cros/i.test(ua)) os = 'ChromeOS';
   else if (/linux/i.test(ua)) os = 'Linux';
 
-  // Browser
+  // Browser (order matters: Edge/Opera/Brave/Samsung include Chrome in their UA)
   let browser = 'Unknown browser';
   if (/edg\//i.test(ua)) browser = 'Edge';
-  else if (/opr\//i.test(ua)) browser = 'Opera';
-  else if (/chrome/i.test(ua)) browser = 'Chrome';
+  else if (/opr\/|opera\//i.test(ua)) browser = 'Opera';
+  else if (/samsungbrowser/i.test(ua)) browser = 'Samsung Internet';
+  else if (/brave/i.test(ua)) browser = 'Brave';
+  else if (/vivaldi/i.test(ua)) browser = 'Vivaldi';
+  else if (/chrome|crios/i.test(ua)) browser = 'Chrome';
+  else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
   else if (/safari/i.test(ua)) browser = 'Safari';
-  else if (/firefox/i.test(ua)) browser = 'Firefox';
-  else if (/msie|trident/i.test(ua)) browser = 'IE';
+  else if (/msie|trident/i.test(ua)) browser = 'Internet Explorer';
 
   return `${os} · ${browser}`;
 }

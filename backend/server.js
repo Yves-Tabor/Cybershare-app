@@ -351,11 +351,41 @@ setIO(io);
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
+  // Auto-join session room if token cookie or auth token present
+  const cookieHeader = socket.handshake.headers?.cookie;
+  let token = socket.handshake.auth?.token;
+  if (!token && cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+    if (match) token = decodeURIComponent(match[1]);
+  }
+  if (token) {
+    try {
+      const { hashToken } = require('./src/utils/sessionUtils');
+      const tokenHash = hashToken(token);
+      socket.join(`session:${tokenHash}`);
+      socket.tokenHash = tokenHash;
+    } catch (e) {
+      console.error('Socket session room error:', e);
+    }
+  }
+
   socket.on('register-user', (userId) => {
     if (!userId) return;
     const room = `user:${userId}`;
     socket.join(room);
     console.log(`[socket] register-user: userId=${userId} joined room=${room} socketId=${socket.id}`);
+  });
+
+  socket.on('register-session', (rawToken) => {
+    if (!rawToken) return;
+    try {
+      const { hashToken } = require('./src/utils/sessionUtils');
+      const tokenHash = hashToken(rawToken);
+      socket.join(`session:${tokenHash}`);
+      socket.tokenHash = tokenHash;
+    } catch (e) {
+      console.error('register-session error:', e);
+    }
   });
 
   socket.on('disconnect', () => {

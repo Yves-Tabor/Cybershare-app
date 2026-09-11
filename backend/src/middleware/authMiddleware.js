@@ -29,6 +29,11 @@ const authMiddleware = async (req, res, next) => {
 
     if (sessionResult.rows.length === 0) {
       // Token was revoked or never registered — treat as unauthorized
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      });
       return res.status(401).json({ error: "Session expired or revoked" });
     }
 
