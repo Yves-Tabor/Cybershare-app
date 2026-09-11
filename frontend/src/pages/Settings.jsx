@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { authAPI, userSettingsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
+import "./Settings.css";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -17,34 +18,6 @@ const AVATAR_COLORS = [
   "#993556",
   "#2a6b6b",
   "#6b2a55",
-];
-
-const INITIAL_SESSIONS = [
-  {
-    id: 1,
-    device: "MacBook Pro · Chrome",
-    location: "Kigali, RW",
-    ip: "102.89.44.12",
-    ts: Date.now() - 1000 * 60 * 2,
-    current: true,
-  },
-  {
-    id: 2,
-    device: "iPhone 16 · Safari",
-    location: "Kigali, RW",
-    ip: "102.89.44.12",
-    ts: Date.now() - 1000 * 60 * 60 * 6,
-    current: false,
-  },
-  {
-    id: 3,
-    device: "Linux · Firefox",
-    location: "Amsterdam, NL",
-    ip: "185.220.101.7",
-    ts: Date.now() - 1000 * 60 * 60 * 24 * 3,
-    current: false,
-    unfamiliar: true,
-  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -436,7 +409,7 @@ function NavItem({ section, active, onClick }) {
   const dangerInactive =
     "bg-transparent border-transparent text-[#7a3a3a] hover:text-[#E24B4A]";
   const normalActive =
-    "bg-[#141414] border border-[#222] lg:bg-transparent lg:border-transparent text-white";
+    "bg-[#141414] border border-[#222] text-white";
   const normalInactive =
     "bg-transparent border-transparent text-[#555] hover:text-[#999]";
   const cls = section.danger
@@ -449,13 +422,7 @@ function NavItem({ section, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 rounded-xl text-[12.5px] font-mono transition-all cursor-pointer border text-left whitespace-nowrap ${cls}`}
-      style={{
-        paddingLeft: "14px",
-        paddingRight: "14px",
-        paddingTop: "10px",
-        paddingBottom: "10px",
-      }}
+      className={`flex items-center gap-2.5 rounded-xl text-[12.5px] font-mono transition-all cursor-pointer border text-left whitespace-nowrap ${cls} settings-nav-btn`}
     >
       {section.icon}
       {section.label}
@@ -463,64 +430,54 @@ function NavItem({ section, active, onClick }) {
   );
 }
 
-function SessionRow({ session, onRevoke }) {
-  const Icon =
-    session.device.includes("iPhone") || session.device.includes("Android")
-      ? IconSmartphone
-      : IconMonitor;
+function SessionRow({ session, onRevoke, revoking }) {
+  const ua = session.device || "";
+  const isMobile =
+    /iphone|android|ipad/i.test(ua);
+  const Icon = isMobile ? IconSmartphone : IconMonitor;
+
+  // Determine OS and browser from the stored device string ("Windows · Chrome")
+  const parts = ua.split(" · ");
+  const osLabel = parts[0] || "Unknown";
+  const browserLabel = parts[1] || "";
+
   return (
-    <div className="flex items-center justify-between gap-3 py-3 border-b border-white/10 last:border-b-0">
+    <div className={`flex items-center justify-between gap-3 py-3.5 border-b border-white/10 last:border-b-0 ${
+      session.current ? "opacity-100" : ""
+    }`}>
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white flex-shrink-0">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          session.current
+            ? "bg-[#7F77DD]/10 border border-[#7F77DD]/30 text-[#7F77DD]"
+            : "bg-white/5 border border-white/10 text-white"
+        }`}>
           <Icon />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[12.5px] text-[#ccc] truncate">
-              {session.device}
+            <p className="text-[12.5px] text-[#ccc] font-medium">
+              {osLabel}{browserLabel ? ` · ${browserLabel}` : ""}
             </p>
             {session.current && (
               <span
                 className="text-[9.5px] font-mono rounded-md bg-[#1a2a2e] text-[#1D9E75] flex-shrink-0"
-                style={{
-                  paddingLeft: "7px",
-                  paddingRight: "7px",
-                  paddingTop: "1px",
-                  paddingBottom: "1px",
-                }}
+                style={{ paddingLeft: "7px", paddingRight: "7px", paddingTop: "1px", paddingBottom: "1px" }}
               >
                 This device
               </span>
             )}
-            {session.unfamiliar && (
-              <span
-                className="text-[9.5px] font-mono rounded-md bg-[#2e2a1a] text-[#BA7517] flex-shrink-0"
-                style={{
-                  paddingLeft: "7px",
-                  paddingRight: "7px",
-                  paddingTop: "1px",
-                  paddingBottom: "1px",
-                }}
-              >
-                Unrecognized
-              </span>
-            )}
           </div>
           <p className="text-[11px] text-[#444] font-mono mt-0.5">
-            {session.location} · {session.ip} · {timeAgo(session.ts)}
+            {session.ip} · Last active {timeAgo(session.ts)}
           </p>
         </div>
       </div>
       {!session.current && (
         <button
           onClick={() => onRevoke(session)}
-          className="text-[11px] font-mono rounded-lg border border-[#222] text-[#666] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] transition-all cursor-pointer bg-transparent flex-shrink-0"
-          style={{
-            paddingLeft: "12px",
-            paddingRight: "12px",
-            paddingTop: "6px",
-            paddingBottom: "6px",
-          }}
+          disabled={revoking}
+          className="text-[11px] font-mono rounded-lg border border-[#222] text-[#666] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] transition-all cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "6px" }}
         >
           Revoke
         </button>
@@ -969,6 +926,7 @@ function ProfileSection({ profile, setProfile, showToast }) {
 function SecuritySection({
   sessions,
   setSessions,
+  sessionsLoading,
   showToast,
   profile,
   setProfile,
@@ -977,6 +935,7 @@ function SecuritySection({
   const [pwError, setPwError] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState(null);
+  const [revoking, setRevoking] = useState(false);
 
   async function updatePassword() {
     if ((profile?.hasPassword && !pw.current) || !pw.next) {
@@ -1010,14 +969,18 @@ function SecuritySection({
   }
 
   async function handleRevoke() {
+    if (!revokeTarget) return;
+    setRevoking(true);
     try {
-      await userSettingsAPI.deleteSession(revokeTarget.id);
+      await authAPI.revokeSession(revokeTarget.id);
       setSessions((prev) => prev.filter((s) => s.id !== revokeTarget.id));
-      showToast("Session revoked.");
+      showToast("Session revoked — that device has been signed out.");
       setRevokeTarget(null);
     } catch (error) {
       console.error("Failed to revoke session:", error);
       showToast("Failed to revoke session.");
+    } finally {
+      setRevoking(false);
     }
   }
 
@@ -1089,19 +1052,53 @@ function SecuritySection({
         title="Active sessions"
         icon={<IconMonitor />}
         description="Devices currently signed in to your account."
+        action={
+          sessions.filter(s => !s.current).length > 0 ? (
+            <button
+              onClick={async () => {
+                try {
+                  await userSettingsAPI.deleteAllSessions();
+                  setSessions(prev => prev.filter(s => s.current));
+                  showToast("All other sessions revoked.");
+                } catch {
+                  showToast("Failed to revoke sessions.");
+                }
+              }}
+              className="text-[10px] font-mono uppercase text-[#E24B4A]/70 hover:text-[#E24B4A] bg-transparent border-none cursor-pointer transition-colors tracking-wider"
+            >
+              Revoke all others
+            </button>
+          ) : null
+        }
       >
-        <div>
-          {sessions.map((s) => (
-            <SessionRow key={s.id} session={s} onRevoke={setRevokeTarget} />
-          ))}
-        </div>
+        {sessionsLoading ? (
+          <div className="flex items-center gap-2 py-6 justify-center">
+            <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            <span className="text-[12px] text-[#444] font-mono">Loading sessions...</span>
+          </div>
+        ) : sessions.length === 0 ? (
+          <p className="text-[12px] text-[#333] font-mono py-4 text-center">No active sessions found.</p>
+        ) : (
+          <div>
+            {sessions.map((s) => (
+              <SessionRow
+                key={s.id}
+                session={s}
+                onRevoke={setRevokeTarget}
+                revoking={revoking}
+              />
+            ))}
+          </div>
+        )}
       </SectionCard>
 
       {revokeTarget && (
         <ConfirmModal
           title="Revoke session"
-          message={`This will sign out "${revokeTarget.device}" immediately.`}
-          confirmLabel="Revoke session"
+          message={`This will immediately sign out "${revokeTarget.device}". The device won't be able to make any requests until it logs in again.`}
+          confirmLabel="Revoke"
           danger
           onConfirm={handleRevoke}
           onClose={() => setRevokeTarget(null)}
@@ -1111,77 +1108,8 @@ function SecuritySection({
   );
 }
 
-function NotificationsSection({ notifications, setNotifications, showToast }) {
-  const [loading, setLoading] = useState(false);
+// NotificationsSection removed — section deleted per user request
 
-  async function toggle(key) {
-    setLoading(true);
-    try {
-      const newValue = !notifications[key];
-      await userSettingsAPI.updateNotificationPreferences({ [key]: newValue });
-      setNotifications((prev) => ({ ...prev, [key]: newValue }));
-      showToast("Notification preferences updated.");
-    } catch (error) {
-      console.error("Failed to update notification preferences:", error);
-      showToast("Failed to update notification preferences.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <SectionCard
-      title="Notifications"
-      icon={<IconBell />}
-      description="Choose what you hear about and how often."
-    >
-      <SettingRow
-        label="Email marketing"
-        description="Receive marketing emails and updates."
-        control={
-          <Toggle
-            checked={notifications.email_marketing}
-            onChange={() => toggle("email_marketing")}
-            disabled={loading}
-          />
-        }
-      />
-      <SettingRow
-        label="Email activity"
-        description="Receive emails about your account activity."
-        control={
-          <Toggle
-            checked={notifications.email_activity}
-            onChange={() => toggle("email_activity")}
-            disabled={loading}
-          />
-        }
-      />
-      <SettingRow
-        label="Push messages"
-        description="Receive push notifications for messages."
-        control={
-          <Toggle
-            checked={notifications.push_messages}
-            onChange={() => toggle("push_messages")}
-            disabled={loading}
-          />
-        }
-      />
-      <SettingRow
-        label="Push mentions"
-        description="Receive push notifications when mentioned."
-        control={
-          <Toggle
-            checked={notifications.push_mentions}
-            onChange={() => toggle("push_mentions")}
-            disabled={loading}
-          />
-        }
-      />
-    </SectionCard>
-  );
-}
 
 function DangerZoneSection({ profile, showToast }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1360,7 +1288,6 @@ function DangerZoneSection({ profile, showToast }) {
 const SECTIONS = [
   { id: "profile", label: "Profile", icon: <IconUser /> },
   { id: "security", label: "Security", icon: <IconShield /> },
-  { id: "notifications", label: "Notifications", icon: <IconBell /> },
   { id: "danger", label: "Danger Zone", icon: <IconAlert />, danger: true },
 ];
 
@@ -1377,25 +1304,16 @@ export default function Settings() {
     color: ME.color,
     bio: "",
   });
-  const [sessions, setSessions] = useState(INITIAL_SESSIONS);
-  const [notifications, setNotifications] = useState({
-    email_marketing: true,
-    email_activity: true,
-    push_messages: true,
-    push_mentions: true,
-  });
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
-  // Fetch user data on mount
+  // Fetch user profile on mount
   useEffect(() => {
     async function fetchData() {
       try {
-        const [userData, notificationData] = await Promise.all([
-          authAPI.me(),
-          userSettingsAPI.getNotificationPreferences(),
-        ]);
-        
+        const userData = await authAPI.me();
         const user = userData.user;
         setProfile({
           handle: user.username,
@@ -1405,12 +1323,10 @@ export default function Settings() {
           bio: user.bio || "",
           email: user.email,
           avatar: user.avatar,
+          hasPassword: user.has_password,
         });
-        
-        setNotifications(notificationData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        // Redirect to login if not authenticated
         redirectToWelcomeAuth(navigate);
       } finally {
         setLoading(false);
@@ -1418,6 +1334,23 @@ export default function Settings() {
     }
     fetchData();
   }, [navigate]);
+
+  // Fetch sessions when security tab is opened
+  useEffect(() => {
+    if (section !== "security") return;
+    async function fetchSessions() {
+      setSessionsLoading(true);
+      try {
+        const data = await authAPI.getSessions();
+        setSessions(data.sessions || []);
+      } catch (error) {
+        console.error("Failed to fetch sessions:", error);
+      } finally {
+        setSessionsLoading(false);
+      }
+    }
+    fetchSessions();
+  }, [section]);
 
   function showToast(msg) {
     clearTimeout(toastTimer.current);
@@ -1477,7 +1410,8 @@ export default function Settings() {
           <br />
 
           <div className="flex flex-col sm:flex-row gap-8">
-            <nav className="flex sm:flex-col gap-1.5 overflow-x-auto sm:overflow-visible sm:w-[176px] sm:flex-shrink-0 sm:sticky sm:top-12 sm:self-start pb-1">
+            {/* Nav: horizontal pills on mobile, vertical sidebar on sm+ */}
+            <nav className="flex sm:flex-col gap-1.5 overflow-x-auto sm:overflow-visible sm:w-[176px] sm:flex-shrink-0 sm:sticky sm:top-12 sm:self-start pb-1 settings-nav">
               {SECTIONS.map((s) => (
                 <NavItem
                   key={s.id}
@@ -1500,16 +1434,10 @@ export default function Settings() {
                 <SecuritySection
                   sessions={sessions}
                   setSessions={setSessions}
+                  sessionsLoading={sessionsLoading}
                   showToast={showToast}
                   profile={profile}
                   setProfile={setProfile}
-                />
-              )}
-              {section === "notifications" && (
-                <NotificationsSection
-                  notifications={notifications}
-                  setNotifications={setNotifications}
-                  showToast={showToast}
                 />
               )}
               {section === "danger" && (

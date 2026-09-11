@@ -1,0 +1,33 @@
+/* Settings Page Styles */
+
+/* ── Nav sidebar / pill bar ─────────────────────────────────────────────── */
+
+/* On mobile: horizontal scrolling pill bar */
+.settings-nav {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.settings-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-nav-btn {
+  padding: 9px 14px;
+  flex-shrink: 0;
+}
+
+/* On sm+: full-width vertical buttons */
+@media (min-width: 640px) {
+  .settings-nav-btn {
+    width: 100%;
+  }
+}
+
+/* ── Responsive content padding ─────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .settings-page-inner {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 32px !important;
+  }
+}

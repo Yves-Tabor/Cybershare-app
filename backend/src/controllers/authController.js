@@ -462,18 +462,17 @@ const getSessions = async (req, res) => {
     const currentTokenHash = req.tokenHash;
 
     const result = await pool.query(
-      "SELECT id, device, ip_address, created_at, token_hash FROM user_sessions WHERE user_id = $1 AND is_revoked = false ORDER BY last_seen DESC",
+      "SELECT id, device, ip_address, created_at, last_seen, token_hash FROM user_sessions WHERE user_id = $1 AND is_revoked = false ORDER BY last_seen DESC",
       [userId]
     );
 
     const sessions = result.rows.map(row => ({
       id: row.id,
       device: row.device || "Unknown Device",
-      location: `IP: ${row.ip_address || "Unknown"}`,
       ip: row.ip_address || "Unknown",
-      ts: new Date(row.created_at).getTime(),
+      ts: new Date(row.last_seen || row.created_at).getTime(),
+      createdAt: new Date(row.created_at).getTime(),
       current: row.token_hash === currentTokenHash,
-      unfamiliar: false
     }));
 
     res.status(200).json({ sessions });
