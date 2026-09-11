@@ -6,5 +6,6 @@ const { getSavedItems, saveItem, unsaveItem } = require('../controllers/savedIte
 router.get('/', authMiddleware, getSavedItems);
 router.post('/', authMiddleware, saveItem);
 router.delete('/', authMiddleware, unsaveItem);
+router.delete('/:id', authMiddleware, unsaveItem);
 
 module.exports = router;

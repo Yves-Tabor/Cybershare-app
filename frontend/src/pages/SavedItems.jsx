@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
+import { savedItemsAPI, groupsAPI, postsAPI } from "../utils/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -79,8 +81,6 @@ function extractDomain(url) {
 const TODAY = todayISO();
 
 // ─── API Integration ─────────────────────────────────────────────────────────
-
-import { savedItemsAPI } from "../utils/api";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -348,8 +348,253 @@ function TypeIcon({ type, color }) {
   );
 }
 
-function SavedItemCard({ item, onRemove, onOpen }) {
-  const meta = TYPE_META[item.type];
+// ─── Reshare post modal ───────────────────────────────────────────────────────
+
+function ReshareModal({ post, onClose, onReshareSuccess }) {
+  const [destination, setDestination] = useState("feed"); // "feed" | "group"
+  const [groups, setGroups] = useState([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [commentary, setCommentary] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchGroups() {
+      setLoadingGroups(true);
+      try {
+        const res = await groupsAPI.getAll();
+        const list = res.groups || [];
+        setGroups(list);
+        if (list.length > 0) {
+          const joinedGroup = list.find((g) => g.joined);
+          setSelectedGroupId(joinedGroup ? joinedGroup.id : list[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch groups:", err);
+      } finally {
+        setLoadingGroups(false);
+      }
+    }
+    fetchGroups();
+  }, []);
+
+  async function handleReshare() {
+    setError("");
+    setSubmitting(true);
+    try {
+      const authorHandle = post.author ? `@${post.author}` : "User";
+      const quoteBlock = `🔁 Reshared from ${authorHandle}:\n"${post.snippet || post.title}"`;
+      const finalContent = commentary.trim()
+        ? `${commentary.trim()}\n\n${quoteBlock}`
+        : quoteBlock;
+
+      if (destination === "feed") {
+        await postsAPI.create(finalContent);
+        onReshareSuccess("Reshared to Global Feed!");
+      } else {
+        if (!selectedGroupId) {
+          setError("Please select a group to reshare to.");
+          setSubmitting(false);
+          return;
+        }
+        const targetGroup = groups.find((g) => String(g.id) === String(selectedGroupId));
+        if (targetGroup && !targetGroup.joined) {
+          try {
+            await groupsAPI.join(selectedGroupId);
+          } catch (joinErr) {
+            console.warn("Could not auto-join group:", joinErr);
+          }
+        }
+        await groupsAPI.createPost(selectedGroupId, finalContent);
+        onReshareSuccess(`Reshared to ${targetGroup?.name || "group"}!`);
+      }
+      onClose();
+    } catch (err) {
+      console.error("Reshare error:", err);
+      setError(err?.message || "Failed to reshare post. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{ padding: "16px" }}
+    >
+      <div className="w-full max-w-[500px] bg-[#0d0d0d] border border-[#222] rounded-2xl overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#1c1c1c] px-6 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#7F77DD]/15 border border-[#7F77DD]/35 flex items-center justify-center text-[#7F77DD]">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 1l4 4-4 4" />
+                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                <path d="M7 23l-4-4 4-4" />
+                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-[14px] font-semibold text-white">Reshare Post</h3>
+              <p className="text-[11px] font-mono text-[#666]">Share to Global Feed or a Group</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-[#666] hover:text-white bg-transparent border-none cursor-pointer transition-colors p-1"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-4">
+          {/* Destination Selector */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+              Destination
+            </label>
+            <div className="grid grid-cols-2 gap-2 bg-[#141414] p-1 rounded-xl border border-[#222]">
+              <button
+                type="button"
+                onClick={() => setDestination("feed")}
+                className={`py-2 px-3 rounded-lg text-[12px] font-mono transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                  destination === "feed"
+                    ? "bg-[#222] text-white font-semibold shadow-sm"
+                    : "bg-transparent text-[#666] hover:text-[#ccc]"
+                }`}
+              >
+                <span>🌐</span> Global Feed
+              </button>
+              <button
+                type="button"
+                onClick={() => setDestination("group")}
+                className={`py-2 px-3 rounded-lg text-[12px] font-mono transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                  destination === "group"
+                    ? "bg-[#222] text-white font-semibold shadow-sm"
+                    : "bg-transparent text-[#666] hover:text-[#ccc]"
+                }`}
+              >
+                <span>👥</span> Group
+              </button>
+            </div>
+          </div>
+
+          {/* Group Picker */}
+          {destination === "group" && (
+            <div>
+              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+                Select Group
+              </label>
+              {loadingGroups ? (
+                <div className="text-[11px] font-mono text-[#555] py-2">Loading groups…</div>
+              ) : groups.length === 0 ? (
+                <div className="text-[12px] font-mono text-[#E24B4A] py-1">No groups available. Please join or create a group first.</div>
+              ) : (
+                <select
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                  className="w-full bg-[#141414] border border-[#252525] rounded-xl text-[12.5px] text-white outline-none focus:border-[#7F77DD] transition-colors px-3.5 py-2.5 cursor-pointer"
+                >
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id} className="bg-[#141414] text-white">
+                      {g.name} {g.joined ? "✓ (Member)" : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          {/* Thoughts Textarea */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+              Add your thoughts (optional)
+            </label>
+            <textarea
+              value={commentary}
+              onChange={(e) => setCommentary(e.target.value)}
+              placeholder="What do you think about this post?"
+              rows={3}
+              className="w-full bg-[#141414] border border-[#252525] rounded-xl text-[13px] text-white outline-none focus:border-[#7F77DD] transition-colors p-3.5 placeholder:text-[#444] resize-none"
+            />
+          </div>
+
+          {/* Quoted Post Card Preview */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#666] mb-1.5">
+              Quoting
+            </label>
+            <div className="border border-[#222] bg-[#111] rounded-xl p-3.5 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                  style={{ background: post.authorColor || "#534AB7" }}
+                >
+                  {(post.author || "U").slice(0, 1).toUpperCase()}
+                </div>
+                <span className="text-[12px] font-semibold text-[#ddd]">@{post.author || "author"}</span>
+                <span className="text-[10px] font-mono text-[#555] ml-auto">Original Post</span>
+              </div>
+              <p className="text-[12.5px] text-[#999] leading-relaxed line-clamp-3 italic">
+                "{post.snippet || post.title}"
+              </p>
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-[11px] font-mono text-[#E24B4A] bg-[#2e1a1a] p-2.5 rounded-lg border border-[#E24B4A]/30">
+              {error}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2.5 border-t border-[#1c1c1c] px-6 py-4 bg-[#090909]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-[12px] font-mono text-[#777] hover:text-white bg-transparent border border-[#222] hover:border-[#333] transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleReshare}
+            disabled={submitting || (destination === "group" && !selectedGroupId)}
+            className="px-5 py-2 rounded-lg text-[12px] font-semibold bg-[#7F77DD] text-white hover:bg-[#6c64cf] transition-colors cursor-pointer border-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? (
+              <>
+                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                Resharing…
+              </>
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 1l4 4-4 4" />
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                  <path d="M7 23l-4-4 4-4" />
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                </svg>
+                Reshare
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Saved item card ────────────────────────────────────────────────────────────
+
+function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
+  const meta = TYPE_META[item.type] || { label: "Item", color: "#888", bg: "#1a1a1a" };
 
   return (
     <div
@@ -403,9 +648,9 @@ function SavedItemCard({ item, onRemove, onOpen }) {
           <div className="flex items-center gap-2 text-[11px] text-[#555] font-mono mb-2.5 flex-wrap">
             {item.type === "post" && (
               <>
-                <span className="truncate">{item.context}</span>
+                <span className="truncate">{item.context || "Global feed"}</span>
                 <span className="text-[#222] flex-shrink-0">·</span>
-                <span className="truncate">by {item.author}</span>
+                <span className="truncate">by {item.author || "User"}</span>
               </>
             )}
             {item.type === "event" && (
@@ -434,7 +679,7 @@ function SavedItemCard({ item, onRemove, onOpen }) {
                   <line x1="2" y1="12" x2="22" y2="12" />
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-                {item.domain}
+                {item.domain || item.url}
               </span>
             )}
           </div>
@@ -464,7 +709,7 @@ function SavedItemCard({ item, onRemove, onOpen }) {
                     >
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
-                    {item.meta.likes}
+                    {item.meta?.likes ?? 0}
                   </span>
                   <span className="flex items-center gap-1">
                     <svg
@@ -479,53 +724,94 @@ function SavedItemCard({ item, onRemove, onOpen }) {
                     >
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
-                    {item.meta.comments}
+                    {item.meta?.comments ?? 0}
                   </span>
                 </span>
               )}
             </div>
 
-            {item.type === "resource" ? (
-              <a
-                href={item.fileId ? `${API_BASE}/resources/files/${item.fileId}/download` : item.url}
-                target={item.fileId ? undefined : "_blank"}
-                rel={item.fileId ? undefined : "noopener noreferrer"}
-                download={item.fileId ? item.fileName : undefined}
-                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#BA7517]/10 border-[#BA7517]/40 text-[#BA7517] hover:bg-[#BA7517]/20 no-underline"
-                style={{ padding: "6px 12px" }}
-              >
-                {item.fileId ? "Download" : "Visit"}
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m-6 3.75 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" />
-                </svg>
-
-              </a>
-            ) : (
-              <button
-                onClick={() => onOpen(item)}
-                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0"
-                style={{
-                  background: meta.color + "1a",
-                  borderColor: meta.color + "55",
-                  color: meta.color,
-                  padding: "6px 12px",
-                }}
-              >
-                Open
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Scan button for items that are links or have a URL */}
+              {item.url && (
+                <button
+                  onClick={() => onScan(item.url)}
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#1D9E75]/10 border-[#1D9E75]/40 text-[#1D9E75] hover:bg-[#1D9E75]/25"
+                  style={{ padding: "6px 12px" }}
+                  title="Scan this URL with Vulnerability Scanner"
                 >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-            )}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  Scan
+                </button>
+              )}
+
+              {/* Resource action: Visit or Download */}
+              {item.type === "resource" && (
+                <a
+                  href={item.fileId ? `${API_BASE}/resources/files/${item.fileId}/download` : item.url}
+                  target={item.fileId ? undefined : "_blank"}
+                  rel={item.fileId ? undefined : "noopener noreferrer"}
+                  download={item.fileId ? item.fileName : undefined}
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#BA7517]/10 border-[#BA7517]/40 text-[#BA7517] hover:bg-[#BA7517]/25 no-underline"
+                  style={{ padding: "6px 12px" }}
+                >
+                  {item.fileId ? "Download" : "Visit"}
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+              )}
+
+              {/* Post action: Reshare in groups / global feed */}
+              {item.type === "post" && (
+                <button
+                  onClick={() => onReshare(item)}
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/25"
+                  style={{ padding: "6px 12px" }}
+                  title="Reshare this post to Global Feed or Group"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 1l4 4-4 4" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <path d="M7 23l-4-4 4-4" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  Reshare
+                </button>
+              )}
+
+              {/* Open button for non-resources */}
+              {item.type !== "resource" && (
+                <button
+                  onClick={() => onOpen(item)}
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0"
+                  style={{
+                    background: meta.color + "1a",
+                    borderColor: meta.color + "55",
+                    color: meta.color,
+                    padding: "6px 12px",
+                  }}
+                >
+                  Open
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -536,11 +822,13 @@ function SavedItemCard({ item, onRemove, onOpen }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SavedItems() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [showSave, setShowSave] = useState(false);
+  const [reshareTarget, setReshareTarget] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
 
@@ -571,36 +859,47 @@ export default function SavedItems() {
     const target = items.find((i) => i.id === id);
     if (!target) return;
     try {
-      await savedItemsAPI.unsave(target.type, target.real_id);
+      await savedItemsAPI.unsave(target.type, target.real_id, target.id);
       setItems((prev) => prev.filter((i) => i.id !== id));
-      showToast(`Removed "${target.title}" from saved items`);
+      showToast(`Removed "${target.title || "item"}" from saved items`);
     } catch (e) {
-      console.error(e);
-      showToast("Failed to remove item");
+      console.error("Failed to remove item:", e);
+      // Fallback: remove from UI state
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      showToast("Removed from saved items");
     }
   }
 
-  function handleOpen(item) {
-    showToast(
-      item.type === "event"
-        ? `Opening ${item.title} on Events…`
-        : `Opening ${item.context} on Community…`,
-    );
+  function handleScan(url) {
+    if (!url) return;
+    navigate(`/main/scanner?url=${encodeURIComponent(url)}`, { state: { url } });
   }
 
-  function handleSave({ url, domain, title, note }) {
-    const newItem = {
-      id: Date.now(),
-      type: "resource",
-      title,
-      domain,
-      url,
-      snippet: note || `Saved from ${domain}.`,
-      savedAt: Date.now(),
-    };
-    setItems((prev) => [newItem, ...prev]);
-    setShowSave(false);
-    showToast(`Saved "${title}"`);
+  function handleOpen(item) {
+    if (item.type === "event") {
+      navigate("/main/events");
+    } else if (item.type === "post") {
+      navigate("/main");
+    } else if (item.url) {
+      window.open(item.url, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  async function handleSave({ url, domain, title, note }) {
+    try {
+      const res = await savedItemsAPI.saveLink({ url, title, note });
+      if (res?.item) {
+        setItems((prev) => [res.item, ...prev]);
+      } else {
+        const data = await savedItemsAPI.getAll();
+        setItems(data.items || []);
+      }
+      setShowSave(false);
+      showToast(`Saved "${title || domain}"`);
+    } catch (err) {
+      console.error("Failed to save link:", err);
+      showToast("Failed to save link");
+    }
   }
 
   const counts = {
@@ -759,6 +1058,8 @@ export default function SavedItems() {
                   item={item}
                   onRemove={handleRemove}
                   onOpen={handleOpen}
+                  onScan={handleScan}
+                  onReshare={setReshareTarget}
                 />
               ))}
             </div>
@@ -828,6 +1129,14 @@ export default function SavedItems() {
         <SaveResourceModal
           onClose={() => setShowSave(false)}
           onSave={handleSave}
+        />
+      )}
+
+      {reshareTarget && (
+        <ReshareModal
+          post={reshareTarget}
+          onClose={() => setReshareTarget(null)}
+          onReshareSuccess={(msg) => showToast(msg)}
         />
       )}
 

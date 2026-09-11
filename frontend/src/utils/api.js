@@ -578,14 +578,30 @@ export const savedItemsAPI = {
       body: JSON.stringify({ item_type, item_id }),
     });
   },
-  unsave: async (item_type, item_id) => {
+  saveLink: async ({ url, title, note }) => {
+    return apiRequest("/saved-items", {
+      method: "POST",
+      body: JSON.stringify({ item_type: "link", url, title, note }),
+    });
+  },
+  unsave: async (item_type, item_id, id) => {
+    if (id) {
+      return apiRequest(`/saved-items/${id}`, {
+        method: "DELETE",
+      });
+    }
     const params = new URLSearchParams();
-    params.append("item_type", item_type);
-    params.append("item_id", item_id);
+    if (item_type) params.append("item_type", item_type);
+    if (item_id) params.append("item_id", item_id);
     return apiRequest(`/saved-items?${params.toString()}`, {
       method: "DELETE",
     });
-  }
+  },
+  removeById: async (id) => {
+    return apiRequest(`/saved-items/${id}`, {
+      method: "DELETE",
+    });
+  },
 };
 
 // User Settings API

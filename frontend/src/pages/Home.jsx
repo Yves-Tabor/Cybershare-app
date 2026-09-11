@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
-import { postsAPI, authAPI, commentsAPI } from "../utils/api";
+import { postsAPI, authAPI, commentsAPI, savedItemsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 const TAGS = {
@@ -1457,8 +1457,14 @@ export default function Home() {
     showToast("Post reported");
   }
 
-  function handleSave() {
-    showToast("Post saved");
+  async function handleSave(postId) {
+    try {
+      await savedItemsAPI.save("post", postId);
+      showToast("Post saved to your saved items");
+    } catch (error) {
+      console.error("Failed to save post:", error);
+      showToast("Failed to save post");
+    }
   }
 
   async function handleDelete(postId) {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import mainBg from "../assets/mainBg.png";
 import { scansAPI, authAPI } from "../utils/api";
@@ -405,8 +405,22 @@ function timeAgo(dateStr) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Scanner() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState("scanner");
   const [url, setUrl] = useState("");
+
+  // Prefill URL if navigated from Saved Items or other pages with link
+  useEffect(() => {
+    const targetUrl = searchParams.get("url") || location.state?.url;
+    if (targetUrl) {
+      setUrl(targetUrl);
+      setView("scanner");
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 120);
+    }
+  }, [searchParams, location.state]);
   const [accepted, setAccepted] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [stepIndex, setStepIndex] = useState(-1);
