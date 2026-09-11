@@ -344,13 +344,15 @@ function ScanResult({ scan }) {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleFindingClick(result)}
-                  className="mt-3 w-full bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2 px-3 hover:bg-[#7F77DD]/20 transition-colors cursor-pointer"
-                  aria-label={`Get automated explanation for ${result.title}`}
-                >
-                  Get automated explanation
-                </button>
+                {!['good-news', 'info'].includes(result.severity) && (
+                  <button
+                    onClick={() => handleFindingClick(result)}
+                    className="mt-3 w-full bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2 px-3 hover:bg-[#7F77DD]/20 transition-colors cursor-pointer"
+                    aria-label={`Get automated explanation for ${result.title}`}
+                  >
+                    Get automated explanation
+                  </button>
+                )}
               </div>
             ))}
             <div ref={findingsEndRef} />
