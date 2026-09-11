@@ -1,47 +1,63 @@
 /* Scanner Page Styles */
 
-.scanner-modal-overlay {
-  padding: 24px;
+/* ── Sticky nav bar ──────────────────────────────────────────────────────── */
+.scanner-nav-bar {
+  background: rgba(5, 5, 5, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.scanner-modal-content {
-  padding: 28px;
+.scanner-nav-inner {
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 16px;
+  padding-bottom: 12px;
 }
 
-.scanner-modal-button {
-  padding-top: 10px;
-  padding-bottom: 10px;
+.scanner-nav-header {
+  margin-bottom: 12px;
 }
 
+/* ── Main scrollable content (offset so it doesn't hide under sticky nav) */
 .scanner-content {
-  padding-left: 32px;
-  padding-right: 32px;
-  padding-top: 48px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 24px;
   padding-bottom: 80px;
 }
 
+/* ── Toggle bar ──────────────────────────────────────────────────────────── */
 .scanner-toggle-bar {
   padding: 4px;
 }
 
 .scanner-toggle-button {
-  padding: 10px 16px;
+  padding: 9px 14px;
+  white-space: nowrap;
 }
 
+/* ── Card chrome ─────────────────────────────────────────────────────────── */
 .scanner-card-header {
-  padding-left: 28px;
-  padding-right: 28px;
+  padding-left: 24px;
+  padding-right: 24px;
   padding-top: 16px;
   padding-bottom: 16px;
 }
 
 .scanner-card-body {
-  padding-left: 28px;
-  padding-right: 28px;
-  padding-top: 32px;
-  padding-bottom: 32px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 28px;
+  padding-bottom: 28px;
 }
 
+/* ── History list item ───────────────────────────────────────────────────── */
+.scanner-history-item {
+  padding: 14px 16px;
+}
+
+/* ── Input / controls ────────────────────────────────────────────────────── */
 .scanner-input {
   padding-left: 20px;
   padding-right: 20px;
@@ -74,4 +90,56 @@
   padding-right: 20px;
   padding-top: 5px;
   padding-bottom: 5px;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.scanner-modal-overlay {
+  padding: 24px;
+}
+
+.scanner-modal-content {
+  padding: 28px;
+}
+
+.scanner-modal-button {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* ── Responsive tweaks ───────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .scanner-nav-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 12px;
+    padding-bottom: 10px;
+  }
+
+  .scanner-content {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 20px;
+  }
+
+  .scanner-card-header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .scanner-card-body {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+
+  .scanner-history-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .scanner-toggle-button {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
 }

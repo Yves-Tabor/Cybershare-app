@@ -389,6 +389,19 @@ function ScanResult({ scan }) {
   );
 }
 
+// ─── Relative time helper ────────────────────────────────────────────────────
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Scanner() {
   const navigate = useNavigate();
@@ -640,7 +653,7 @@ export default function Scanner() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      className="min-h-screen text-[#e0e0e0]"
       style={{
         fontFamily: "'DM Sans', sans-serif",
         backgroundImage: `url(${mainBg})`,
@@ -649,25 +662,28 @@ export default function Scanner() {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="bg-transparent min-h-screen">
-        {/* ── Scanline overlay ── */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          aria-hidden="true"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
-          }}
-        />
+      {/* ── Scanline overlay ── */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        aria-hidden="true"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
+        }}
+      />
 
-        {/* ── Content ── */}
-        <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[900px] mx-auto scanner-content">
+      {/* ── Sticky nav bar ── */}
+      <div className="sticky top-0 z-50 scanner-nav-bar">
+        <div className="w-full max-w-[900px] mx-auto scanner-nav-inner">
           {/* Header */}
-          <header className="flex items-center justify-between mb-14">
+          <header className="flex items-center justify-between scanner-nav-header">
             <div className="flex items-center gap-2.5">
               <IconShield size={18} className="text-white" />
-              <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-white">
+              <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-white hidden sm:inline">
                 Platform Security Layer
+              </span>
+              <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-white sm:hidden">
+                PSL
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -683,27 +699,34 @@ export default function Scanner() {
                   }`}
                 />
                 <span className="text-[10px] font-mono tracking-widest uppercase text-[#444]">
-                  {redisStatus === null ? "Checking" : redisStatus ? "Online" : "Redis Offline"}
+                  {redisStatus === null ? "Checking" : redisStatus ? "Online" : "Offline"}
                 </span>
               </div>
             </div>
           </header>
 
           {/* Toggle Bar */}
-          <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 mb-8 scanner-toggle-bar">
+          <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 scanner-toggle-bar">
             {VIEWS.map((v) => (
               <button
                 key={v.key}
                 onClick={() => setView(v.key)}
-                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none scanner-toggle-button ${view === v.key
-                    ? "bg-white text-black"
-                    : "bg-transparent text-[#aaa] hover:text-[#fff]"
-                  }`}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-all duration-200 cursor-pointer border-none scanner-toggle-button ${
+                  view === v.key
+                    ? "bg-white text-black shadow-sm"
+                    : "bg-transparent text-[#aaa] hover:text-[#fff] hover:bg-white/5"
+                }`}
               >
                 {v.label}
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[900px] mx-auto scanner-content">
+          {/* spacer — header + toggle bar height */}
 
           {/* Service Error Alert Banner */}
           {serviceError && (
@@ -943,12 +966,18 @@ export default function Scanner() {
 
             {view === "history" && (
               <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
+                {/* History header */}
                 <div className="border-b border-[#141414] flex items-center justify-between scanner-card-header">
                   <div className="flex items-center gap-3">
                     <IconScan size={14} className="text-[#555]" />
                     <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
                       Scan History
                     </span>
+                    {scanHistory.length > 0 && (
+                      <span className="text-[10px] font-mono text-[#333] bg-[#111] rounded-full px-2 py-0.5">
+                        {scanHistory.length}
+                      </span>
+                    )}
                   </div>
                   {scanHistory.length > 0 && (
                     <button
@@ -961,75 +990,111 @@ export default function Scanner() {
                           console.error("Failed to clear scan history:", err);
                         }
                       }}
-                      className="text-[10px] font-mono uppercase text-[#E24B4A] hover:text-[#ff6b6b] bg-transparent border-none cursor-pointer transition-colors"
+                      className="text-[10px] font-mono uppercase text-[#E24B4A]/70 hover:text-[#E24B4A] bg-transparent border-none cursor-pointer transition-colors tracking-wider"
                     >
-                      Clear History
+                      Clear all
                     </button>
                   )}
                 </div>
 
                 <div className="scanner-card-body">
                   {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <IconLoader size={16} className="text-[#555]" />
-                      <span className="text-[12px] text-[#555] ml-2">
-                        Loading history...
-                      </span>
+                    <div className="flex items-center justify-center py-10">
+                      <IconLoader size={16} className="text-[#444]" />
+                      <span className="text-[12px] text-[#444] ml-2 font-mono">Loading...</span>
                     </div>
                   ) : scanHistory.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12">
-                      <svg
-                        width="32"
-                        height="32"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#222"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <div className="w-12 h-12 rounded-full bg-[#0d0d0d] border border-[#1a1a1a] flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8"/>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                      </div>
+                      <p className="text-[12px] font-mono text-[#2a2a2a]">No scans yet</p>
+                      <button
+                        onClick={() => setView("scanner")}
+                        className="text-[11px] font-mono text-[#7F77DD]/60 hover:text-[#7F77DD] bg-transparent border-none cursor-pointer transition-colors"
                       >
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                      </svg>
-                      <p className="text-[12px] font-mono text-[#2a2a2a] mt-3">
-                        No scan history yet
-                      </p>
+                        Run your first scan →
+                      </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3">
-                      {scanHistory.map((scan) => (
-                        <div
-                          key={scan.id}
-                          onClick={() => {
-                            setSelectedScan(scan);
-                            setView("result");
-                          }}
-                          className="border border-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:border-[#2a2a2a] transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="app-title-text text-[12px] font-semibold text-white truncate">
-                              {scan.targetUrl}
-                            </span>
-                            <span
-                              className={`text-[10px] font-mono rounded-md px-2 py-1 ${scan.status === "completed"
-                                  ? "bg-[#1a2e1a] text-[#639922]"
-                                  : scan.status === "failed"
+                    <div className="flex flex-col gap-2">
+                      {scanHistory.map((scan) => {
+                        let domain = scan.targetUrl;
+                        try { domain = new URL(scan.targetUrl).hostname; } catch {}
+                        const scoreColor =
+                          !scan.securityScore ? "#333"
+                          : scan.securityScore >= 70 ? "#1D9E75"
+                          : scan.securityScore >= 40 ? "#BA7517"
+                          : "#E24B4A";
+                        return (
+                          <div
+                            key={scan.id}
+                            onClick={() => {
+                              setSelectedScan(scan);
+                              setView("result");
+                            }}
+                            className="group relative flex items-center gap-4 border border-[#161616] hover:border-[#2a2a2a] rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/[0.015] scanner-history-item"
+                          >
+                            {/* Score ring */}
+                            <div className="flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-[#0d0d0d] border border-[#1a1a1a]">
+                              {scan.securityScore ? (
+                                <>
+                                  <span className="text-[13px] font-bold leading-none" style={{ color: scoreColor }}>
+                                    {scan.securityScore}
+                                  </span>
+                                  <span className="text-[8px] font-mono text-[#333] mt-0.5">score</span>
+                                </>
+                              ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"/>
+                                  <line x1="12" y1="8" x2="12" y2="12"/>
+                                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                              )}
+                            </div>
+
+                            {/* Main info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-semibold text-white truncate leading-tight">
+                                {domain}
+                              </p>
+                              <p className="text-[10px] text-[#444] truncate mt-0.5 font-mono">
+                                {scan.targetUrl}
+                              </p>
+                            </div>
+
+                            {/* Right meta */}
+                            <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
+                              <span
+                                className={`text-[9px] font-mono rounded px-1.5 py-0.5 tracking-wider uppercase ${
+                                  scan.status === "completed"
+                                    ? "bg-[#1a2e1a] text-[#639922]"
+                                    : scan.status === "failed"
                                     ? "bg-[#2e1a1a] text-[#E24B4A]"
                                     : "bg-[#1a1a2e] text-[#7F77DD]"
                                 }`}
+                              >
+                                {scan.status}
+                              </span>
+                              <span className="text-[10px] font-mono text-[#383838]">
+                                {timeAgo(scan.createdAt)}
+                              </span>
+                            </div>
+
+                            {/* Arrow */}
+                            <svg
+                              className="flex-shrink-0 text-[#222] group-hover:text-[#444] transition-colors"
+                              width="14" height="14" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
                             >
-                              {scan.status}
-                            </span>
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
                           </div>
-                          <div className="flex items-center gap-4 text-[11px] text-[#555]">
-                            <span>
-                              {new Date(scan.createdAt).toLocaleString()}
-                            </span>
-                            {scan.securityScore && (
-                              <span>Score: {scan.securityScore}/100</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
