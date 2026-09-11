@@ -1141,7 +1141,7 @@ export default function Scanner() {
               {statusText}
             </span>
           </footer>
-      </div>
+        </div>
 
       {modalOpen && <DisclosureModal onClose={() => setModalOpen(false)} />}
     </div>
