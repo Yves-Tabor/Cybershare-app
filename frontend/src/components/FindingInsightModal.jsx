@@ -24,6 +24,18 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
     hasInsight,
   } = useFindingInsight(finding?.id, finding);
 
+  // Store previous active element to restore focus when modal closes
+  const previousActiveElementRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElementRef.current = document.activeElement;
+    } else if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+      previousActiveElementRef.current.focus();
+      previousActiveElementRef.current = null;
+    }
+  }, [isOpen]);
+
   // Handle Escape key to close modal
   useEffect(() => {
     if (!isOpen) return;
@@ -83,9 +95,13 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
           if (savedChoice === 'explain') {
             setShowExplanation(true);
           }
+        } else {
+          setUserChoice(null);
+          setShowExplanation(false);
         }
       } catch {
-        // ignore storage error
+        setUserChoice(null);
+        setShowExplanation(false);
       }
     }, 0);
 

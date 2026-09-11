@@ -1,5 +1,6 @@
 const dns = require('dns').promises;
 const { URL } = require('url');
+const axios = require('axios');
 
 /**
  * DNS Scanner
@@ -118,19 +119,71 @@ async function scanDNS(targetUrl) {
       }
     }
 
-    // Check for DNSSEC (basic check - DNSSEC validation is complex)
-    results.push({
-      category: 'DNS',
-      severity: 'good-news',
-      confidence: 'heuristic',
-      title: 'DNSSEC Configuration',
-      description: 'DNSSEC (DNS Security Extensions) adds cryptographic signatures to DNS records. This scanner performs a basic check. Full DNSSEC validation requires recursive resolver support.',
-      recommendation: 'Consider implementing DNSSEC to protect against DNS spoofing and cache poisoning attacks.',
-      typeSlug: 'missing-dnssec',
-      metadata: {
-        domain: hostname
+    // Check for DNSSEC via DNS-over-HTTPS query for DS (Delegation Signer) record
+    try {
+      let hasDNSSEC = false;
+      let checkPerformed = false;
+
+      try {
+        const dohResponse = await axios.get(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=DS`, {
+          headers: { accept: 'application/dns-json' },
+          timeout: 4000,
+        });
+        if (dohResponse.data && dohResponse.data.Status === 0) {
+          checkPerformed = true;
+          hasDNSSEC = Array.isArray(dohResponse.data.Answer) && dohResponse.data.Answer.some(a => a.type === 43);
+        }
+      } catch {
+        // Fallback to Google DNS DoH
+        try {
+          const googleDoh = await axios.get(`https://dns.google/resolve?name=${encodeURIComponent(hostname)}&type=DS`, {
+            timeout: 4000,
+          });
+          if (googleDoh.data && googleDoh.data.Status === 0) {
+            checkPerformed = true;
+            hasDNSSEC = Array.isArray(googleDoh.data.Answer) && googleDoh.data.Answer.some(a => a.type === 43);
+          }
+        } catch {
+          // DoH network failure, checkPerformed remains false
+        }
       }
-    });
+
+      if (checkPerformed) {
+        if (hasDNSSEC) {
+          // Configured correctly: Plain good-news confirmation, typeSlug MUST stay null
+          results.push({
+            category: 'DNS',
+            severity: 'good-news',
+            confidence: 'confirmed',
+            title: 'DNSSEC Enabled',
+            description: `DNSSEC is enabled for ${hostname}. Cryptographic signatures protect against DNS spoofing and cache poisoning.`,
+            recommendation: 'Ensure your DS records remain up-to-date with your domain registrar.',
+            typeSlug: null,
+            metadata: {
+              domain: hostname,
+              dnssecEnabled: true,
+            },
+          });
+        } else {
+          // Absent / not enabled: Vulnerability finding with typeSlug = 'missing-dnssec'
+          results.push({
+            category: 'DNS',
+            severity: 'low',
+            confidence: 'confirmed',
+            title: 'DNSSEC Not Enabled',
+            description: `The domain ${hostname} does not have DNSSEC enabled. DNS records are not digitally signed, which could allow DNS spoofing or cache poisoning.`,
+            recommendation: 'Enable DNSSEC at your domain registrar and DNS hosting provider.',
+            typeSlug: 'missing-dnssec',
+            metadata: {
+              domain: hostname,
+              dnssecEnabled: false,
+            },
+          });
+        }
+      }
+    } catch {
+      // Ignore DNSSEC check errors
+    }
 
     // Check DNS resolution
     try {

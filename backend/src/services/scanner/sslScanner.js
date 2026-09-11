@@ -25,6 +25,10 @@ async function scanSSL(targetUrl) {
         title: 'Target URL Uses HTTP',
         description: 'The target URL was specified with http://. Checking SSL/TLS configuration on default port 443.',
         recommendation: 'Ensure your web server redirects all HTTP traffic to HTTPS.',
+        typeSlug: 'insecure-http',
+        metadata: {
+          domain: hostname,
+        },
       });
     }
 

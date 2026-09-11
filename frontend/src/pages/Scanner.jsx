@@ -362,6 +362,7 @@ function ScanResult({ scan }) {
       {selectedFinding && (
         <>
           <FindingInsightModal
+            key={selectedFinding.id}
             finding={selectedFinding}
             isOpen={isModalOpen}
             onClose={handleModalClose}

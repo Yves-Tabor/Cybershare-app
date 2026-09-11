@@ -98,6 +98,7 @@ async function scanCookies(targetUrl) {
           title: `SameSite=None Without Secure Flag on Cookie: ${cookie.name}`,
           description: `The cookie "${cookie.name}" has SameSite=None but is missing the Secure flag. Modern browsers require Secure flag when SameSite=None is used.`,
           recommendation: 'Add the Secure flag when using SameSite=None.',
+          typeSlug: 'insecure-cookies',
           metadata: {
             domain: hostname,
             cookie_name: cookie.name,

@@ -14,7 +14,7 @@ export function useFindingInsight(resultId, findingData) {
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
   const debounceTimerRef = useRef(null);
-  const findingTypeSlug = findingData?.type_slug;
+  const findingTypeSlug = findingData?.typeSlug ?? findingData?.type_slug;
 
   const fetchInsightData = useCallback(async () => {
     if (!CASCADE_ENABLED || !resultId) {
@@ -36,6 +36,8 @@ export function useFindingInsight(resultId, findingData) {
       abortControllerRef.current = new AbortController();
       setLoading(true);
       setError(null);
+      setVulnerabilityType(null);
+      setRelatedGroups([]);
 
       try {
         // Fetch related groups

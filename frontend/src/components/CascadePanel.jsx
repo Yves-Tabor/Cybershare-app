@@ -71,7 +71,7 @@ function CascadePanel({ finding, scanId, onDismiss }) {
   const tags = getTags();
 
   return (
-    <div className="cascade-panel absolute bottom-4 right-4 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-right-4 duration-300">
+    <div className="cascade-panel fixed bottom-4 right-4 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-right-4 duration-300">
       <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e1e1e]">

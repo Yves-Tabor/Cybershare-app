@@ -141,6 +141,7 @@ async function scanHeaders(targetUrl) {
           : 'Remove the X-Powered-By header in your application configuration.',
         typeSlug: 'info-disclosure-headers',
         metadata: {
+          domain: hostname,
           header_name: 'X-Powered-By',
           headerValue: poweredByValue,
           hasVersion: hasVersion
@@ -162,6 +163,7 @@ async function scanHeaders(targetUrl) {
         recommendation: `Remove the X-AspNet-Version header to prevent version fingerprinting (currently: "${headers[aspNetVersionHeader]}").`,
         typeSlug: 'info-disclosure-headers',
         metadata: {
+          domain: hostname,
           header_name: 'X-AspNet-Version',
           headerValue: headers[aspNetVersionHeader]
         }
@@ -182,6 +184,7 @@ async function scanHeaders(targetUrl) {
         recommendation: `Remove the X-AspNetMvc-Version header to prevent version fingerprinting (currently: "${headers[aspNetMvcVersionHeader]}").`,
         typeSlug: 'info-disclosure-headers',
         metadata: {
+          domain: hostname,
           header_name: 'X-AspNetMvc-Version',
           headerValue: headers[aspNetMvcVersionHeader]
         }
@@ -208,6 +211,7 @@ async function scanHeaders(targetUrl) {
           : 'Consider removing the Via header if proxy information disclosure is a concern.',
         typeSlug: 'info-disclosure-headers',
         metadata: {
+          domain: hostname,
           header_name: 'Via',
           headerValue: viaValue,
           hasVersion: hasVersion
@@ -235,6 +239,7 @@ async function scanHeaders(targetUrl) {
           : 'Remove the X-Generator header to minimize technology stack disclosure.',
         typeSlug: 'info-disclosure-headers',
         metadata: {
+          domain: hostname,
           header_name: 'X-Generator',
           headerValue: generatorValue,
           hasVersion: hasVersion
