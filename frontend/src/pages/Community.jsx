@@ -294,6 +294,545 @@ function Toast({ message, visible }) {
   );
 }
 
+// ─── Ban Member Modal ─────────────────────────────────────────────────────────
+
+function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
+  const [reason, setReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleBan() {
+    setIsSubmitting(true);
+    await onConfirm(reason.trim());
+    setIsSubmitting(false);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-[480px] bg-[#101017] border border-[#E24B4A]/40 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-[#222232] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#E24B4A]/15 border border-[#E24B4A]/30 flex items-center justify-center text-[#E24B4A]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-[15px] font-semibold text-white">Ban Member</h3>
+              <p className="text-[11px] text-silver font-mono">@{targetUser?.username}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-silver hover:text-white bg-transparent border-none cursor-pointer p-1"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/25 rounded-xl p-3.5 text-[12px] text-[#fca5a5] leading-relaxed">
+            <strong>Warning:</strong> Banning <strong>@{targetUser?.username}</strong> will permanently remove them from <strong>{groupName}</strong>. They will <em>never</em> be able to view, search for, or access this group again.
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+              Reason for Ban (Optional)
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g., Harassment, continuous spam, community rule violations"
+              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-4 py-2.5 text-[13px] text-white outline-none focus:border-[#E24B4A] transition-colors placeholder:text-silver/50"
+            />
+          </div>
+        </div>
+
+        <div className="p-5 bg-[#0b0b10] border-t border-[#222232] flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="px-4 py-2 text-[12px] font-mono text-silver hover:text-white bg-transparent border border-gray rounded-xl cursor-pointer transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleBan}
+            disabled={isSubmitting}
+            className="px-5 py-2 text-[12px] font-mono font-bold text-white bg-[#E24B4A] hover:bg-[#c93b3a] rounded-xl border-none cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {isSubmitting ? "Banning..." : "Confirm & Ban User"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Report Member Modal ──────────────────────────────────────────────────────
+
+function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
+  const [reason, setReason] = useState("Harassment or bullying");
+  const [details, setDetails] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const REASONS = [
+    "Harassment or bullying",
+    "Spam, scams or unsolicited links",
+    "Malicious payloads or exploit code",
+    "Hate speech or abusive language",
+    "Impersonation or fraud",
+    "Other violation",
+  ];
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!reason) return;
+    setIsSubmitting(true);
+    await onSubmit(reason, details.trim());
+    setIsSubmitting(false);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-[500px] bg-[#101017] border border-[#f59e0b]/40 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-[#222232] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#f59e0b]/15 border border-[#f59e0b]/30 flex items-center justify-center text-[#f59e0b]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-[15px] font-semibold text-white">Report User by Email</h3>
+              <p className="text-[11px] text-silver font-mono">@{targetUser?.username} in {groupName}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-silver hover:text-white bg-transparent border-none cursor-pointer p-1"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="bg-[#181824] border border-[#2e2e45] rounded-xl p-3 text-[12px] text-silver leading-relaxed flex items-center gap-2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" className="flex-shrink-0">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <span>This will dispatch an incident notification email to Cybershare administrators with logs and timestamp.</span>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+              Reason / Category
+            </label>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-3.5 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors cursor-pointer"
+            >
+              {REASONS.map((r) => (
+                <option key={r} value={r} className="bg-[#101017] text-white">
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+              Incident Details & Evidence
+            </label>
+            <textarea
+              rows={3}
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="Describe what occurred, quotes, or relevant message context..."
+              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-4 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors placeholder:text-silver/50 resize-none"
+            />
+          </div>
+
+          <div className="pt-2 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-4 py-2 text-[12px] font-mono text-silver hover:text-white bg-transparent border border-gray rounded-xl cursor-pointer transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2 text-[12px] font-mono font-bold text-[#080808] bg-[#f59e0b] hover:bg-[#d97706] rounded-xl border-none cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+              {isSubmitting ? "Sending Email..." : "Send Email Report"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Manage Members Modal ─────────────────────────────────────────────────────
+
+function ManageMembersModal({
+  group,
+  currentUser,
+  isOwner,
+  isAdmin,
+  onClose,
+  onUpdateRole,
+  onOpenBan,
+  onOpenReport,
+  onUnban,
+  onInvite,
+}) {
+  const [tab, setTab] = useState("members");
+  const [search, setSearch] = useState("");
+  const [bans, setBans] = useState([]);
+  const [loadingBans, setLoadingBans] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+
+  useEffect(() => {
+    if (tab === "bans" && (isOwner || isAdmin)) {
+      setLoadingBans(true);
+      groupsAPI
+        .getBans(group.id)
+        .then((res) => setBans(res.bans || []))
+        .catch((err) => console.error("Failed to fetch bans:", err))
+        .finally(() => setLoadingBans(false));
+    }
+  }, [tab, group.id, isOwner, isAdmin]);
+
+  const memberList =
+    group.memberDetails && group.memberDetails.length > 0
+      ? group.memberDetails
+      : (group.members || []).map((m) => {
+          const username = typeof m === "string" ? m : m.username;
+          return {
+            id: typeof m === "object" ? m.id : null,
+            username,
+            role: username === group.owner ? "owner" : "member",
+          };
+        });
+
+  const filteredMembers = memberList.filter((m) =>
+    (m.username || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  async function handleRoleChange(userId, newRole) {
+    setActionLoadingId(userId);
+    await onUpdateRole(userId, newRole);
+    setActionLoadingId(null);
+  }
+
+  async function handleUnbanClick(userId) {
+    setActionLoadingId(userId);
+    await onUnban(userId);
+    setBans((prev) => prev.filter((b) => b.user_id !== userId));
+    setActionLoadingId(null);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-[640px] max-h-[85vh] flex flex-col bg-[#101017] border border-gray rounded-2xl overflow-hidden shadow-2xl">
+        {/* Modal Header */}
+        <div className="p-5 border-b border-[#222232] flex items-center justify-between flex-shrink-0">
+          <div>
+            <h3 className="text-[16px] font-semibold text-white flex items-center gap-2">
+              <span>Members & Administration</span>
+              <span className="text-[11px] font-mono text-[#818cf8] bg-[#818cf8]/10 px-2 py-0.5 rounded-full border border-[#818cf8]/30">
+                {group.name}
+              </span>
+            </h3>
+            <p className="text-[11px] text-silver font-mono mt-0.5">
+              Creator is Main Admin. Main Admin can name/unname other Admins.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-silver hover:text-white bg-transparent border-none cursor-pointer p-1"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Tab switcher */}
+        {(isOwner || isAdmin) && (
+          <div className="flex border-b border-[#222232] bg-[#0b0b10] px-5 flex-shrink-0">
+            <button
+              onClick={() => setTab("members")}
+              className={`py-3 px-4 text-[12px] font-mono border-b-2 cursor-pointer transition-colors bg-transparent ${
+                tab === "members"
+                  ? "border-[#7F77DD] text-white font-bold"
+                  : "border-transparent text-silver hover:text-white"
+              }`}
+            >
+              Active Members ({memberList.length})
+            </button>
+            <button
+              onClick={() => setTab("bans")}
+              className={`py-3 px-4 text-[12px] font-mono border-b-2 cursor-pointer transition-colors bg-transparent flex items-center gap-1.5 ${
+                tab === "bans"
+                  ? "border-[#E24B4A] text-[#fca5a5] font-bold"
+                  : "border-transparent text-silver hover:text-white"
+              }`}
+            >
+              <span>Banned Users</span>
+              {bans.length > 0 && (
+                <span className="text-[10px] bg-[#E24B4A]/20 text-[#E24B4A] px-1.5 py-0.2 rounded-full">
+                  {bans.length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Search Bar for Members */}
+        {tab === "members" && (
+          <div className="p-4 border-b border-[#222232] bg-[#0d0d14] flex-shrink-0">
+            <div className="flex items-center gap-2 bg-[#161622] border border-[#2a2a3e] rounded-xl px-3 py-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search member by username..."
+                className="bg-transparent border-none outline-none text-[12px] text-white placeholder:text-silver/50 w-full font-mono"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="text-silver hover:text-white bg-transparent border-none cursor-pointer text-[11px]"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Content area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {tab === "members" && (
+            <>
+              {filteredMembers.length === 0 ? (
+                <div className="py-8 text-center text-[12px] text-silver font-mono">
+                  No members found matching "{search}"
+                </div>
+              ) : (
+                filteredMembers.map((member) => {
+                  const isThisOwner =
+                    member.role === "owner" ||
+                    member.id === group.ownerId ||
+                    member.username === group.owner;
+                  const isThisAdmin = member.role === "admin";
+                  const isSelf =
+                    currentUser &&
+                    (member.id === currentUser.id ||
+                      member.username === currentUser.username);
+
+                  return (
+                    <div
+                      key={member.id || member.username}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#161622]/60 hover:bg-[#161622] border border-[#222235] rounded-xl p-3 transition-colors"
+                    >
+                      {/* User identity & badge */}
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+                          style={{ background: avatarColor(member.username) }}
+                        >
+                          {member.username.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[13px] font-semibold text-white truncate">
+                              @{member.username}
+                            </span>
+                            {isSelf && (
+                              <span className="text-[9.5px] font-mono text-silver bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
+                                You
+                              </span>
+                            )}
+                            {isThisOwner && (
+                              <span className="text-[9.5px] font-mono bg-[#BA7517]/20 text-[#f59e0b] border border-[#BA7517]/40 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                                ★ Main Admin (Creator)
+                              </span>
+                            )}
+                            {isThisAdmin && !isThisOwner && (
+                              <span className="text-[9.5px] font-mono bg-[#7F77DD]/20 text-[#a5b4fc] border border-[#7F77DD]/40 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                                🛡️ Admin
+                              </span>
+                            )}
+                            {!isThisOwner && !isThisAdmin && (
+                              <span className="text-[9.5px] font-mono bg-white/5 text-silver border border-white/10 px-1.5 py-0.5 rounded">
+                                Member
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Administrative actions */}
+                      <div className="flex items-center gap-1.5 flex-wrap flex-shrink-0">
+                        {/* Creator naming/unnaming Admin */}
+                        {isOwner && !isThisOwner && member.id && (
+                          <>
+                            {isThisAdmin ? (
+                              <button
+                                onClick={() => handleRoleChange(member.id, "member")}
+                                disabled={actionLoadingId === member.id}
+                                className="text-[11px] font-mono px-2.5 py-1 rounded-lg border border-[#7F77DD]/40 text-[#a5b4fc] hover:bg-[#7F77DD]/15 transition-all bg-transparent cursor-pointer disabled:opacity-40"
+                                title="Demote admin to regular member"
+                              >
+                                {actionLoadingId === member.id ? "Updating..." : "Dismiss Admin"}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRoleChange(member.id, "admin")}
+                                disabled={actionLoadingId === member.id}
+                                className="text-[11px] font-mono px-2.5 py-1 rounded-lg border border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/15 transition-all bg-transparent cursor-pointer disabled:opacity-40"
+                                title="Promote member to group admin"
+                              >
+                                {actionLoadingId === member.id ? "Updating..." : "+ Name Admin"}
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {/* Ban button */}
+                        {!isThisOwner && !isSelf && member.id && (
+                          <>
+                            {(isOwner || (isAdmin && !isThisAdmin)) && (
+                              <button
+                                onClick={() => onOpenBan(member)}
+                                className="text-[11px] font-mono px-2.5 py-1 rounded-lg border border-[#E24B4A]/40 text-[#E24B4A] hover:bg-[#E24B4A]/15 transition-all bg-transparent cursor-pointer"
+                                title="Ban user from this group"
+                              >
+                                Ban
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {/* Report button */}
+                        {!isSelf && member.id && (
+                          <button
+                            onClick={() => onOpenReport(member)}
+                            className="text-[11px] font-mono px-2.5 py-1 rounded-lg border border-[#f59e0b]/40 text-[#f59e0b] hover:bg-[#f59e0b]/15 transition-all bg-transparent cursor-pointer"
+                            title="Report user to administrators via email"
+                          >
+                            Report
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </>
+          )}
+
+          {tab === "bans" && (
+            <>
+              {loadingBans ? (
+                <div className="py-8 text-center text-[12px] text-silver font-mono">
+                  Loading banned users...
+                </div>
+              ) : bans.length === 0 ? (
+                <div className="py-8 text-center text-[12px] text-silver font-mono">
+                  No banned users in this group.
+                </div>
+              ) : (
+                bans.map((ban) => (
+                  <div
+                    key={ban.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#1a1215] border border-[#E24B4A]/30 rounded-xl p-3.5"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-[#fca5a5]">
+                          @{ban.username}
+                        </span>
+                        <span className="text-[10px] font-mono text-silver">
+                          {ban.email}
+                        </span>
+                      </div>
+                      <p className="text-[11.5px] text-silver mt-1">
+                        Reason: <span className="text-white font-mono">{ban.reason || "Misbehavior"}</span>
+                      </p>
+                      <p className="text-[10px] text-silver/60 font-mono mt-0.5">
+                        Banned by @{ban.banned_by_username || "admin"} · {new Date(ban.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => handleUnbanClick(ban.user_id)}
+                        disabled={actionLoadingId === ban.user_id}
+                        className="text-[11px] font-mono px-3 py-1.5 rounded-lg border border-[#7F77DD]/40 text-[#a5b4fc] hover:bg-[#7F77DD]/20 transition-all bg-transparent cursor-pointer disabled:opacity-40"
+                      >
+                        {actionLoadingId === ban.user_id ? "Unbanning..." : "Unban User"}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 bg-[#0b0b10] border-t border-[#222232] flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
+          <span className="text-[11px] text-silver font-mono">
+            {group.name} · {group.memberCount} members
+          </span>
+          <div className="flex items-center gap-2">
+            {(isOwner || isAdmin) && (
+              <button
+                onClick={onInvite}
+                className="text-[11.5px] font-mono font-bold text-white bg-[#7F77DD] hover:bg-[#6860ca] px-3 py-1.5 rounded-xl border-none cursor-pointer transition-colors"
+              >
+                + Invite Members
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-[11.5px] font-mono text-silver hover:text-white px-3 py-1.5 rounded-xl border border-gray bg-transparent cursor-pointer transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Create Group Modal ───────────────────────────────────────────────────────
 
 function CreateGroupModal({ onClose, onCreate }) {
@@ -771,6 +1310,32 @@ function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
             >
               {group.category}
             </span>
+            {isOwner && (
+              <span
+                className="text-[9.5px] font-mono rounded-md bg-[#BA7517]/20 text-[#F59E0B] border border-[#BA7517]/40 font-semibold"
+                style={{
+                  paddingLeft: "6px",
+                  paddingRight: "6px",
+                  paddingTop: "2px",
+                  paddingBottom: "2px",
+                }}
+              >
+                ★ Main Admin
+              </span>
+            )}
+            {!isOwner && group.myRole === "admin" && (
+              <span
+                className="text-[9.5px] font-mono rounded-md bg-[#7F77DD]/20 text-[#A5B4FC] border border-[#7F77DD]/40 font-semibold"
+                style={{
+                  paddingLeft: "6px",
+                  paddingRight: "6px",
+                  paddingTop: "2px",
+                  paddingBottom: "2px",
+                }}
+              >
+                🛡️ Admin
+              </span>
+            )}
           </div>
           <p className="text-[12.5px] text-silver leading-relaxed mb-3 line-clamp-2">
             {group.description}
@@ -840,7 +1405,15 @@ function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
 
 // ─── Post inside group ────────────────────────────────────────────────────────
 
-function GroupPost({ post, groupId, onLike, onComment }) {
+function GroupPost({
+  post,
+  groupId,
+  onLike,
+  onComment,
+  isAdmin,
+  onDeletePost,
+  onDeleteComment,
+}) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const inputRef = useRef(null);
@@ -862,24 +1435,50 @@ function GroupPost({ post, groupId, onLike, onComment }) {
       }}
     >
       {/* Author */}
-      <div className="flex items-center gap-2.5 mb-3">
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
-          style={{ background: post.color }}
-        >
-          {post.initials}
-        </div>
-        <div className="flex-1 min-w-0">
-          <span
-            className="text-[12px] font-semibold text-white"
-            style={{ paddingRight: "8px" }}
+      <div className="flex items-center justify-between gap-2.5 mb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
+            style={{ background: post.avatarColor || post.color }}
           >
-            {post.author}
-          </span>
-          <span className="text-[11px] text-silver font-mono ml-2">
-            {timeAgo(post.ts)}
-          </span>
+            {post.initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <span
+              className="text-[12px] font-semibold text-white"
+              style={{ paddingRight: "8px" }}
+            >
+              {post.author}
+            </span>
+            <span className="text-[11px] text-silver font-mono">
+              {timeAgo(post.ts)}
+            </span>
+          </div>
         </div>
+
+        {isAdmin && onDeletePost && (
+          <button
+            onClick={() => onDeletePost(groupId, post.id)}
+            className="text-silver/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10 p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+            title="Delete post (Admin only)"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              <line x1="10" y1="11" x2="10" y2="17" />
+              <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <p className="text-[13px] text-white leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]">
@@ -971,16 +1570,41 @@ function GroupPost({ post, groupId, onLike, onComment }) {
                   >
                     {c.initials}
                   </div>
-                  <div className="flex-1">
-                    <span
-                      className="text-[11px] font-semibold text-[#888]"
-                      style={{ paddingRight: "8px" }}
-                    >
-                      {c.author}
-                    </span>
-                    <span className="text-[10px] text-silver font-mono ml-1.5">
-                      {timeAgo(c.ts)}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span
+                          className="text-[11px] font-semibold text-[#888]"
+                          style={{ paddingRight: "8px" }}
+                        >
+                          {c.author}
+                        </span>
+                        <span className="text-[10px] text-silver font-mono ml-1.5">
+                          {timeAgo(c.ts)}
+                        </span>
+                      </div>
+                      {isAdmin && onDeleteComment && (
+                        <button
+                          onClick={() => onDeleteComment(groupId, post.id, c.id)}
+                          className="text-silver/40 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10 p-1 rounded bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+                          title="Delete comment (Admin only)"
+                        >
+                          <svg
+                            width="11"
+                            height="11"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                     <p className="text-[12px] text-white mt-0.5 leading-relaxed">
                       {c.body}
                     </p>
@@ -1053,7 +1677,12 @@ function GroupDetail({
   onInvite,
   onJoin,
   onDelete,
+  onDeletePost,
+  onDeleteComment,
+  onOpenManageMembers,
   isOwner,
+  isAdmin,
+  currentUser,
 }) {
   const [postText, setPostText] = useState("");
   const [attachment, setAttachment] = useState(null);
@@ -1129,7 +1758,7 @@ function GroupDetail({
               {group.name.slice(0, 2).toUpperCase()}
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h2 className="text-[16px] font-semibold text-white">
                   {group.name}
                 </h2>
@@ -1148,7 +1777,7 @@ function GroupDetail({
                 </span>
                 {isOwner && (
                   <span
-                    className="text-[9.5px] font-mono rounded-md bg-[#1a1a1a] text-[#555] border border-[#222]"
+                    className="text-[9.5px] font-mono rounded-md bg-[#BA7517]/20 text-[#F59E0B] border border-[#BA7517]/40 font-semibold flex items-center gap-1"
                     style={{
                       paddingLeft: "8px",
                       paddingRight: "8px",
@@ -1156,33 +1785,88 @@ function GroupDetail({
                       paddingBottom: "2px",
                     }}
                   >
-                    Owner
+                    ★ Main Admin
+                  </span>
+                )}
+                {!isOwner && isAdmin && (
+                  <span
+                    className="text-[9.5px] font-mono rounded-md bg-[#7F77DD]/20 text-[#A5B4FC] border border-[#7F77DD]/40 font-semibold flex items-center gap-1"
+                    style={{
+                      paddingLeft: "8px",
+                      paddingRight: "8px",
+                      paddingTop: "2px",
+                      paddingBottom: "2px",
+                    }}
+                  >
+                    🛡️ Admin
                   </span>
                 )}
               </div>
               <p className="text-[12.5px] text-silver leading-relaxed mb-3 max-w-lg">
                 {group.description}
               </p>
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-1.5">
-                  {(group.members || []).slice(0, 5).map((m, i) => (
-                    <div
-                      key={m}
-                      className="w-5 h-5 rounded-full border border-[#080808] flex items-center justify-center text-[8px] font-bold text-white"
-                      style={{ background: avatarColor(m), zIndex: 5 - i }}
-                    >
-                      {m.slice(0, 2).toUpperCase()}
-                    </div>
-                  ))}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div
+                  className="flex -space-x-1.5 cursor-pointer hover:opacity-85 transition-opacity"
+                  onClick={onOpenManageMembers}
+                  title="View group members"
+                >
+                  {(group.members || []).slice(0, 5).map((m, i) => {
+                    const username = typeof m === "string" ? m : m.username;
+                    return (
+                      <div
+                        key={username + i}
+                        className="w-5 h-5 rounded-full border border-[#080808] flex items-center justify-center text-[8px] font-bold text-white"
+                        style={{ background: avatarColor(username), zIndex: 5 - i }}
+                      >
+                        {username.slice(0, 2).toUpperCase()}
+                      </div>
+                    );
+                  })}
                 </div>
-                <span className="text-[11px] text-silver font-mono">
-                  {group.memberCount.toLocaleString()} members
-                </span>
+                <button
+                  onClick={onOpenManageMembers}
+                  className="text-[11px] text-silver hover:text-white font-mono bg-transparent border-none cursor-pointer flex items-center gap-1 transition-colors"
+                >
+                  <span>{group.memberCount.toLocaleString()} members</span>
+                  <span className="text-[#818cf8] underline ml-1">
+                    {isOwner || isAdmin ? "· Manage" : "· View list"}
+                  </span>
+                </button>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {isOwner && (
+          <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
+            {group.joined && (
+              <button
+                onClick={onOpenManageMembers}
+                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-[#7F77DD]/30 text-[#A5B4FC] hover:bg-[#7F77DD]/10 transition-all cursor-pointer bg-transparent"
+                style={{
+                  paddingLeft: "12px",
+                  paddingRight: "12px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                {isOwner || isAdmin ? "Manage Members" : "Members"}
+              </button>
+            )}
+            {(isOwner || isAdmin) && (
               <button
                 onClick={() => onInvite(group.id)}
                 className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-gray text-silver hover:text-white hover:border-gray transition-all cursor-pointer bg-transparent"
@@ -1373,6 +2057,9 @@ function GroupDetail({
               groupId={group.id}
               onLike={onLike}
               onComment={onComment}
+              isAdmin={isAdmin}
+              onDeletePost={onDeletePost}
+              onDeleteComment={onDeleteComment}
             />
           ))}
         </div>
@@ -1396,6 +2083,9 @@ export default function Community() {
   const [query, setQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [banTarget, setBanTarget] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
   const [inviteTargetGroupId, setInviteTargetGroupId] = useState(null);
   const [activeGroupId, setActiveGroupId] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: "" });
@@ -1435,8 +2125,11 @@ export default function Community() {
             ownerId: g.owner_id,
             memberCount: parseInt(g.member_count) || 0,
             joined: g.joined,
+            myRole: g.my_role,
+            currentUserRole: g.my_role,
             posts: [],
             members: g.members || [],
+            memberDetails: g.memberDetails || [],
           };
         });
         setGroups(transformedGroups);
@@ -1462,7 +2155,10 @@ export default function Community() {
   }, [searchParams]);
 
   const activeGroup = groups.find((g) => g.id === activeGroupId);
-  const isOwner = activeGroup?.ownerId === currentUser?.id;
+  const isOwner =
+    activeGroup?.ownerId === currentUser?.id ||
+    activeGroup?.currentUserRole === "owner";
+  const isAdmin = isOwner || activeGroup?.currentUserRole === "admin";
 
   // Close search popup on outside click
   useEffect(() => {
@@ -1771,13 +2467,144 @@ export default function Community() {
       setGroups((prev) =>
         prev.map((g) => {
           if (g.id !== groupId) return g;
-          return { ...g, posts: transformedPosts, members: groupResponse.group.members || [] };
+          return {
+            ...g,
+            posts: transformedPosts,
+            members: groupResponse.group.members || [],
+            memberDetails: groupResponse.group.memberDetails || [],
+            currentUserRole: groupResponse.group.currentUserRole || g.currentUserRole,
+            ownerId: groupResponse.group.owner_id || g.ownerId,
+            owner: groupResponse.group.owner_username || g.owner,
+          };
         }),
       );
       setView("group");
     } catch (error) {
       console.error("Failed to fetch group:", error);
+      if (error.status === 403 || error.message?.toLowerCase().includes("banned")) {
+        showToast("You are banned from this group.");
+        setGroups((prev) => prev.filter((g) => g.id !== groupId));
+        setActiveGroupId(null);
+        setView("directory");
+        return;
+      }
       showToast("Failed to load group.");
+    }
+  }
+
+  async function handleDeletePost(groupId, postId) {
+    if (!window.confirm("Are you sure you want to delete this message?")) return;
+    try {
+      await groupsAPI.deletePost(groupId, postId);
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            posts: g.posts.filter((p) => p.id !== postId),
+          };
+        }),
+      );
+      showToast("Message deleted.");
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+      showToast(error.message || "Failed to delete post.");
+    }
+  }
+
+  async function handleDeleteComment(groupId, postId, commentId) {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      await groupsAPI.deleteComment(groupId, postId, commentId);
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            posts: g.posts.map((p) => {
+              if (p.id !== postId) return p;
+              return {
+                ...p,
+                comments: p.comments.filter((c) => c.id !== commentId),
+              };
+            }),
+          };
+        }),
+      );
+      showToast("Comment deleted.");
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+      showToast(error.message || "Failed to delete comment.");
+    }
+  }
+
+  async function handleUpdateRole(groupId, userId, newRole) {
+    try {
+      await groupsAPI.updateMemberRole(groupId, userId, newRole);
+      const groupResponse = await groupsAPI.getById(groupId);
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            members: groupResponse.group.members || [],
+            memberDetails: groupResponse.group.memberDetails || [],
+            currentUserRole: groupResponse.group.currentUserRole || g.currentUserRole,
+          };
+        }),
+      );
+      showToast(
+        newRole === "admin"
+          ? "Member named as Admin."
+          : "Admin privileges removed.",
+      );
+    } catch (error) {
+      console.error("Failed to update role:", error);
+      showToast(error.message || "Failed to update role.");
+    }
+  }
+
+  async function handleBanMember(groupId, userId, reason) {
+    try {
+      await groupsAPI.banMember(groupId, userId, reason);
+      const groupResponse = await groupsAPI.getById(groupId);
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            memberCount: Math.max(0, g.memberCount - 1),
+            members: groupResponse.group.members || [],
+            memberDetails: groupResponse.group.memberDetails || [],
+          };
+        }),
+      );
+      showToast("User banned from this group.");
+      setBanTarget(null);
+    } catch (error) {
+      console.error("Failed to ban member:", error);
+      showToast(error.message || "Failed to ban member.");
+    }
+  }
+
+  async function handleUnbanMember(groupId, userId) {
+    try {
+      await groupsAPI.unbanMember(groupId, userId);
+      showToast("User unbanned successfully.");
+    } catch (error) {
+      console.error("Failed to unban member:", error);
+      showToast(error.message || "Failed to unban member.");
+    }
+  }
+
+  async function handleReportMember(groupId, userId, reason, details) {
+    try {
+      await groupsAPI.reportMember(groupId, userId, reason, details);
+      showToast("Report submitted. Email sent to administrators.");
+      setReportTarget(null);
+    } catch (error) {
+      console.error("Failed to report member:", error);
+      showToast(error.message || "Failed to report member.");
     }
   }
 
@@ -2025,7 +2852,12 @@ export default function Community() {
               onInvite={handleInvite}
               onJoin={handleJoin}
               onDelete={handleDelete}
+              onDeletePost={handleDeletePost}
+              onDeleteComment={handleDeleteComment}
+              onOpenManageMembers={() => setShowMembersModal(true)}
               isOwner={isOwner}
+              isAdmin={isAdmin}
+              currentUser={currentUser}
             />
           )}
         </div>
@@ -2043,6 +2875,54 @@ export default function Community() {
           groupName={groups.find((g) => g.id === inviteTargetGroupId)?.name || "Group"}
           onClose={() => setShowInviteModal(false)}
           onInvite={processInvites}
+        />
+      )}
+
+      {showMembersModal && activeGroup && (
+        <ManageMembersModal
+          group={activeGroup}
+          currentUser={currentUser}
+          isOwner={isOwner}
+          isAdmin={isAdmin}
+          onClose={() => setShowMembersModal(false)}
+          onUpdateRole={(userId, newRole) =>
+            handleUpdateRole(activeGroup.id, userId, newRole)
+          }
+          onOpenBan={(member) => {
+            setBanTarget(member);
+            setShowMembersModal(false);
+          }}
+          onOpenReport={(member) => {
+            setReportTarget(member);
+            setShowMembersModal(false);
+          }}
+          onUnban={(userId) => handleUnbanMember(activeGroup.id, userId)}
+          onInvite={() => {
+            setShowMembersModal(false);
+            handleInvite(activeGroup.id);
+          }}
+        />
+      )}
+
+      {banTarget && activeGroup && (
+        <BanMemberModal
+          targetUser={banTarget}
+          groupName={activeGroup.name}
+          onClose={() => setBanTarget(null)}
+          onConfirm={(reason) =>
+            handleBanMember(activeGroup.id, banTarget.id, reason)
+          }
+        />
+      )}
+
+      {reportTarget && activeGroup && (
+        <ReportMemberModal
+          targetUser={reportTarget}
+          groupName={activeGroup.name}
+          onClose={() => setReportTarget(null)}
+          onSubmit={(reason, details) =>
+            handleReportMember(activeGroup.id, reportTarget.id, reason, details)
+          }
         />
       )}
 

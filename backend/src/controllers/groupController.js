@@ -1,6 +1,7 @@
 const db = require("../config/database");
 const { checkAndPruneStorage } = require("../services/storageService");
 const { createNotification, NOTIFICATION_TYPES } = require("../services/notification/notificationService");
+const { sendReportEmail } = require("../services/emailService");
 
 // Get all groups
 const getAllGroups = async (req, res) => {
@@ -13,13 +14,16 @@ const getAllGroups = async (req, res) => {
         u.username as owner_username,
         u.id as owner_id,
         COUNT(DISTINCT gm.user_id) as member_count,
-
-        CASE WHEN gm2.user_id IS NOT NULL THEN true ELSE false END as joined
+        CASE WHEN gm2.user_id IS NOT NULL THEN true ELSE false END as joined,
+        gm2.role as my_role
       FROM groups g
       LEFT JOIN users u ON g.owner_id = u.id
       LEFT JOIN group_members gm ON g.id = gm.group_id
       LEFT JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $1
-      GROUP BY g.id, u.username, u.id, gm2.user_id
+      WHERE ($1::int IS NULL OR NOT EXISTS (
+        SELECT 1 FROM group_bans gb WHERE gb.group_id = g.id AND gb.user_id = $1
+      ))
+      GROUP BY g.id, u.username, u.id, gm2.user_id, gm2.role
       ORDER BY g.created_at DESC
     `;
 
@@ -37,6 +41,17 @@ const getGroupById = async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
 
+    // Check if user is banned from this group
+    if (userId) {
+      const banCheck = await db.query(
+        "SELECT 1 FROM group_bans WHERE group_id = $1 AND user_id = $2",
+        [id, userId]
+      );
+      if (banCheck.rows.length > 0) {
+        return res.status(403).json({ error: "You are banned from this group" });
+      }
+    }
+
     // Get group details
     const groupQuery = `
       SELECT
@@ -44,13 +59,14 @@ const getGroupById = async (req, res) => {
         u.username as owner_username,
         u.id as owner_id,
         COUNT(DISTINCT gm.user_id) as member_count,
-        CASE WHEN gm2.user_id IS NOT NULL THEN true ELSE false END as joined
+        CASE WHEN gm2.user_id IS NOT NULL THEN true ELSE false END as joined,
+        gm2.role as my_role
       FROM groups g
       LEFT JOIN users u ON g.owner_id = u.id
       LEFT JOIN group_members gm ON g.id = gm.group_id
       LEFT JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $1
       WHERE g.id = $2
-      GROUP BY g.id, u.username, u.id, gm2.user_id
+      GROUP BY g.id, u.username, u.id, gm2.user_id, gm2.role
     `;
 
     const groupResult = await db.query(groupQuery, [userId || null, id]);
@@ -61,16 +77,32 @@ const getGroupById = async (req, res) => {
 
     const group = groupResult.rows[0];
 
-    // Get group members
+    // Get group members with roles
     const membersResult = await db.query(
-      `SELECT u.username
+      `SELECT u.id, u.username, gm.role, gm.joined_at
        FROM group_members gm
        JOIN users u ON gm.user_id = u.id
        WHERE gm.group_id = $1
-       ORDER BY gm.joined_at ASC`,
+       ORDER BY
+         CASE
+           WHEN gm.role = 'owner' THEN 1
+           WHEN gm.role = 'admin' THEN 2
+           ELSE 3
+         END,
+         gm.joined_at ASC`,
       [id],
     );
     group.members = membersResult.rows.map((r) => r.username);
+    group.memberDetails = membersResult.rows;
+
+    let currentUserRole = null;
+    if (userId) {
+      const currentMember = membersResult.rows.find((m) => m.id === userId);
+      if (currentMember) {
+        currentUserRole = currentMember.role;
+      }
+    }
+    group.currentUserRole = currentUserRole;
 
     // Get group posts with likes and comments count
     const postsQuery = `
@@ -150,9 +182,9 @@ const createGroup = async (req, res) => {
     const result = await db.query(query, [name, description, category, userId]);
     const group = result.rows[0];
 
-    // Add owner as first member
+    // Add owner as first member with 'owner' role
     await db.query(
-      "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2)",
+      "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'owner')",
       [group.id, userId],
     );
 
@@ -169,8 +201,17 @@ const joinGroup = async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
 
+    // Check if user is banned from this group
+    const banCheck = await db.query(
+      "SELECT 1 FROM group_bans WHERE group_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+    if (banCheck.rows.length > 0) {
+      return res.status(403).json({ error: "You are banned from this group and cannot join" });
+    }
+
     await db.query(
-      "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2)",
+      "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')",
       [id, userId],
     );
 
@@ -474,31 +515,39 @@ const removeMember = async (req, res) => {
   }
 };
 
-// Invite a user to a group (owner only)
+// Invite a user to a group (Creator or Appointed Admin only)
 const inviteToGroup = async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.body;
     const currentUserId = req.userId;
 
-    // Check if current user is the owner and get group info
-    const groupCheck = await db.query(
-      "SELECT g.owner_id, g.name, u.username as owner_username FROM groups g JOIN users u ON g.owner_id = u.id WHERE g.id = $1",
-      [id],
+    // Check if current user is owner or appointed admin
+    const roleCheck = await db.query(
+      `SELECT g.owner_id, g.name, u.username as inviter_username, gm.role
+       FROM groups g
+       LEFT JOIN users u ON u.id = $1
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+       WHERE g.id = $2`,
+      [currentUserId, id],
     );
 
-    if (groupCheck.rows.length === 0) {
+    if (roleCheck.rows.length === 0) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    if (groupCheck.rows[0].owner_id !== currentUserId) {
+    const groupInfo = roleCheck.rows[0];
+    const isOwner = groupInfo.owner_id === currentUserId;
+    const isAdmin = groupInfo.role === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res
         .status(403)
-        .json({ error: "Only the owner can invite members" });
+        .json({ error: "Only admins can invite members to this group" });
     }
 
-    const groupName = groupCheck.rows[0].name;
-    const inviterUsername = groupCheck.rows[0].owner_username;
+    const groupName = groupInfo.name;
+    const inviterUsername = groupInfo.inviter_username || "An admin";
 
     // Find user by email
     const userResult = await db.query("SELECT id FROM users WHERE email = $1", [
@@ -506,15 +555,24 @@ const inviteToGroup = async (req, res) => {
     ]);
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found with this email" });
     }
 
     const targetUserId = userResult.rows[0].id;
 
+    // Check if target user is banned
+    const banCheck = await db.query(
+      "SELECT 1 FROM group_bans WHERE group_id = $1 AND user_id = $2",
+      [id, targetUserId]
+    );
+    if (banCheck.rows.length > 0) {
+      return res.status(400).json({ error: "This user has been banned from this group" });
+    }
+
     // Add as member
     try {
       await db.query(
-        "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2)",
+        "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')",
         [id, targetUserId],
       );
     } catch (error) {
@@ -537,6 +595,353 @@ const inviteToGroup = async (req, res) => {
   } catch (error) {
     console.error("Error inviting user:", error);
     res.status(500).json({ error: "Failed to invite user" });
+  }
+};
+
+// Update a member's role (Creator / Main Admin only)
+const updateMemberRole = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { role } = req.body;
+    const currentUserId = req.userId;
+
+    if (!["admin", "member"].includes(role)) {
+      return res.status(400).json({ error: "Role must be 'admin' or 'member'" });
+    }
+
+    const groupCheck = await db.query(
+      "SELECT owner_id, name FROM groups WHERE id = $1",
+      [id]
+    );
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    if (groupCheck.rows[0].owner_id !== currentUserId) {
+      return res.status(403).json({ error: "Only the group creator (main admin) can name or unname admins" });
+    }
+
+    if (parseInt(userId, 10) === currentUserId) {
+      return res.status(400).json({ error: "Cannot change the creator's role" });
+    }
+
+    const memberCheck = await db.query(
+      "SELECT * FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+    if (memberCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Member not found in this group" });
+    }
+
+    await db.query(
+      "UPDATE group_members SET role = $1 WHERE group_id = $2 AND user_id = $3",
+      [role, id, userId]
+    );
+
+    const groupName = groupCheck.rows[0].name;
+    const title = role === "admin" ? "Promoted to Admin" : "Admin Privileges Removed";
+    const msg = role === "admin"
+      ? `You are now an Admin in "${groupName}"`
+      : `Your Admin privileges were removed in "${groupName}"`;
+
+    await createNotification(
+      parseInt(userId, 10),
+      NOTIFICATION_TYPES.COMMUNITY,
+      title,
+      msg,
+      parseInt(id, 10)
+    );
+
+    res.json({ message: `Member role updated to ${role} successfully` });
+  } catch (error) {
+    console.error("Error updating member role:", error);
+    res.status(500).json({ error: "Failed to update member role" });
+  }
+};
+
+// Ban a user from the group (Creator or Appointed Admin)
+const banMember = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { reason } = req.body;
+    const currentUserId = req.userId;
+
+    const groupCheck = await db.query(
+      `SELECT g.owner_id, g.name, gm.role as caller_role
+       FROM groups g
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+       WHERE g.id = $2`,
+      [currentUserId, id]
+    );
+
+    if (groupCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const group = groupCheck.rows[0];
+    const isOwner = group.owner_id === currentUserId;
+    const isAdmin = group.caller_role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Only admins can ban members" });
+    }
+
+    const targetId = parseInt(userId, 10);
+    if (targetId === currentUserId) {
+      return res.status(400).json({ error: "You cannot ban yourself" });
+    }
+    if (targetId === group.owner_id) {
+      return res.status(400).json({ error: "Cannot ban the group creator" });
+    }
+
+    // Check target's role
+    const targetCheck = await db.query(
+      "SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [id, targetId]
+    );
+    if (targetCheck.rows.length > 0 && targetCheck.rows[0].role === "admin" && !isOwner) {
+      return res.status(403).json({ error: "Admins cannot ban other admins. Only the group creator can." });
+    }
+
+    // Remove from group_members
+    await db.query(
+      "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [id, targetId]
+    );
+
+    // Record in group_bans
+    await db.query(
+      `INSERT INTO group_bans (group_id, user_id, banned_by, reason)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (group_id, user_id)
+       DO UPDATE SET banned_by = $3, reason = $4, created_at = CURRENT_TIMESTAMP`,
+      [id, targetId, currentUserId, reason || "Misbehavior"]
+    );
+
+    await createNotification(
+      targetId,
+      NOTIFICATION_TYPES.COMMUNITY,
+      "Group Notice",
+      `You have been removed and banned from "${group.name}".`,
+      parseInt(id, 10)
+    );
+
+    res.json({ message: "User banned from group successfully" });
+  } catch (error) {
+    console.error("Error banning user:", error);
+    res.status(500).json({ error: "Failed to ban user" });
+  }
+};
+
+// Unban a user from the group (Creator or Appointed Admin)
+const unbanMember = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const currentUserId = req.userId;
+
+    const roleCheck = await db.query(
+      `SELECT g.owner_id, gm.role
+       FROM groups g
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+       WHERE g.id = $2`,
+      [currentUserId, id]
+    );
+
+    if (roleCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const isOwner = roleCheck.rows[0].owner_id === currentUserId;
+    const isAdmin = roleCheck.rows[0].role === "admin";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Only admins can unban users" });
+    }
+
+    await db.query(
+      "DELETE FROM group_bans WHERE group_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    res.json({ message: "User unbanned successfully" });
+  } catch (error) {
+    console.error("Error unbanning user:", error);
+    res.status(500).json({ error: "Failed to unban user" });
+  }
+};
+
+// Get list of banned users for a group (Creator or Appointed Admin)
+const getGroupBans = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.userId;
+
+    const roleCheck = await db.query(
+      `SELECT g.owner_id, gm.role
+       FROM groups g
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+       WHERE g.id = $2`,
+      [currentUserId, id]
+    );
+
+    if (roleCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const isOwner = roleCheck.rows[0].owner_id === currentUserId;
+    const isAdmin = roleCheck.rows[0].role === "admin";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Only admins can view bans" });
+    }
+
+    const bansResult = await db.query(
+      `SELECT gb.id, gb.group_id, gb.user_id, gb.reason, gb.created_at,
+              u.username, u.email,
+              b.username as banned_by_username
+       FROM group_bans gb
+       JOIN users u ON gb.user_id = u.id
+       JOIN users b ON gb.banned_by = b.id
+       WHERE gb.group_id = $1
+       ORDER BY gb.created_at DESC`,
+      [id]
+    );
+
+    res.json({ bans: bansResult.rows });
+  } catch (error) {
+    console.error("Error fetching group bans:", error);
+    res.status(500).json({ error: "Failed to fetch bans" });
+  }
+};
+
+// Report a user in a group and send email notification
+const reportMember = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { reason, details } = req.body;
+    const currentUserId = req.userId;
+
+    if (!reason) {
+      return res.status(400).json({ error: "Report reason is required" });
+    }
+
+    const groupQuery = await db.query(
+      "SELECT name FROM groups WHERE id = $1",
+      [id]
+    );
+    if (groupQuery.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const reporterQuery = await db.query("SELECT username FROM users WHERE id = $1", [currentUserId]);
+    const targetQuery = await db.query("SELECT username FROM users WHERE id = $1", [userId]);
+
+    if (targetQuery.rows.length === 0) {
+      return res.status(404).json({ error: "Reported user not found" });
+    }
+
+    const groupName = groupQuery.rows[0].name;
+    const reporterUsername = reporterQuery.rows[0]?.username || "anonymous";
+    const reportedUsername = targetQuery.rows[0].username;
+
+    // Save report in database
+    await db.query(
+      `INSERT INTO group_reports (group_id, reporter_id, reported_user_id, reason, details)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id, currentUserId, userId, reason, details || null]
+    );
+
+    // Send email to admins/support
+    await sendReportEmail({
+      groupName,
+      reporterUsername,
+      reportedUsername,
+      reason,
+      details,
+    });
+
+    res.json({ message: "Report submitted successfully. Administrators have been notified via email." });
+  } catch (error) {
+    console.error("Error reporting member:", error);
+    res.status(500).json({ error: "Failed to report member" });
+  }
+};
+
+// Delete a post in a group (Creator or Appointed Admin only)
+const deleteGroupPost = async (req, res) => {
+  try {
+    const { groupId, postId } = req.params;
+    const currentUserId = req.userId;
+
+    const roleCheck = await db.query(
+      `SELECT g.owner_id, gm.role
+       FROM groups g
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+       WHERE g.id = $2`,
+      [currentUserId, groupId]
+    );
+
+    if (roleCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const isOwner = roleCheck.rows[0].owner_id === currentUserId;
+    const isAdmin = roleCheck.rows[0].role === "admin";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Only admins can delete messages and posts" });
+    }
+
+    const result = await db.query(
+      "DELETE FROM group_posts WHERE id = $1 AND group_id = $2 RETURNING id",
+      [postId, groupId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found in this group" });
+    }
+
+    res.json({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting group post:", error);
+    res.status(500).json({ error: "Failed to delete post" });
+  }
+};
+
+// Delete a comment on a group post (Creator or Appointed Admin only)
+const deleteGroupPostComment = async (req, res) => {
+  try {
+    const { groupId, postId, commentId } = req.params;
+    const currentUserId = req.userId;
+
+    const roleCheck = await db.query(
+      `SELECT g.owner_id, gm.role
+       FROM groups g
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+       WHERE g.id = $2`,
+      [currentUserId, groupId]
+    );
+
+    if (roleCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const isOwner = roleCheck.rows[0].owner_id === currentUserId;
+    const isAdmin = roleCheck.rows[0].role === "admin";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Only admins can delete comments" });
+    }
+
+    const result = await db.query(
+      "DELETE FROM group_post_comments WHERE id = $1 AND group_post_id = $2 RETURNING id",
+      [commentId, postId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    res.json({ message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ error: "Failed to delete comment" });
   }
 };
 
@@ -584,5 +989,12 @@ module.exports = {
   createGroupPostComment,
   removeMember,
   inviteToGroup,
+  updateMemberRole,
+  banMember,
+  unbanMember,
+  getGroupBans,
+  reportMember,
+  deleteGroupPost,
+  deleteGroupPostComment,
   deleteGroup,
 };

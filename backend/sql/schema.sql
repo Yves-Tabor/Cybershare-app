@@ -182,6 +182,7 @@ CREATE TABLE IF NOT EXISTS group_members (
   id SERIAL PRIMARY KEY,
   group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(20) DEFAULT 'member',
   joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(group_id, user_id)
 );
@@ -189,6 +190,34 @@ CREATE TABLE IF NOT EXISTS group_members (
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON group_members(user_id);
+
+-- Group Bans Table
+CREATE TABLE IF NOT EXISTS group_bans (
+  id SERIAL PRIMARY KEY,
+  group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  banned_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(group_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_bans_group_id ON group_bans(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_bans_user_id ON group_bans(user_id);
+
+-- Group Reports Table
+CREATE TABLE IF NOT EXISTS group_reports (
+  id SERIAL PRIMARY KEY,
+  group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reported_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason VARCHAR(255) NOT NULL,
+  details TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_reports_group_id ON group_reports(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_reports_reported_user_id ON group_reports(reported_user_id);
 
 -- Group Posts Table
 CREATE TABLE IF NOT EXISTS group_posts (

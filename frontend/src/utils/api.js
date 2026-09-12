@@ -553,6 +553,49 @@ export const groupsAPI = {
     });
   },
 
+  updateMemberRole: async (groupId, userId, role) => {
+    return apiRequest(`/groups/${groupId}/members/${userId}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
+  },
+
+  banMember: async (groupId, userId, reason) => {
+    return apiRequest(`/groups/${groupId}/ban/${userId}`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  unbanMember: async (groupId, userId) => {
+    return apiRequest(`/groups/${groupId}/ban/${userId}`, {
+      method: "DELETE",
+    });
+  },
+
+  getBans: async (groupId) => {
+    return apiRequest(`/groups/${groupId}/bans`);
+  },
+
+  reportMember: async (groupId, userId, reason, details) => {
+    return apiRequest(`/groups/${groupId}/report/${userId}`, {
+      method: "POST",
+      body: JSON.stringify({ reason, details }),
+    });
+  },
+
+  deletePost: async (groupId, postId) => {
+    return apiRequest(`/groups/${groupId}/posts/${postId}`, {
+      method: "DELETE",
+    });
+  },
+
+  deleteComment: async (groupId, postId, commentId) => {
+    return apiRequest(`/groups/${groupId}/posts/${postId}/comments/${commentId}`, {
+      method: "DELETE",
+    });
+  },
+
   invite: async (groupId, email) => {
     return apiRequest(`/groups/${groupId}/invite`, {
       method: "POST",

@@ -322,6 +322,43 @@ async function runMigrations() {
       await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
     }
     console.log('[migration] user profile columns added to users table');
+
+    // Community groups migrations: role in group_members, group_bans, and group_reports
+    await pool.query(`ALTER TABLE group_members ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'member'`);
+    // Ensure group creators have 'owner' role in group_members
+    await pool.query(`
+      UPDATE group_members gm
+      SET role = 'owner'
+      FROM groups g
+      WHERE gm.group_id = g.id AND gm.user_id = g.owner_id
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS group_bans (
+        id SERIAL PRIMARY KEY,
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        banned_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        reason TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(group_id, user_id)
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_group_bans_group_user ON group_bans(group_id, user_id)`);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS group_reports (
+        id SERIAL PRIMARY KEY,
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        reported_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        reason VARCHAR(255) NOT NULL,
+        details TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_group_reports_group_id ON group_reports(group_id)`);
+    console.log('[migration] group roles, group_bans, and group_reports tables ready');
   } catch (err) {
     console.error('[migration] Failed to run migrations:', err.message);
     // Non-fatal — server will still start

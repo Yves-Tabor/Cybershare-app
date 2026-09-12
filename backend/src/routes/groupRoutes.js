@@ -21,6 +21,13 @@ const {
   createGroupPostComment,
   removeMember,
   inviteToGroup,
+  updateMemberRole,
+  banMember,
+  unbanMember,
+  getGroupBans,
+  reportMember,
+  deleteGroupPost,
+  deleteGroupPostComment,
   deleteGroup,
 } = require("../controllers/groupController");
 const {
@@ -60,6 +67,9 @@ router.post("/:id/leave", authMiddleware, leaveGroup);
 // Create a post in a group (requires auth)
 router.post("/:id/posts", authMiddleware, upload.single("attachment"), validate(createGroupPostSchema), createGroupPost);
 
+// Delete a post in a group (requires auth, admin only)
+router.delete("/:groupId/posts/:postId", authMiddleware, deleteGroupPost);
+
 // Get attachment for a group post
 router.get("/:id/posts/:postId/attachment", optionalAuth, getGroupPostAttachment);
 
@@ -77,10 +87,28 @@ router.post(
   createGroupPostComment,
 );
 
+// Delete a comment on a group post (requires auth, admin only)
+router.delete("/:groupId/posts/:postId/comments/:commentId", authMiddleware, deleteGroupPostComment);
+
 // Remove a member from a group (requires auth, owner only)
 router.delete("/:id/members/:userId", authMiddleware, removeMember);
 
-// Invite a user to a group (requires auth, owner only)
+// Name/unname admin role (requires auth, creator only)
+router.patch("/:id/members/:userId/role", authMiddleware, updateMemberRole);
+
+// Ban a user from group (requires auth, admin only)
+router.post("/:id/ban/:userId", authMiddleware, banMember);
+
+// Unban a user from group (requires auth, admin only)
+router.delete("/:id/ban/:userId", authMiddleware, unbanMember);
+
+// Get banned users of group (requires auth, admin only)
+router.get("/:id/bans", authMiddleware, getGroupBans);
+
+// Report a user in group (requires auth, sends email)
+router.post("/:id/report/:userId", authMiddleware, reportMember);
+
+// Invite a user to a group (requires auth, admin only)
 router.post("/:id/invite", authMiddleware, validate(inviteToGroupSchema), inviteToGroup);
 
 // Delete a group (requires auth, owner only)
