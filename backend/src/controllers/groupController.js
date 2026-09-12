@@ -878,16 +878,18 @@ const reportMember = async (req, res) => {
       [id, currentUserId, userId, reason, details || null]
     );
 
-    // Send email to admins/support
-    await sendReportEmail({
+    // Dispatch email notification asynchronously (non-blocking) so user experience is instant
+    sendReportEmail({
       groupName,
       reporterUsername,
       reportedUsername,
       reason,
       details,
+    }).catch((err) => {
+      console.error("[reportMember] Background email error:", err.message);
     });
 
-    res.json({ message: "Report submitted successfully. Administrators have been notified via email." });
+    return res.json({ message: "Report submitted successfully. Incident report dispatched." });
   } catch (error) {
     console.error("Error reporting member:", error);
     res.status(500).json({ error: "Failed to report member" });

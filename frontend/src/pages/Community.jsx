@@ -391,10 +391,13 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!reason) return;
+    if (!reason || isSubmitting) return;
     setIsSubmitting(true);
-    await onSubmit(reason, details.trim());
-    setIsSubmitting(false);
+    try {
+      await onSubmit(reason, details.trim());
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (

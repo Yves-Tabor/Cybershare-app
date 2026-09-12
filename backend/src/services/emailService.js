@@ -7,16 +7,33 @@ function getTransporter() {
 
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const user = process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+  const service = process.env.SMTP_SERVICE || ((host && host.toLowerCase().includes("gmail")) ? "gmail" : null);
 
-  if (host && user && pass) {
-    transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
-    });
+  if ((service || host) && user && pass) {
+    const config = service
+      ? {
+          service,
+          auth: { user, pass },
+          connectionTimeout: 6000,
+          greetingTimeout: 5000,
+          socketTimeout: 8000,
+        }
+      : {
+          host,
+          port,
+          secure: port === 465,
+          auth: { user, pass },
+          connectionTimeout: 6000,
+          greetingTimeout: 5000,
+          socketTimeout: 8000,
+          tls: {
+            rejectUnauthorized: false,
+          },
+        };
+
+    transporter = nodemailer.createTransport(config);
   }
 
   return transporter;
@@ -33,7 +50,23 @@ function getTransporter() {
  */
 async function sendReportEmail({ groupName, reporterUsername, reportedUsername, reason, details }) {
   const adminEmail = process.env.REPORT_ADMIN_EMAIL || "walvesoutis@gmail.com";
-  const fromEmail = process.env.SMTP_FROM || '"Cybershare Community" <no-reply@cybershare.app>';
+  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER;
+
+  // Ensure fromEmail is a valid RFC 2822 email format.
+  // If SMTP_FROM is malformed (e.g. '"Cybershare" cybershare.website' without @) or using Gmail,
+  // ensure it uses the authenticated smtpUser so Gmail doesn't reject or hang.
+  let fromEmail = process.env.SMTP_FROM;
+  if (!fromEmail || !fromEmail.includes("@")) {
+    if (smtpUser && smtpUser.includes("@")) {
+      fromEmail = `"Cybershare Community" <${smtpUser}>`;
+    } else {
+      fromEmail = '"Cybershare Community" <no-reply@cybershare.app>';
+    }
+  } else if (smtpUser && smtpUser.includes("@") && (!fromEmail.includes("<") || !fromEmail.includes(">"))) {
+    // If user provided just an email or raw string, wrap nicely
+    fromEmail = `"Cybershare Community" <${smtpUser}>`;
+  }
+
   const subject = `[Community Incident Report] @${reportedUsername} reported in "${groupName}": ${reason}`;
 
   const html = `
@@ -89,13 +122,19 @@ async function sendReportEmail({ groupName, reporterUsername, reportedUsername, 
 
   if (mailer) {
     try {
-      const info = await mailer.sendMail({
+      const sendPromise = mailer.sendMail({
         from: fromEmail,
         to: adminEmail,
         subject,
         text,
         html,
       });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("SMTP sendMail timed out after 8s")), 8000)
+      );
+
+      const info = await Promise.race([sendPromise, timeoutPromise]);
       console.log(`[emailService] Report email dispatched to ${adminEmail}: ${info.messageId}`);
       return { success: true, messageId: info.messageId };
     } catch (err) {
