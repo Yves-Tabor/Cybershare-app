@@ -252,25 +252,32 @@ const getNotificationPreferences = async (req, res) => {
     email_activity: true,
     push_messages: true,
     push_mentions: true,
+    notif_scanner: true,
+    notif_group_invite: true,
+    notif_group_messages: true,
+    notif_group_created: true,
+    notif_post_activity: true,
+    notif_events: true,
   };
 
   try {
     const userId = req.userId;
 
     const result = await pool.query(
-      'SELECT email_marketing, email_activity, push_messages, push_mentions FROM notification_preferences WHERE user_id = $1',
+      `SELECT email_marketing, email_activity, push_messages, push_mentions,
+              notif_scanner, notif_group_invite, notif_group_messages,
+              notif_group_created, notif_post_activity, notif_events
+       FROM notification_preferences WHERE user_id = $1`,
       [userId]
     );
 
     if (result.rows.length === 0) {
-      // Return defaults if no preferences exist yet for this user
       return res.status(200).json(DEFAULT_PREFERENCES);
     }
 
-    res.status(200).json(result.rows[0]);
+    // Merge DB row with defaults (handles missing columns gracefully)
+    res.status(200).json({ ...DEFAULT_PREFERENCES, ...result.rows[0] });
   } catch (error) {
-    // If the table doesn't exist yet in this environment, return safe defaults
-    // instead of crashing with a 500 error
     if (error.code === '42P01') {
       console.warn('notification_preferences table not found, returning defaults');
       return res.status(200).json(DEFAULT_PREFERENCES);
@@ -284,35 +291,35 @@ const getNotificationPreferences = async (req, res) => {
 const updateNotificationPreferences = async (req, res) => {
   try {
     const userId = req.userId;
-    const { email_marketing, email_activity, push_messages, push_mentions } = req.body;
+    const {
+      email_marketing, email_activity, push_messages, push_mentions,
+      notif_scanner, notif_group_invite, notif_group_messages,
+      notif_group_created, notif_post_activity, notif_events,
+    } = req.body;
 
-    // Build update query dynamically based on provided fields
     const updates = [];
     const values = [];
     let paramCount = 1;
 
-    if (typeof email_marketing === 'boolean') {
-      updates.push(`email_marketing = $${paramCount}`);
-      values.push(email_marketing);
-      paramCount++;
-    }
+    const boolFields = [
+      ['email_marketing', email_marketing],
+      ['email_activity', email_activity],
+      ['push_messages', push_messages],
+      ['push_mentions', push_mentions],
+      ['notif_scanner', notif_scanner],
+      ['notif_group_invite', notif_group_invite],
+      ['notif_group_messages', notif_group_messages],
+      ['notif_group_created', notif_group_created],
+      ['notif_post_activity', notif_post_activity],
+      ['notif_events', notif_events],
+    ];
 
-    if (typeof email_activity === 'boolean') {
-      updates.push(`email_activity = $${paramCount}`);
-      values.push(email_activity);
-      paramCount++;
-    }
-
-    if (typeof push_messages === 'boolean') {
-      updates.push(`push_messages = $${paramCount}`);
-      values.push(push_messages);
-      paramCount++;
-    }
-
-    if (typeof push_mentions === 'boolean') {
-      updates.push(`push_mentions = $${paramCount}`);
-      values.push(push_mentions);
-      paramCount++;
+    for (const [col, val] of boolFields) {
+      if (typeof val === 'boolean') {
+        updates.push(`${col} = $${paramCount}`);
+        values.push(val);
+        paramCount++;
+      }
     }
 
     if (updates.length === 0) {
@@ -321,12 +328,14 @@ const updateNotificationPreferences = async (req, res) => {
 
     values.push(userId);
 
-    // Use UPSERT to handle both insert and update
+    const colNames = boolFields.filter(([, v]) => typeof v === 'boolean').map(([c]) => c);
+    const colValues = values.slice(0, -1);
+
     const query = `
-      INSERT INTO notification_preferences (user_id, ${updates.join(', ')})
-      VALUES ($${paramCount}, ${updates.map((_, i) => `$${i + 1}`).join(', ')})
+      INSERT INTO notification_preferences (user_id, ${colNames.join(', ')})
+      VALUES ($${values.length}, ${colNames.map((_, i) => `$${i + 1}`).join(', ')})
       ON CONFLICT (user_id) DO UPDATE SET ${updates.join(', ')}
-      RETURNING email_marketing, email_activity, push_messages, push_mentions
+      RETURNING *
     `;
 
     const result = await pool.query(query, values);

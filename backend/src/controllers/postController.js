@@ -1,4 +1,6 @@
 const pool = require('../config/database');
+const { notifyPostReshare } = require('../services/notification/notificationService');
+
 
 // Get all posts
 const getAllPosts = async (req, res) => {
@@ -97,13 +99,13 @@ const getPostById = async (req, res) => {
 const createPost = async (req, res) => {
   try {
     const userId = req.userId;
-    const { content } = req.body;
+    const { content, reshare_source_id } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO posts (content, user_id)
-       VALUES ($1, $2)
-       RETURNING id, content, created_at, updated_at`,
-      [content, userId]
+      `INSERT INTO posts (content, user_id, reshare_source_id)
+       VALUES ($1, $2, $3)
+       RETURNING id, content, created_at, updated_at, reshare_source_id`,
+      [content, userId, reshare_source_id || null]
     );
 
     const post = result.rows[0];
@@ -123,6 +125,7 @@ const createPost = async (req, res) => {
         content: post.content,
         createdAt: post.created_at,
         updatedAt: post.updated_at,
+        reshareSourceId: post.reshare_source_id,
         user: {
           id: user.id,
           username: user.username,
@@ -131,6 +134,17 @@ const createPost = async (req, res) => {
         },
       },
     });
+
+    // If this is a reshare, notify the original post author
+    if (reshare_source_id) {
+      const sourcePost = await pool.query('SELECT user_id FROM posts WHERE id = $1', [reshare_source_id]);
+      if (sourcePost.rows.length > 0) {
+        const originalAuthorId = sourcePost.rows[0].user_id;
+        if (originalAuthorId !== userId) {
+          notifyPostReshare(originalAuthorId, reshare_source_id, user.username).catch(() => {});
+        }
+      }
+    }
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS posts (
   id SERIAL PRIMARY KEY,
   content TEXT NOT NULL,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reshare_source_id INTEGER REFERENCES posts(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -147,7 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_event_attendees_user_id ON event_attendees(user_i
 CREATE TABLE IF NOT EXISTS notifications (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(50) NOT NULL CHECK (type IN ('EVENT', 'SCAN_COMPLETED', 'SCAN_FAILED', 'COMMUNITY', 'SYSTEM', 'SECURITY_ALERT')),
+  type VARCHAR(50) NOT NULL CHECK (type IN ('EVENT', 'SCAN_COMPLETED', 'SCAN_FAILED', 'COMMUNITY', 'SYSTEM', 'SECURITY_ALERT', 'GROUP_INVITE', 'GROUP_MESSAGE', 'GROUP_CREATED', 'POST_COMMENT', 'POST_RESHARE')),
   title VARCHAR(255) NOT NULL,
   message TEXT NOT NULL,
   related_id INTEGER,
@@ -287,7 +288,13 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   email_marketing BOOLEAN DEFAULT true,
   email_activity BOOLEAN DEFAULT true,
   push_messages BOOLEAN DEFAULT true,
-  push_mentions BOOLEAN DEFAULT true
+  push_mentions BOOLEAN DEFAULT true,
+  notif_scanner BOOLEAN DEFAULT true,
+  notif_group_invite BOOLEAN DEFAULT true,
+  notif_group_messages BOOLEAN DEFAULT true,
+  notif_group_created BOOLEAN DEFAULT true,
+  notif_post_activity BOOLEAN DEFAULT true,
+  notif_events BOOLEAN DEFAULT true
 );
 
 -- Index for faster lookups

@@ -1283,10 +1283,180 @@ function DangerZoneSection({ profile, showToast }) {
   );
 }
 
+// ─── Notifications Section ───────────────────────────────────────────────────
+
+function NotificationsSection({ showToast }) {
+  const [prefs, setPrefs] = useState({
+    notif_scanner: true,
+    notif_group_invite: true,
+    notif_group_messages: true,
+    notif_group_created: true,
+    notif_post_activity: true,
+    notif_events: true,
+  });
+  const [loading, setLoading] = useState(true);
+  const [updatingKey, setUpdatingKey] = useState(null);
+
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const data = await userSettingsAPI.getNotificationPreferences();
+        if (data) {
+          setPrefs((prev) => ({
+            ...prev,
+            notif_scanner: data.notif_scanner ?? true,
+            notif_group_invite: data.notif_group_invite ?? true,
+            notif_group_messages: data.notif_group_messages ?? true,
+            notif_group_created: data.notif_group_created ?? true,
+            notif_post_activity: data.notif_post_activity ?? true,
+            notif_events: data.notif_events ?? true,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load notification preferences:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPreferences();
+  }, []);
+
+  async function handleToggle(key, nextVal) {
+    const prevVal = prefs[key];
+    setPrefs((p) => ({ ...p, [key]: nextVal }));
+    setUpdatingKey(key);
+    try {
+      await userSettingsAPI.updateNotificationPreferences({ [key]: nextVal });
+      showToast("Notification preferences updated.");
+    } catch (err) {
+      console.error("Failed to update preference:", err);
+      setPrefs((p) => ({ ...p, [key]: prevVal }));
+      showToast("Failed to update preferences.");
+    } finally {
+      setUpdatingKey(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <SectionCard
+        title="Notifications"
+        icon={<IconBell />}
+        description="Control which notifications and alert types you want to receive."
+      >
+        <p className="text-[12px] font-mono text-[#666] py-6 text-center">
+          Loading notification preferences...
+        </p>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionCard
+        title="Notifications"
+        icon={<IconBell />}
+        description="Choose which types of alerts and platform notifications you want to receive."
+      >
+        <div className="mb-6">
+          <p className="text-[11px] font-mono font-bold tracking-[0.14em] uppercase text-[#7F77DD] mb-2">
+            Scanner & Security
+          </p>
+          <SettingRow
+            label="Scanner findings"
+            description="Alerts when automated security scans complete, fail, or detect vulnerabilities."
+            control={
+              <Toggle
+                checked={prefs.notif_scanner}
+                disabled={updatingKey === "notif_scanner"}
+                onChange={(val) => handleToggle("notif_scanner", val)}
+              />
+            }
+          />
+        </div>
+
+        <div className="mb-6">
+          <p className="text-[11px] font-mono font-bold tracking-[0.14em] uppercase text-[#7F77DD] mb-2">
+            Community & Groups
+          </p>
+          <SettingRow
+            label="Group invitations"
+            description="Notifications when you are invited to join a group or community."
+            control={
+              <Toggle
+                checked={prefs.notif_group_invite}
+                disabled={updatingKey === "notif_group_invite"}
+                onChange={(val) => handleToggle("notif_group_invite", val)}
+              />
+            }
+          />
+          <SettingRow
+            label="Community new messages"
+            description="Notifications for new posts and discussions in groups you belong to."
+            control={
+              <Toggle
+                checked={prefs.notif_group_messages}
+                disabled={updatingKey === "notif_group_messages"}
+                onChange={(val) => handleToggle("notif_group_messages", val)}
+              />
+            }
+          />
+          <SettingRow
+            label="Community new groups"
+            description="Broadcast alerts whenever a new public community or group is created."
+            control={
+              <Toggle
+                checked={prefs.notif_group_created}
+                disabled={updatingKey === "notif_group_created"}
+                onChange={(val) => handleToggle("notif_group_created", val)}
+              />
+            }
+          />
+        </div>
+
+        <div className="mb-6">
+          <p className="text-[11px] font-mono font-bold tracking-[0.14em] uppercase text-[#7F77DD] mb-2">
+            Social & Activity
+          </p>
+          <SettingRow
+            label="Post comments & resharing"
+            description="Notifications whenever someone comments on or reshares your posts."
+            control={
+              <Toggle
+                checked={prefs.notif_post_activity}
+                disabled={updatingKey === "notif_post_activity"}
+                onChange={(val) => handleToggle("notif_post_activity", val)}
+              />
+            }
+          />
+        </div>
+
+        <div>
+          <p className="text-[11px] font-mono font-bold tracking-[0.14em] uppercase text-[#7F77DD] mb-2">
+            Events & Workshops
+          </p>
+          <SettingRow
+            label="New events"
+            description="Alerts when new workshops, webinars, or community events are published."
+            control={
+              <Toggle
+                checked={prefs.notif_events}
+                disabled={updatingKey === "notif_events"}
+                onChange={(val) => handleToggle("notif_events", val)}
+              />
+            }
+          />
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
+
 // ─── Nav config ───────────────────────────────────────────────────────────────
 
 const SECTIONS = [
   { id: "profile", label: "Profile", icon: <IconUser /> },
+  { id: "notifications", label: "Notifications", icon: <IconBell /> },
   { id: "security", label: "Security", icon: <IconShield /> },
   { id: "danger", label: "Danger Zone", icon: <IconAlert />, danger: true },
 ];
@@ -1429,6 +1599,9 @@ export default function Settings() {
                   setProfile={setProfile}
                   showToast={showToast}
                 />
+              )}
+              {section === "notifications" && (
+                <NotificationsSection showToast={showToast} />
               )}
               {section === "security" && (
                 <SecuritySection

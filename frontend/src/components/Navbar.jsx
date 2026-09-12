@@ -193,19 +193,49 @@ const UserIcon = () => (
 );
 
 function NotifIcon({ type }) {
-  if (type === "comment")
+  if (type === "POST_COMMENT" || type === "comment")
     return (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    );
+  if (type === "POST_RESHARE")
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 1l4 4-4 4" />
+        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+        <path d="M7 23l-4-4 4-4" />
+        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+      </svg>
+    );
+  if (type === "GROUP_MESSAGE")
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      </svg>
+    );
+  if (type === "GROUP_INVITE" || type === "GROUP_CREATED" || type === "COMMUNITY")
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    );
+  if (type === "EVENT")
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    );
+  if (type === "SCAN_COMPLETED" || type === "SCAN_FAILED" || type === "SECURITY_ALERT")
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     );
   if (type === "bookmark")
@@ -512,15 +542,24 @@ function UserPanel({
                 }
                 onClose();
                 // Navigate based on type
-                if (notif.type === "COMMUNITY" && notif.relatedId) {
-                  navigate(`/main/community?group=${notif.relatedId}`);
-                } else if (
-                  (notif.type === "SCAN_COMPLETED" || notif.type === "SCAN_FAILED" || notif.type === "SECURITY_ALERT") &&
+                if (
+                  (notif.type === "COMMUNITY" ||
+                    notif.type === "GROUP_CREATED" ||
+                    notif.type === "GROUP_INVITE" ||
+                    notif.type === "GROUP_MESSAGE") &&
                   notif.relatedId
                 ) {
+                  navigate(`/main/community?group=${notif.relatedId}`);
+                } else if (
+                  notif.type === "SCAN_COMPLETED" ||
+                  notif.type === "SCAN_FAILED" ||
+                  notif.type === "SECURITY_ALERT"
+                ) {
                   navigate(`/main/scanner`);
-                } else if (notif.type === "EVENT" && notif.relatedId) {
+                } else if (notif.type === "EVENT") {
                   navigate(`/main/events`);
+                } else if (notif.type === "POST_COMMENT" || notif.type === "POST_RESHARE") {
+                  navigate(`/main`);
                 }
               }}
               style={{

@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const { notifyPostComment } = require('../services/notification/notificationService');
 
 // Get comments for a post
 const getPostComments = async (req, res) => {
@@ -105,6 +106,15 @@ const createComment = async (req, res) => {
         },
       },
     });
+
+    // Notify post author if commenter is different
+    const postAuthorResult = await pool.query('SELECT user_id FROM posts WHERE id = $1', [postId]);
+    if (postAuthorResult.rows.length > 0) {
+      const postAuthorId = postAuthorResult.rows[0].user_id;
+      if (postAuthorId !== userId) {
+        notifyPostComment(postAuthorId, parseInt(postId), user.username).catch(() => {});
+      }
+    }
   } catch (error) {
     console.error("Create comment error:", error);
     res.status(500).json({ error: "Internal server error" });

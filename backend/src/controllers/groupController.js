@@ -1,6 +1,12 @@
 const db = require("../config/database");
 const { checkAndPruneStorage } = require("../services/storageService");
-const { createNotification, NOTIFICATION_TYPES } = require("../services/notification/notificationService");
+const {
+  createNotification,
+  NOTIFICATION_TYPES,
+  notifyGroupCreated,
+  notifyGroupInvite,
+  notifyGroupMessage,
+} = require("../services/notification/notificationService");
 const { sendReportEmail } = require("../services/emailService");
 
 // Get all groups
@@ -188,6 +194,15 @@ const createGroup = async (req, res) => {
       [group.id, userId],
     );
 
+    // Get creator username and all other users to broadcast group creation
+    const creatorResult = await db.query('SELECT username FROM users WHERE id = $1', [userId]);
+    const creatorUsername = creatorResult.rows[0]?.username || 'Someone';
+    const allUsersResult = await db.query('SELECT id FROM users WHERE id != $1 AND deleted_at IS NULL', [userId]);
+    const otherUserIds = allUsersResult.rows.map(r => r.id);
+    if (otherUserIds.length > 0) {
+      notifyGroupCreated(otherUserIds, group.id, group.name, creatorUsername).catch(() => {});
+    }
+
     res.status(201).json({ group });
   } catch (error) {
     console.error("Error creating group:", error);
@@ -304,14 +319,34 @@ const createGroupPost = async (req, res) => {
     }
 
     const result = await db.query(query, values);
-    res.status(201).json({ post: result.rows[0] });
+    const newPost = result.rows[0];
+    res.status(201).json({ post: newPost });
 
-    // Asynchronously prune old storage if limit reached
-    if (file) {
-      checkAndPruneStorage().catch((err) =>
-        console.error("Storage pruning background task failed:", err)
-      );
-    }
+    // Asynchronously notify group members (except poster) of new message
+    setImmediate(async () => {
+      try {
+        const posterResult = await db.query('SELECT username FROM users WHERE id = $1', [userId]);
+        const posterUsername = posterResult.rows[0]?.username || 'Someone';
+        const groupInfoResult = await db.query('SELECT name FROM groups WHERE id = $1', [id]);
+        const groupName = groupInfoResult.rows[0]?.name || 'the group';
+        const membersResult = await db.query(
+          'SELECT user_id FROM group_members WHERE group_id = $1 AND user_id != $2',
+          [id, userId]
+        );
+        const memberIds = membersResult.rows.map(r => r.user_id);
+        if (memberIds.length > 0) {
+          await notifyGroupMessage(memberIds, parseInt(id), groupName, newPost.id, posterUsername);
+        }
+      } catch (err) {
+        console.error('Background group message notify failed:', err.message);
+      }
+      // Asynchronously prune old storage if limit reached
+      if (file) {
+        checkAndPruneStorage().catch((err) =>
+          console.error("Storage pruning background task failed:", err)
+        );
+      }
+    });
   } catch (error) {
     console.error("Error creating group post:", error);
     res.status(500).json({ error: "Failed to create post" });
@@ -582,14 +617,8 @@ const inviteToGroup = async (req, res) => {
       throw error;
     }
 
-    // Send notification to invited user
-    await createNotification(
-      targetUserId,
-      NOTIFICATION_TYPES.COMMUNITY,
-      "Group Invitation",
-      `You've been invited to join "${groupName}" by ${inviterUsername}`,
-      parseInt(id),
-    );
+    // Send GROUP_INVITE notification to invited user
+    await notifyGroupInvite(targetUserId, parseInt(id), groupName, inviterUsername);
 
     res.json({ message: "User invited successfully" });
   } catch (error) {

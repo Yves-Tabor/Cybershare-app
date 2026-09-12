@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { eventsAPI, authAPI } from "../utils/api";
+import { eventsAPI, authAPI, savedItemsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -485,7 +485,7 @@ function CreateEventModal({ onClose, onCreate }) {
 
 // ─── Event card (events list) ─────────────────────────────────────────────────
 
-function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
+function EventCard({ event, onToggleCalendar, onToggleSave, onDelete, currentUser }) {
   return (
     <div
       className="border-2 border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
@@ -584,6 +584,30 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
             </div>
             
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => onToggleSave && onToggleSave(event.id)}
+                title={event.isSaved ? "Remove from saved items" : "Save event"}
+                className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
+                  event.isSaved
+                    ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
+                    : "border-white/10 text-[#888] bg-transparent hover:border-white/20 hover:text-white"
+                }`}
+                style={{ padding: "6px 12px" }}
+              >
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill={event.isSaved ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+                {event.isSaved ? "Saved" : "Save"}
+              </button>
               {currentUser?.id === event.hostId && (
                 <button
                   onClick={() => onDelete(event.id)}
@@ -961,6 +985,20 @@ export default function Events() {
           meetup: { label: "Meetup", color: "#BA7517", bg: "#2e2a1a" },
           webinar: { label: "Webinar", color: "#185FA5", bg: "#16222e" },
         };
+        let savedEventIds = new Set();
+        try {
+          const savedData = await savedItemsAPI.getAll();
+          if (savedData?.saved_items) {
+            savedEventIds = new Set(
+              savedData.saved_items
+                .filter((item) => item.item_type === "event")
+                .map((item) => item.item_id)
+            );
+          }
+        } catch {
+          // non-critical
+        }
+
         const transformedEvents = data.events.map((e) => {
           const lowerCat = e.category ? e.category.toLowerCase() : "";
           const cat = categoryMap[lowerCat] || {
@@ -987,6 +1025,7 @@ export default function Events() {
             host: e.createdBy?.username || e.username || "Unknown",
             attendees: e.attendeeCount ?? e.attendee_count ?? 0,
             addedToCalendar: e.isRegistered || e.registered || false,
+            isSaved: savedEventIds.has(e.id),
           };
         });
         setEvents(transformedEvents);
@@ -1038,6 +1077,32 @@ export default function Events() {
     } catch (error) {
       console.error("Failed to toggle calendar:", error);
       showToast("Failed to update calendar.");
+    }
+  }
+
+  async function handleToggleSave(id) {
+    const event = events.find((e) => e.id === id);
+    if (!event) return;
+
+    const nextSaved = !event.isSaved;
+    setEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, isSaved: nextSaved } : e))
+    );
+
+    try {
+      if (nextSaved) {
+        await savedItemsAPI.save("event", id);
+        showToast(`Saved "${event.title}" to your items`);
+      } else {
+        await savedItemsAPI.unsave("event", id);
+        showToast(`Removed "${event.title}" from saved items`);
+      }
+    } catch (error) {
+      console.error("Failed to toggle save:", error);
+      setEvents((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, isSaved: !nextSaved } : e))
+      );
+      showToast("Failed to update saved item.");
     }
   }
 
@@ -1184,7 +1249,7 @@ export default function Events() {
                 )}
               </div>
             </div>
-            {view === "events" && (currentUser?.role === "admin" || currentUser?.role === "moderator") && (
+            {view === "events" && (
               <button
                 onClick={() => setShowCreate(true)}
                 className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
@@ -1206,6 +1271,7 @@ export default function Events() {
                   Post event
               </button>
             )}
+
           </div>
 
           {/* Events / Calendar toggle */}
@@ -1339,6 +1405,7 @@ export default function Events() {
                       key={e.id}
                       event={e}
                       onToggleCalendar={handleToggleCalendar}
+                      onToggleSave={handleToggleSave}
                       onDelete={handleDelete}
                       currentUser={currentUser}
                     />

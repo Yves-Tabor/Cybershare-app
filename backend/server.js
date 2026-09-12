@@ -359,6 +359,40 @@ async function runMigrations() {
     `);
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_group_reports_group_id ON group_reports(group_id)`);
     console.log('[migration] group roles, group_bans, and group_reports tables ready');
+
+    // Expand notifications type CHECK to include new types
+    await pool.query(`
+      ALTER TABLE notifications
+        DROP CONSTRAINT IF EXISTS notifications_type_check
+    `);
+    await pool.query(`
+      ALTER TABLE notifications
+        ADD CONSTRAINT notifications_type_check CHECK (
+          type IN (
+            'EVENT', 'SCAN_COMPLETED', 'SCAN_FAILED', 'COMMUNITY', 'SYSTEM', 'SECURITY_ALERT',
+            'GROUP_INVITE', 'GROUP_MESSAGE', 'GROUP_CREATED', 'POST_COMMENT', 'POST_RESHARE'
+          )
+        )
+    `);
+    console.log('[migration] notifications type constraint expanded');
+
+    // Add reshare_source_id to posts for tracking reshared posts
+    await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS reshare_source_id INTEGER REFERENCES posts(id) ON DELETE SET NULL`);
+    console.log('[migration] reshare_source_id added to posts');
+
+    // Add per-type notification preference columns
+    const notifPrefCols = [
+      ['notif_scanner', 'BOOLEAN DEFAULT true'],
+      ['notif_group_invite', 'BOOLEAN DEFAULT true'],
+      ['notif_group_messages', 'BOOLEAN DEFAULT true'],
+      ['notif_group_created', 'BOOLEAN DEFAULT true'],
+      ['notif_post_activity', 'BOOLEAN DEFAULT true'],
+      ['notif_events', 'BOOLEAN DEFAULT true'],
+    ];
+    for (const [col, type] of notifPrefCols) {
+      await pool.query(`ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+    }
+    console.log('[migration] notification_preferences new columns ready');
   } catch (err) {
     console.error('[migration] Failed to run migrations:', err.message);
     // Non-fatal — server will still start
