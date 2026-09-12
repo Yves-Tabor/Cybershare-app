@@ -413,7 +413,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
               </svg>
             </div>
             <div>
-              <h3 className="text-[15px] font-semibold text-white">Report User by Email</h3>
+              <h3 className="text-[15px] font-semibold text-white">Report User</h3>
               <p className="text-[11px] text-silver font-mono">@{targetUser?.username} in {groupName}</p>
             </div>
           </div>
@@ -431,7 +431,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
-            <span>This will dispatch an incident report directly to walvesoutis@gmail.com with your input details and context.</span>
+            <span>This will securely dispatch an incident report to platform administration with your input details and context.</span>
           </div>
 
           <div>
@@ -2631,7 +2631,7 @@ export default function Community() {
   async function handleReportMember(groupId, userId, reason, details) {
     try {
       await groupsAPI.reportMember(groupId, userId, reason, details);
-      showToast("Report submitted and emailed to walvesoutis@gmail.com.");
+      showToast("Report submitted successfully. Incident report dispatched.");
       setReportTarget(null);
     } catch (error) {
       console.error("Failed to report member:", error);
