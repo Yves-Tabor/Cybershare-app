@@ -32,9 +32,9 @@ function getTransporter() {
  * @param {string} [params.details]
  */
 async function sendReportEmail({ groupName, reporterUsername, reportedUsername, reason, details }) {
-  const adminEmail = process.env.REPORT_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "security-reports@cybershare.app";
+  const adminEmail = process.env.REPORT_ADMIN_EMAIL || "walvesoutis@gmail.com";
   const fromEmail = process.env.SMTP_FROM || '"Cybershare Community" <no-reply@cybershare.app>';
-  const subject = `[Group Report] User @${reportedUsername} reported in "${groupName}"`;
+  const subject = `[Community Incident Report] @${reportedUsername} reported in "${groupName}": ${reason}`;
 
   const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f0f15; color: #f0f0f0; border-radius: 12px; overflow: hidden; border: 1px solid #28283c;">

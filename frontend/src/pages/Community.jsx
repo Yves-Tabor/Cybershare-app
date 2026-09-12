@@ -431,7 +431,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
-            <span>This will dispatch an incident notification email to Cybershare administrators with logs and timestamp.</span>
+            <span>This will dispatch an incident report directly to walvesoutis@gmail.com with your input details and context.</span>
           </div>
 
           <div>
@@ -1413,6 +1413,8 @@ function GroupPost({
   isAdmin,
   onDeletePost,
   onDeleteComment,
+  onOpenReport,
+  currentUser,
 }) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -1456,29 +1458,54 @@ function GroupPost({
           </div>
         </div>
 
-        {isAdmin && onDeletePost && (
-          <button
-            onClick={() => onDeletePost(groupId, post.id)}
-            className="text-silver/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10 p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
-            title="Delete post (Admin only)"
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        <div className="flex items-center gap-1">
+          {onOpenReport && post.authorId && post.authorId !== currentUser?.id && (
+            <button
+              onClick={() => onOpenReport({ id: post.authorId, username: post.author })}
+              className="text-silver/50 hover:text-[#f59e0b] hover:bg-[#f59e0b]/10 p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+              title="Report user / message"
             >
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              <line x1="10" y1="11" x2="10" y2="17" />
-              <line x1="14" y1="11" x2="14" y2="17" />
-            </svg>
-          </button>
-        )}
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </button>
+          )}
+
+          {isAdmin && onDeletePost && (
+            <button
+              onClick={() => onDeletePost(groupId, post.id)}
+              className="text-silver/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10 p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+              title="Delete post (Admin only)"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="text-[13px] text-white leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]">
@@ -1680,6 +1707,7 @@ function GroupDetail({
   onDeletePost,
   onDeleteComment,
   onOpenManageMembers,
+  onOpenReport,
   isOwner,
   isAdmin,
   currentUser,
@@ -2060,6 +2088,8 @@ function GroupDetail({
               isAdmin={isAdmin}
               onDeletePost={onDeletePost}
               onDeleteComment={onDeleteComment}
+              onOpenReport={onOpenReport}
+              currentUser={currentUser}
             />
           ))}
         </div>
@@ -2447,6 +2477,7 @@ export default function Community() {
       const transformedPosts = groupResponse.posts.map((p) => ({
         id: p.id,
         author: p.username,
+        authorId: p.user_id || p.post_author_id,
         avatarColor: avatarColor(p.username),
         initials: p.username.slice(0, 2).toUpperCase(),
         body: p.content,
@@ -2600,7 +2631,7 @@ export default function Community() {
   async function handleReportMember(groupId, userId, reason, details) {
     try {
       await groupsAPI.reportMember(groupId, userId, reason, details);
-      showToast("Report submitted. Email sent to administrators.");
+      showToast("Report submitted and emailed to walvesoutis@gmail.com.");
       setReportTarget(null);
     } catch (error) {
       console.error("Failed to report member:", error);
@@ -2855,6 +2886,7 @@ export default function Community() {
               onDeletePost={handleDeletePost}
               onDeleteComment={handleDeleteComment}
               onOpenManageMembers={() => setShowMembersModal(true)}
+              onOpenReport={(member) => setReportTarget(member)}
               isOwner={isOwner}
               isAdmin={isAdmin}
               currentUser={currentUser}

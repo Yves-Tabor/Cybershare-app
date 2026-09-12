@@ -20,14 +20,13 @@ const AVATAR_COLORS = [
 
 const TYPE_META = {
   post: { label: "Post", color: "#7F77DD", bg: "#1a1a2e" },
-  event: { label: "Event", color: "#1D9E75", bg: "#1a2a2e" },
   resource: { label: "Resource", color: "#BA7517", bg: "#2e2a1a" },
+  event: { label: "Event", color: "#1D9E75", bg: "#1a2a2e" },
 };
 
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "post", label: "Posts" },
-  { key: "event", label: "Events" },
   { key: "resource", label: "Resources" },
 ];
 

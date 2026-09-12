@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { eventsAPI, authAPI, savedItemsAPI } from "../utils/api";
+import { eventsAPI, authAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -485,7 +485,12 @@ function CreateEventModal({ onClose, onCreate }) {
 
 // ─── Event card (events list) ─────────────────────────────────────────────────
 
-function EventCard({ event, onToggleCalendar, onToggleSave, onDelete, currentUser }) {
+function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
+  const canDelete =
+    (currentUser?.id && event.hostId && Number(currentUser.id) === Number(event.hostId)) ||
+    (currentUser?.username && event.host && currentUser.username.toLowerCase() === event.host.toLowerCase()) ||
+    currentUser?.role === "admin" ||
+    currentUser?.role === "moderator";
   return (
     <div
       className="border-2 border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
@@ -584,40 +589,17 @@ function EventCard({ event, onToggleCalendar, onToggleSave, onDelete, currentUse
             </div>
             
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => onToggleSave && onToggleSave(event.id)}
-                title={event.isSaved ? "Remove from saved items" : "Save event"}
-                className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
-                  event.isSaved
-                    ? "border-[#1D9E75]/40 text-[#1D9E75] bg-[#1D9E75]/10 hover:border-[#E24B4A]/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"
-                    : "border-white/10 text-[#888] bg-transparent hover:border-white/20 hover:text-white"
-                }`}
-                style={{ padding: "6px 12px" }}
-              >
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill={event.isSaved ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                </svg>
-                {event.isSaved ? "Saved" : "Save"}
-              </button>
-              {currentUser?.id === event.hostId && (
+              {canDelete && (
                 <button
                   onClick={() => onDelete(event.id)}
-                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-transparent border-red-500/40 text-red-500 hover:bg-red-500/10"
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-red-500/10 border-red-500/40 text-red-400 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-300"
                   style={{ padding: "6px 12px" }}
+                  title="Delete your event"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4 w-3.5 h-3.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                   </svg>
-                  Delete
+                  Delete event
                 </button>
               )}
               <button
@@ -985,20 +967,6 @@ export default function Events() {
           meetup: { label: "Meetup", color: "#BA7517", bg: "#2e2a1a" },
           webinar: { label: "Webinar", color: "#185FA5", bg: "#16222e" },
         };
-        let savedEventIds = new Set();
-        try {
-          const savedData = await savedItemsAPI.getAll();
-          if (savedData?.saved_items) {
-            savedEventIds = new Set(
-              savedData.saved_items
-                .filter((item) => item.item_type === "event")
-                .map((item) => item.item_id)
-            );
-          }
-        } catch {
-          // non-critical
-        }
-
         const transformedEvents = data.events.map((e) => {
           const lowerCat = e.category ? e.category.toLowerCase() : "";
           const cat = categoryMap[lowerCat] || {
@@ -1023,9 +991,9 @@ export default function Events() {
               e.location?.toLowerCase().includes("zoom"),
             location: e.location || "TBD",
             host: e.createdBy?.username || e.username || "Unknown",
+            hostId: e.createdBy?.id ?? e.created_by_id ?? e.created_by ?? null,
             attendees: e.attendeeCount ?? e.attendee_count ?? 0,
             addedToCalendar: e.isRegistered || e.registered || false,
-            isSaved: savedEventIds.has(e.id),
           };
         });
         setEvents(transformedEvents);
@@ -1080,32 +1048,6 @@ export default function Events() {
     }
   }
 
-  async function handleToggleSave(id) {
-    const event = events.find((e) => e.id === id);
-    if (!event) return;
-
-    const nextSaved = !event.isSaved;
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isSaved: nextSaved } : e))
-    );
-
-    try {
-      if (nextSaved) {
-        await savedItemsAPI.save("event", id);
-        showToast(`Saved "${event.title}" to your items`);
-      } else {
-        await savedItemsAPI.unsave("event", id);
-        showToast(`Removed "${event.title}" from saved items`);
-      }
-    } catch (error) {
-      console.error("Failed to toggle save:", error);
-      setEvents((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, isSaved: !nextSaved } : e))
-      );
-      showToast("Failed to update saved item.");
-    }
-  }
-
   async function handleDelete(id) {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     try {
@@ -1141,20 +1083,6 @@ export default function Events() {
       );
       // Refresh events
       const response = await eventsAPI.getAll();
-      let savedEventIds = new Set();
-      try {
-        const savedData = await savedItemsAPI.getAll();
-        if (savedData?.saved_items) {
-          savedEventIds = new Set(
-            savedData.saved_items
-              .filter((item) => item.item_type === "event")
-              .map((item) => item.item_id)
-          );
-        }
-      } catch {
-        // non-critical
-      }
-
       const transformedEvents = response.events.map((e) => {
         const lowerCat = e.category ? e.category.toLowerCase() : "";
         const cat = categoryMap[lowerCat] || {
@@ -1178,9 +1106,9 @@ export default function Events() {
             e.location?.toLowerCase().includes("zoom"),
           location: e.location || "TBD",
           host: e.createdBy?.username || e.username || "Unknown",
+          hostId: e.createdBy?.id ?? e.created_by_id ?? e.created_by ?? null,
           attendees: e.attendeeCount ?? e.attendee_count ?? 0,
           addedToCalendar: e.isRegistered || e.registered || false,
-          isSaved: savedEventIds.has(e.id),
         };
       });
       setEvents(transformedEvents);
@@ -1426,7 +1354,6 @@ export default function Events() {
                       key={e.id}
                       event={e}
                       onToggleCalendar={handleToggleCalendar}
-                      onToggleSave={handleToggleSave}
                       onDelete={handleDelete}
                       currentUser={currentUser}
                     />
