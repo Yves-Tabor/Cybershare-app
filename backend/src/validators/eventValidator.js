@@ -12,10 +12,12 @@ const createEventSchema = z.object({
   description: z
     .string()
     .max(2000, 'Description must be at most 2000 characters')
+    .nullable()
     .optional(),
   location: z
     .string()
     .max(255, 'Location must be at most 255 characters')
+    .nullable()
     .optional(),
   start_date: z
     .string()
@@ -23,11 +25,11 @@ const createEventSchema = z.object({
   end_date: z
     .string()
     .refine((date) => !isNaN(Date.parse(date)), 'Invalid end date')
+    .nullable()
     .optional(),
   image_url: z
-    .string()
-    .url('Invalid image URL')
-    .max(500, 'Image URL must be at most 500 characters')
+    .union([z.string().url('Invalid image URL').max(500, 'Image URL must be at most 500 characters'), z.literal('')])
+    .nullable()
     .optional(),
   category: z
     .enum(EVENT_CATEGORIES, {
@@ -50,10 +52,12 @@ const updateEventSchema = z.object({
   description: z
     .string()
     .max(2000, 'Description must be at most 2000 characters')
+    .nullable()
     .optional(),
   location: z
     .string()
     .max(255, 'Location must be at most 255 characters')
+    .nullable()
     .optional(),
   start_date: z
     .string()
@@ -62,11 +66,11 @@ const updateEventSchema = z.object({
   end_date: z
     .string()
     .refine((date) => !isNaN(Date.parse(date)), 'Invalid end date')
+    .nullable()
     .optional(),
   image_url: z
-    .string()
-    .url('Invalid image URL')
-    .max(500, 'Image URL must be at most 500 characters')
+    .union([z.string().url('Invalid image URL').max(500, 'Image URL must be at most 500 characters'), z.literal('')])
+    .nullable()
     .optional(),
   category: z
     .enum(EVENT_CATEGORIES, {

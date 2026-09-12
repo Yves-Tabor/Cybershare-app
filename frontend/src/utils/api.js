@@ -360,18 +360,20 @@ export const eventsAPI = {
     category,
     status,
   ) => {
+    const payload = {
+      title: title?.trim(),
+      start_date: startDate,
+      category: category ? String(category).toLowerCase() : undefined,
+    };
+    if (description && description.trim()) payload.description = description.trim();
+    if (location && location.trim()) payload.location = location.trim();
+    if (endDate) payload.end_date = endDate;
+    if (imageUrl && imageUrl.trim()) payload.image_url = imageUrl.trim();
+    if (status) payload.status = status;
+
     return apiRequest("/events", {
       method: "POST",
-      body: JSON.stringify({
-        title,
-        description,
-        location,
-        start_date: startDate,
-        end_date: endDate,
-        image_url: imageUrl,
-        category,
-        status,
-      }),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -386,18 +388,19 @@ export const eventsAPI = {
     category,
     status,
   ) => {
+    const payload = {};
+    if (title !== undefined && title !== null) payload.title = title.trim();
+    if (description !== undefined && description !== null && description.trim()) payload.description = description.trim();
+    if (location !== undefined && location !== null && location.trim()) payload.location = location.trim();
+    if (startDate) payload.start_date = startDate;
+    if (endDate) payload.end_date = endDate;
+    if (imageUrl !== undefined && imageUrl !== null && imageUrl.trim()) payload.image_url = imageUrl.trim();
+    if (category) payload.category = String(category).toLowerCase();
+    if (status) payload.status = status;
+
     return apiRequest(`/events/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({
-        title,
-        description,
-        location,
-        start_date: startDate,
-        end_date: endDate,
-        image_url: imageUrl,
-        category,
-        status,
-      }),
+      body: JSON.stringify(payload),
     });
   },
 

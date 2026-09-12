@@ -1127,18 +1127,34 @@ export default function Events() {
         meetup: { label: "Meetup", color: "#BA7517", bg: "#2e2a1a" },
         webinar: { label: "Webinar", color: "#185FA5", bg: "#16222e" },
       };
+      const startDateTime = `${data.date}T${data.time || "00:00"}`;
+
       await eventsAPI.create(
         data.title,
-        data.description,
+        data.description || "No description provided.",
         data.location,
-        `${data.date}T${data.time}`,
-        `${data.date}T${data.time}`,
-        null,
+        startDateTime,
+        startDateTime,
+        undefined,
         data.category.toLowerCase(),
         "upcoming",
       );
       // Refresh events
       const response = await eventsAPI.getAll();
+      let savedEventIds = new Set();
+      try {
+        const savedData = await savedItemsAPI.getAll();
+        if (savedData?.saved_items) {
+          savedEventIds = new Set(
+            savedData.saved_items
+              .filter((item) => item.item_type === "event")
+              .map((item) => item.item_id)
+          );
+        }
+      } catch {
+        // non-critical
+      }
+
       const transformedEvents = response.events.map((e) => {
         const lowerCat = e.category ? e.category.toLowerCase() : "";
         const cat = categoryMap[lowerCat] || {
@@ -1164,6 +1180,7 @@ export default function Events() {
           host: e.createdBy?.username || e.username || "Unknown",
           attendees: e.attendeeCount ?? e.attendee_count ?? 0,
           addedToCalendar: e.isRegistered || e.registered || false,
+          isSaved: savedEventIds.has(e.id),
         };
       });
       setEvents(transformedEvents);
@@ -1171,7 +1188,11 @@ export default function Events() {
       showToast(`"${data.title}" posted and added to your calendar`);
     } catch (error) {
       console.error("Failed to create event:", error);
-      showToast("Failed to create event.");
+      const detailMsg =
+        error.details && error.details.length > 0
+          ? error.details.map((d) => d.message).join(", ")
+          : error.message;
+      showToast(detailMsg || "Failed to create event.");
     }
   }
 
