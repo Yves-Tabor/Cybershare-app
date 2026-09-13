@@ -378,8 +378,6 @@ function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
 function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
   const [reason, setReason] = useState("Harassment or bullying");
   const [details, setDetails] = useState("");
-  const [reporterEmail, setReporterEmail] = useState("");
-  const [reporterName, setReporterName] = useState(currentUser?.username || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const REASONS = [
@@ -403,20 +401,20 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!reason || !reporterEmail || !reporterName || isSubmitting) return;
+    if (!reason || !currentUser?.email || !currentUser?.username || isSubmitting) return;
     setIsSubmitting(true);
 
     try {
       const formData = new FormData();
       formData.append("access_key", "59024579-f374-4952-9f5e-b9cb89aecc4c");
       formData.append("subject", `[Community Incident Report] @${targetUser?.username} reported in "${groupName}"`);
-      formData.append("from_name", reporterName);
-      formData.append("replyto", reporterEmail);
+      formData.append("from_name", currentUser.username);
+      formData.append("replyto", currentUser.email);
       formData.append("to", "walvesoutis@gmail.com");
       formData.append("message", getMessage());
       formData.append("group_name", groupName);
       formData.append("reported_username", targetUser?.username);
-      formData.append("reporter_username", currentUser?.username);
+      formData.append("reporter_username", currentUser.username);
       formData.append("reason", reason);
       formData.append("details", details || "None provided");
       formData.append("timestamp", new Date().toISOString());
@@ -476,34 +474,6 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
               <polyline points="22,6 12,13 2,6" />
             </svg>
             <span>This will securely submit an incident report to platform administration with your input details and context.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
-              Your Email
-            </label>
-            <input
-              type="email"
-              value={reporterEmail}
-              onChange={(e) => setReporterEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-3.5 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors placeholder:text-silver/50"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
-              Your Name
-            </label>
-            <input
-              type="text"
-              value={reporterName}
-              onChange={(e) => setReporterName(e.target.value)}
-              placeholder="Your name"
-              required
-              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-3.5 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors placeholder:text-silver/50"
-            />
           </div>
 
           <div>
