@@ -49,8 +49,20 @@ const validate = (schema) => (req, res, next) => {
   next();
 };
 
+const { diagnoseEmail } = require("../services/emailService");
+
 // Get all groups
 router.get("/", optionalAuth, getAllGroups);
+
+// SMTP diagnostic check to verify credentials and test email sending
+router.get("/diagnose-email", async (req, res) => {
+  try {
+    const result = await diagnoseEmail();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // Get a single group with posts
 router.get("/:id", optionalAuth, getGroupById);
