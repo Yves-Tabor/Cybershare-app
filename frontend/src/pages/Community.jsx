@@ -375,9 +375,11 @@ function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
 
 // ─── Report Member Modal ──────────────────────────────────────────────────────
 
-function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
+function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
   const [reason, setReason] = useState("Harassment or bullying");
   const [details, setDetails] = useState("");
+  const [reporterEmail, setReporterEmail] = useState("");
+  const [reporterName, setReporterName] = useState(currentUser?.username || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const REASONS = [
@@ -389,12 +391,51 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
     "Other violation",
   ];
 
+  // Generate the message based on current form state
+  const getMessage = () => {
+    let message = `I am reporting @${targetUser?.username} for ${reason}`;
+    if (details && details.trim()) {
+      message += `\n\nDetails: ${details.trim()}`;
+    }
+    message += `\n\nGroup: ${groupName}\nReported by: @${currentUser?.username}\nTimestamp: ${new Date().toISOString()}`;
+    return message;
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!reason || isSubmitting) return;
+    if (!reason || !reporterEmail || !reporterName || isSubmitting) return;
     setIsSubmitting(true);
+
     try {
-      await onSubmit(reason, details.trim());
+      const formData = new FormData();
+      formData.append("access_key", "59024579-f374-4952-9f5e-b9cb89aecc4c");
+      formData.append("subject", `[Community Incident Report] @${targetUser?.username} reported in "${groupName}"`);
+      formData.append("from_name", reporterName);
+      formData.append("replyto", reporterEmail);
+      formData.append("to", "walvesoutis@gmail.com");
+      formData.append("message", getMessage());
+      formData.append("group_name", groupName);
+      formData.append("reported_username", targetUser?.username);
+      formData.append("reporter_username", currentUser?.username);
+      formData.append("reason", reason);
+      formData.append("details", details || "None provided");
+      formData.append("timestamp", new Date().toISOString());
+
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert("Report submitted successfully!");
+        onClose();
+      } else {
+        alert("Failed to submit report. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      alert("Failed to submit report. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -434,7 +475,35 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
-            <span>This will securely dispatch an incident report to platform administration with your input details and context.</span>
+            <span>This will securely submit an incident report to platform administration with your input details and context.</span>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+              Your Email
+            </label>
+            <input
+              type="email"
+              value={reporterEmail}
+              onChange={(e) => setReporterEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-3.5 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors placeholder:text-silver/50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+              Your Name
+            </label>
+            <input
+              type="text"
+              value={reporterName}
+              onChange={(e) => setReporterName(e.target.value)}
+              placeholder="Your name"
+              required
+              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-3.5 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors placeholder:text-silver/50"
+            />
           </div>
 
           <div>
@@ -485,7 +554,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, onSubmit }) {
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
-              {isSubmitting ? "Sending Email..." : "Send Email Report"}
+              {isSubmitting ? "Submitting Report..." : "Submit Report"}
             </button>
           </div>
         </form>
@@ -748,7 +817,7 @@ function ManageMembersModal({
                           <button
                             onClick={() => onOpenReport(member)}
                             className="text-[11px] font-mono px-2.5 py-1 rounded-lg border border-[#f59e0b]/40 text-[#f59e0b] hover:bg-[#f59e0b]/15 transition-all bg-transparent cursor-pointer"
-                            title="Report user to administrators via email"
+                            title="Report user to administrators"
                           >
                             Report
                           </button>
@@ -2631,17 +2700,6 @@ export default function Community() {
     }
   }
 
-  async function handleReportMember(groupId, userId, reason, details) {
-    try {
-      await groupsAPI.reportMember(groupId, userId, reason, details);
-      showToast("Report submitted successfully. Incident report dispatched.");
-      setReportTarget(null);
-    } catch (error) {
-      console.error("Failed to report member:", error);
-      showToast(error.message || "Failed to report member.");
-    }
-  }
-
   const filteredGroups = groups
     .filter((g) => filter === "all" || g.joined)
     .filter(
@@ -2955,9 +3013,7 @@ export default function Community() {
           targetUser={reportTarget}
           groupName={activeGroup.name}
           onClose={() => setReportTarget(null)}
-          onSubmit={(reason, details) =>
-            handleReportMember(activeGroup.id, reportTarget.id, reason, details)
-          }
+          currentUser={currentUser}
         />
       )}
 

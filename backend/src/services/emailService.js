@@ -31,41 +31,6 @@ function getTransporter(targetPort) {
 }
 
 /**
- * Optional HTTPS dispatch via Resend API (bypasses all cloud SMTP port blocks)
- */
-async function sendViaResend({ to, from, subject, html, text }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return { success: false, error: "RESEND_API_KEY not set" };
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM || "Cybershare Security <onboarding@resend.dev>",
-        to: [to],
-        subject,
-        html,
-        text,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      return { success: true, messageId: data.id, provider: "resend" };
-    }
-    console.error("[emailService] Resend API error:", data);
-    // Return the full error so callers can surface it
-    return { success: false, statusCode: res.status, error: data?.message || data?.error || JSON.stringify(data) };
-  } catch (err) {
-    console.error("[emailService] Resend network error:", err.message);
-    return { success: false, error: `Network error: ${err.message}` };
-  }
-}
-
-/**
  * Optional HTTPS dispatch via Brevo API (bypasses all cloud SMTP port blocks)
  */
 async function sendViaBrevo({ to, subject, html, text }) {
@@ -177,15 +142,7 @@ async function sendReportEmail({ groupName, reporterUsername, reportedUsername, 
 
   const text = `Community Incident Report\n\nGroup: ${groupName}\nReported Member: @${reportedUsername}\nReported By: @${reporterUsername}\nReason: ${reason}\nDetails: ${details || "None provided"}\nTime: ${new Date().toUTCString()}`;
 
-  // 1. Try HTTPS API delivery first if configured (Resend / Brevo)
-  if (process.env.RESEND_API_KEY) {
-    const resendResult = await sendViaResend({ to: adminEmail, from: fromEmail, subject, html, text });
-    if (resendResult) {
-      console.log(`[emailService] Dispatched via Resend API: ${resendResult.messageId}`);
-      return resendResult;
-    }
-  }
-
+  // 1. Try Brevo API if configured
   if (process.env.BREVO_API_KEY) {
     const brevoResult = await sendViaBrevo({ to: adminEmail, subject, html, text });
     if (brevoResult) {
@@ -246,34 +203,9 @@ async function diagnoseEmail() {
     passLength: pass ? pass.length : 0,
     hasSpacesInRawPass: rawPass.includes(" "),
     adminEmail,
-    resendConfigured: !!process.env.RESEND_API_KEY,
     brevoConfigured: !!process.env.BREVO_API_KEY,
     portResults: {},
   };
-
-  // Test HTTPS API first if available
-  if (process.env.RESEND_API_KEY) {
-    const resendTest = await sendViaResend({
-      to: adminEmail,
-      from: "Cybershare Diagnostic <onboarding@resend.dev>",
-      subject: `[Cybershare Diagnostic] Resend API Check`,
-      text: `Success! Delivery via Resend API is operational.`,
-      html: `<p><strong>Success!</strong> Resend HTTPS delivery is active and working.</p>`,
-    });
-    if (resendTest?.success) {
-      return {
-        success: true,
-        provider: "resend",
-        messageId: resendTest.messageId,
-        message: `Diagnostic test email dispatched to ${adminEmail} via Resend API!`,
-        diagnostics,
-      };
-    } else {
-      // Expose Resend error so user can fix it
-      diagnostics.resendError = resendTest?.error || "Unknown error";
-      diagnostics.resendStatusCode = resendTest?.statusCode;
-    }
-  }
 
   if (!diagnostics.configured) {
     return {
@@ -307,29 +239,15 @@ async function diagnoseEmail() {
 
     const isFirewallBlock = port465Err.includes("Timeout") && port587Err.includes("Timeout");
 
-    // Determine Resend fix tip based on resendError
-    let resendTip = "";
-    if (diagnostics.resendError) {
-      if (diagnostics.resendStatusCode === 403 || diagnostics.resendError.includes("not allowed") || diagnostics.resendError.includes("domain")) {
-        resendTip = `Resend rejected the 'from' address. Go to resend.com → Domains, add and verify your domain, then set RESEND_FROM='Cybershare <noreply@yourdomain.com>' in Render. Until then, send TO a Resend-verified address or use the test domain.`;
-      } else if (diagnostics.resendStatusCode === 401 || diagnostics.resendError.includes("Unauthorized") || diagnostics.resendError.includes("API key")) {
-        resendTip = `Resend API key is invalid or expired. Go to resend.com → API Keys, create a new key and update RESEND_API_KEY in Render.`;
-      } else {
-        resendTip = `Resend returned: ${diagnostics.resendError}`;
-      }
-    }
-
     return {
       success: false,
       diagnostics,
       error: isFirewallBlock
-        ? `Render blocks outbound SMTP. Resend is configured but also failed: ${diagnostics.resendError || 'Unknown'}`
+        ? `Render blocks outbound SMTP. Brevo is configured but also failed.`
         : `SMTP connection failed: 587 (${port587Err}) | 465 (${port465Err})`,
-      tip: diagnostics.resendError
-        ? resendTip
-        : (isFirewallBlock
-          ? "Add RESEND_API_KEY to Render to use HTTPS email delivery instead."
-          : "Check your Google App Password."),
+      tip: isFirewallBlock
+        ? "Add BREVO_API_KEY to Render to use HTTPS email delivery instead."
+        : "Check your Google App Password.",
     };
   }
 
