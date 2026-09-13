@@ -35,7 +35,7 @@ function getTransporter(targetPort) {
  */
 async function sendViaResend({ to, from, subject, html, text }) {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) return { success: false, error: "RESEND_API_KEY not set" };
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -57,10 +57,11 @@ async function sendViaResend({ to, from, subject, html, text }) {
       return { success: true, messageId: data.id, provider: "resend" };
     }
     console.error("[emailService] Resend API error:", data);
-    return null;
+    // Return the full error so callers can surface it
+    return { success: false, statusCode: res.status, error: data?.message || data?.error || JSON.stringify(data) };
   } catch (err) {
     console.error("[emailService] Resend network error:", err.message);
-    return null;
+    return { success: false, error: `Network error: ${err.message}` };
   }
 }
 
@@ -259,7 +260,7 @@ async function diagnoseEmail() {
       text: `Success! Delivery via Resend API is operational.`,
       html: `<p><strong>Success!</strong> Resend HTTPS delivery is active and working.</p>`,
     });
-    if (resendTest) {
+    if (resendTest?.success) {
       return {
         success: true,
         provider: "resend",
@@ -267,6 +268,10 @@ async function diagnoseEmail() {
         message: `Diagnostic test email dispatched to ${adminEmail} via Resend API!`,
         diagnostics,
       };
+    } else {
+      // Expose Resend error so user can fix it
+      diagnostics.resendError = resendTest?.error || "Unknown error";
+      diagnostics.resendStatusCode = resendTest?.statusCode;
     }
   }
 
@@ -302,15 +307,29 @@ async function diagnoseEmail() {
 
     const isFirewallBlock = port465Err.includes("Timeout") && port587Err.includes("Timeout");
 
+    // Determine Resend fix tip based on resendError
+    let resendTip = "";
+    if (diagnostics.resendError) {
+      if (diagnostics.resendStatusCode === 403 || diagnostics.resendError.includes("not allowed") || diagnostics.resendError.includes("domain")) {
+        resendTip = `Resend rejected the 'from' address. Go to resend.com → Domains, add and verify your domain, then set RESEND_FROM='Cybershare <noreply@yourdomain.com>' in Render. Until then, send TO a Resend-verified address or use the test domain.`;
+      } else if (diagnostics.resendStatusCode === 401 || diagnostics.resendError.includes("Unauthorized") || diagnostics.resendError.includes("API key")) {
+        resendTip = `Resend API key is invalid or expired. Go to resend.com → API Keys, create a new key and update RESEND_API_KEY in Render.`;
+      } else {
+        resendTip = `Resend returned: ${diagnostics.resendError}`;
+      }
+    }
+
     return {
       success: false,
       diagnostics,
       error: isFirewallBlock
-        ? "Render network is blocking outbound SMTP ports (both 465 and 587)."
+        ? `Render blocks outbound SMTP. Resend is configured but also failed: ${diagnostics.resendError || 'Unknown'}`
         : `SMTP connection failed: 587 (${port587Err}) | 465 (${port465Err})`,
-      tip: isFirewallBlock
-        ? "Render blocks outbound SMTP (ports 25, 465, 587) on free web services to prevent spam. You can add RESEND_API_KEY in Render to send via HTTPS (never blocked)."
-        : "Check your Google App Password. Ensure 2-Step Verification is active and you used a 16-character App Password.",
+      tip: diagnostics.resendError
+        ? resendTip
+        : (isFirewallBlock
+          ? "Add RESEND_API_KEY to Render to use HTTPS email delivery instead."
+          : "Check your Google App Password."),
     };
   }
 
