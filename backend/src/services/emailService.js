@@ -1,40 +1,104 @@
 const nodemailer = require("nodemailer");
 
-function getTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+/**
+ * Creates a Nodemailer transport instance for a given port
+ * @param {number} [targetPort] 
+ */
+function getTransporter(targetPort) {
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = targetPort || parseInt(process.env.SMTP_PORT || "587", 10);
   const user = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || "").trim();
   const rawPass = process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD || "";
-  // Strip all whitespace from App Passwords (Google generates them with spaces like 'abcd efgh ijkl mnop')
   const pass = rawPass.replace(/\s+/g, "").trim();
-  const service = process.env.SMTP_SERVICE || ((host && host.toLowerCase().includes("gmail")) ? "gmail" : null);
 
-  if ((service || host) && user && pass) {
-    const config = service
-      ? {
-          service,
-          auth: { user, pass },
-          connectionTimeout: 10000,
-          greetingTimeout: 8000,
-          socketTimeout: 15000,
-        }
-      : {
-          host,
-          port,
-          secure: port === 465,
-          auth: { user, pass },
-          connectionTimeout: 10000,
-          greetingTimeout: 8000,
-          socketTimeout: 15000,
-          tls: {
-            rejectUnauthorized: false,
-          },
-        };
-
-    return nodemailer.createTransport(config);
+  if (user && pass) {
+    const isPort465 = port === 465;
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure: isPort465, // true for 465, false for 587 (STARTTLS)
+      auth: { user, pass },
+      connectionTimeout: 8000,
+      greetingTimeout: 6000,
+      socketTimeout: 10000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
   }
 
   return null;
+}
+
+/**
+ * Optional HTTPS dispatch via Resend API (bypasses all cloud SMTP port blocks)
+ */
+async function sendViaResend({ to, from, subject, html, text }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || "Cybershare Security <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html,
+        text,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      return { success: true, messageId: data.id, provider: "resend" };
+    }
+    console.error("[emailService] Resend API error:", data);
+    return null;
+  } catch (err) {
+    console.error("[emailService] Resend network error:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Optional HTTPS dispatch via Brevo API (bypasses all cloud SMTP port blocks)
+ */
+async function sendViaBrevo({ to, subject, html, text }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "Cybershare Community",
+          email: process.env.BREVO_SENDER || "admin@cybershare.app",
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      return { success: true, messageId: data.messageId, provider: "brevo" };
+    }
+    console.error("[emailService] Brevo API error:", data);
+    return null;
+  } catch (err) {
+    console.error("[emailService] Brevo network error:", err.message);
+    return null;
+  }
 }
 
 /**
@@ -48,11 +112,8 @@ function getTransporter() {
  */
 async function sendReportEmail({ groupName, reporterUsername, reportedUsername, reason, details }) {
   const adminEmail = process.env.REPORT_ADMIN_EMAIL || "walvesoutis@gmail.com";
-  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER;
+  const smtpUser = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || "").trim();
 
-  // Ensure fromEmail is a valid RFC 2822 email format.
-  // If SMTP_FROM is malformed (e.g. '"Cybershare" cybershare.website' without @) or using Gmail,
-  // ensure it uses the authenticated smtpUser so Gmail doesn't reject or hang.
   let fromEmail = process.env.SMTP_FROM;
   if (!fromEmail || !fromEmail.includes("@")) {
     if (smtpUser && smtpUser.includes("@")) {
@@ -61,7 +122,6 @@ async function sendReportEmail({ groupName, reporterUsername, reportedUsername, 
       fromEmail = '"Cybershare Community" <no-reply@cybershare.app>';
     }
   } else if (smtpUser && smtpUser.includes("@") && (!fromEmail.includes("<") || !fromEmail.includes(">"))) {
-    // If user provided just an email or raw string, wrap nicely
     fromEmail = `"Cybershare Community" <${smtpUser}>`;
   }
 
@@ -116,10 +176,33 @@ async function sendReportEmail({ groupName, reporterUsername, reportedUsername, 
 
   const text = `Community Incident Report\n\nGroup: ${groupName}\nReported Member: @${reportedUsername}\nReported By: @${reporterUsername}\nReason: ${reason}\nDetails: ${details || "None provided"}\nTime: ${new Date().toUTCString()}`;
 
-  const mailer = getTransporter();
+  // 1. Try HTTPS API delivery first if configured (Resend / Brevo)
+  if (process.env.RESEND_API_KEY) {
+    const resendResult = await sendViaResend({ to: adminEmail, from: fromEmail, subject, html, text });
+    if (resendResult) {
+      console.log(`[emailService] Dispatched via Resend API: ${resendResult.messageId}`);
+      return resendResult;
+    }
+  }
 
-  if (mailer) {
+  if (process.env.BREVO_API_KEY) {
+    const brevoResult = await sendViaBrevo({ to: adminEmail, subject, html, text });
+    if (brevoResult) {
+      console.log(`[emailService] Dispatched via Brevo API: ${brevoResult.messageId}`);
+      return brevoResult;
+    }
+  }
+
+  // 2. Try SMTP delivery: primary port (587 STARTTLS) and fallback port (465 SSL)
+  const configuredPort = parseInt(process.env.SMTP_PORT || "587", 10);
+  const portsToTry = configuredPort === 465 ? [465, 587] : [587, 465];
+
+  for (const port of portsToTry) {
+    const mailer = getTransporter(port);
+    if (!mailer) break;
+
     try {
+      console.log(`[emailService] Attempting SMTP dispatch via port ${port}...`);
       const sendPromise = mailer.sendMail({
         from: fromEmail,
         to: adminEmail,
@@ -129,15 +212,14 @@ async function sendReportEmail({ groupName, reporterUsername, reportedUsername, 
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("SMTP sendMail timed out after 15s")), 15000)
+        setTimeout(() => reject(new Error(`SMTP sendMail timed out on port ${port} after 8s`)), 8000)
       );
 
       const info = await Promise.race([sendPromise, timeoutPromise]);
-      console.log(`[emailService] Report email successfully dispatched to ${adminEmail}: ${info.messageId}`);
-      return { success: true, messageId: info.messageId, accepted: info.accepted };
+      console.log(`[emailService] Report email successfully dispatched via port ${port} to ${adminEmail}: ${info.messageId}`);
+      return { success: true, messageId: info.messageId, port };
     } catch (err) {
-      console.error(`[emailService] Failed to send report email via SMTP (${err.code || 'UNKNOWN'}):`, err.message);
-      // Still log fallback so the report is recorded and not lost
+      console.warn(`[emailService] Port ${port} attempt failed (${err.code || err.message})`);
     }
   }
 
@@ -147,77 +229,103 @@ async function sendReportEmail({ groupName, reporterUsername, reportedUsername, 
 }
 
 /**
- * Diagnostic tool to verify SMTP configuration and send a test email
+ * Diagnostic tool to test SMTP connection (port 587 vs 465) and optional HTTPS API
  */
 async function diagnoseEmail() {
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const user = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || "").trim();
   const rawPass = process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD || "";
   const pass = rawPass.replace(/\s+/g, "").trim();
-  const service = process.env.SMTP_SERVICE || ((host && host.toLowerCase().includes("gmail")) ? "gmail" : null);
   const adminEmail = process.env.REPORT_ADMIN_EMAIL || "walvesoutis@gmail.com";
 
   const diagnostics = {
-    configured: !!((service || host) && user && pass),
-    service: service || "custom",
-    host: host || (service === "gmail" ? "smtp.gmail.com" : null),
-    port: port || (service === "gmail" ? 465 : null),
+    configured: !!(user && pass),
+    host,
     userMasked: user ? user.replace(/(.{2})(.*)(@.*)/, "$1***$3") : null,
     passLength: pass ? pass.length : 0,
     hasSpacesInRawPass: rawPass.includes(" "),
     adminEmail,
+    resendConfigured: !!process.env.RESEND_API_KEY,
+    brevoConfigured: !!process.env.BREVO_API_KEY,
+    portResults: {},
   };
+
+  // Test HTTPS API first if available
+  if (process.env.RESEND_API_KEY) {
+    const resendTest = await sendViaResend({
+      to: adminEmail,
+      from: "Cybershare Diagnostic <onboarding@resend.dev>",
+      subject: `[Cybershare Diagnostic] Resend API Check`,
+      text: `Success! Delivery via Resend API is operational.`,
+      html: `<p><strong>Success!</strong> Resend HTTPS delivery is active and working.</p>`,
+    });
+    if (resendTest) {
+      return {
+        success: true,
+        provider: "resend",
+        messageId: resendTest.messageId,
+        message: `Diagnostic test email dispatched to ${adminEmail} via Resend API!`,
+        diagnostics,
+      };
+    }
+  }
 
   if (!diagnostics.configured) {
     return {
       success: false,
       diagnostics,
-      error: "SMTP credentials incomplete. Ensure SMTP_USER and SMTP_PASS are set in environment variables.",
+      error: "SMTP credentials incomplete. Ensure SMTP_USER and SMTP_PASS are set.",
     };
   }
 
-  const mailer = getTransporter();
-  if (!mailer) {
+  // Test both Port 587 (STARTTLS) and Port 465 (SSL)
+  let workingPort = null;
+  const ports = [587, 465];
+
+  for (const p of ports) {
+    const mailer = getTransporter(p);
+    try {
+      await Promise.race([
+        mailer.verify(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout after 6s")), 6000)),
+      ]);
+      diagnostics.portResults[p] = { connected: true };
+      if (!workingPort) workingPort = p;
+    } catch (err) {
+      diagnostics.portResults[p] = { connected: false, error: err.message, code: err.code };
+    }
+  }
+
+  if (!workingPort) {
+    const port465Err = diagnostics.portResults[465]?.error || "";
+    const port587Err = diagnostics.portResults[587]?.error || "";
+
+    const isFirewallBlock = port465Err.includes("Timeout") && port587Err.includes("Timeout");
+
     return {
       success: false,
       diagnostics,
-      error: "Failed to initialize nodemailer transporter.",
+      error: isFirewallBlock
+        ? "Render network is blocking outbound SMTP ports (both 465 and 587)."
+        : `SMTP connection failed: 587 (${port587Err}) | 465 (${port465Err})`,
+      tip: isFirewallBlock
+        ? "Render blocks outbound SMTP (ports 25, 465, 587) on free web services to prevent spam. You can add RESEND_API_KEY in Render to send via HTTPS (never blocked)."
+        : "Check your Google App Password. Ensure 2-Step Verification is active and you used a 16-character App Password.",
     };
   }
 
-  // Step 1: Verify credentials with SMTP server
+  // Send test email with the working port
+  const activeMailer = getTransporter(workingPort);
   try {
-    await mailer.verify();
-    diagnostics.smtpConnected = true;
-  } catch (verifyErr) {
-    diagnostics.smtpConnected = false;
-    diagnostics.verifyError = {
-      message: verifyErr.message,
-      code: verifyErr.code,
-      response: verifyErr.response,
-    };
-    return {
-      success: false,
-      diagnostics,
-      error: `SMTP connection failed: ${verifyErr.message}`,
-      tip: verifyErr.code === "EAUTH"
-        ? "Google rejected credentials. You MUST use a 16-character Google App Password (not your normal Gmail login password) with 2-Step Verification enabled."
-        : "Verify network host, port, and security settings.",
-    };
-  }
-
-  // Step 2: Attempt sending a real diagnostic message
-  try {
-    const testInfo = await mailer.sendMail({
+    const testInfo = await activeMailer.sendMail({
       from: `"Cybershare Diagnostic" <${user}>`,
       to: adminEmail,
-      subject: `[Cybershare Diagnostic] Test Email Delivery Check`,
-      text: `Hello! This is a test email verifying that Cybershare reporting email service is working properly.\n\nTime: ${new Date().toUTCString()}\nRecipient: ${adminEmail}\nSender: ${user}`,
+      subject: `[Cybershare Diagnostic] Test Email Delivery (Port ${workingPort})`,
+      text: `Hello! This is a test email verifying that Cybershare reporting email service is working properly on Port ${workingPort}.\n\nTime: ${new Date().toUTCString()}\nRecipient: ${adminEmail}`,
       html: `
         <div style="font-family: sans-serif; max-width: 500px; padding: 20px; border: 1px solid #4338ca; border-radius: 8px; background: #0f0f15; color: #fff;">
           <h3 style="color: #818cf8; margin-top: 0;">Cybershare Email Diagnostic Test</h3>
-          <p>This email confirms that your SMTP delivery to <strong>${adminEmail}</strong> is working properly!</p>
+          <p>SMTP delivery to <strong>${adminEmail}</strong> is operational via <strong>Port ${workingPort}</strong>!</p>
           <hr style="border: 0; border-top: 1px solid #28283c;" />
           <p style="font-size: 12px; color: #9ca3af;">Sent at: ${new Date().toUTCString()}</p>
         </div>
@@ -226,16 +334,17 @@ async function diagnoseEmail() {
 
     return {
       success: true,
-      diagnostics,
+      workingPort,
       messageId: testInfo.messageId,
-      accepted: testInfo.accepted,
-      message: `Diagnostic email successfully dispatched to ${adminEmail}! Please check the Inbox and the Spam/Junk folder.`,
+      diagnostics,
+      message: `Diagnostic email successfully sent to ${adminEmail} via port ${workingPort}! Check inbox and Spam/Junk folder.`,
     };
   } catch (sendErr) {
     return {
       success: false,
+      workingPort,
       diagnostics,
-      error: `Failed to deliver test email: ${sendErr.message}`,
+      error: `Failed to dispatch email: ${sendErr.message}`,
     };
   }
 }
