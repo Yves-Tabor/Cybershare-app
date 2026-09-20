@@ -33,6 +33,14 @@ const register = async (req, res) => {
     // Normalize username: lowercase and remove spaces
     const normalizedUsername = username.toLowerCase().replace(/\s+/g, "");
 
+    // Check that username contains at least 4 letters
+    const letterCount = (normalizedUsername.match(/[a-z]/g) || []).length;
+    if (letterCount < 4) {
+      return res
+        .status(400)
+        .json({ error: "Username must contain at least 4 letters" });
+    }
+
     // Check if user already exists
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1 OR username = $2",
@@ -254,28 +262,44 @@ const completeProfile = async (req, res) => {
     const userId = req.userId;
     const { username, password, bio } = req.body;
 
-    // Normalize username
-    const normalizedUsername = username.toLowerCase().replace(/\s+/g, "");
-
-    // Check if username is already taken
-    const existingUser = await pool.query(
-      "SELECT id FROM users WHERE username = $1 AND id != $2",
-      [normalizedUsername, userId],
-    );
-
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: "Username already taken" });
+    let result;
+    let passwordHash = null;
+    if (password) {
+      const saltRounds = 10;
+      passwordHash = await bcrypt.hash(password, saltRounds);
     }
 
-    // Hash new password
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    if (username) {
+      // Normalize username
+      const normalizedUsername = username.toLowerCase().replace(/\s+/g, "");
 
-    // Update user
-    const result = await pool.query(
-      "UPDATE users SET username = $1, password_hash = $2, bio = $3 WHERE id = $4 RETURNING id, username, email, bio, avatar, color, role, created_at",
-      [normalizedUsername, passwordHash, bio || null, userId],
-    );
+      const letterCount = (normalizedUsername.match(/[a-z]/g) || []).length;
+      if (letterCount < 4) {
+        return res.status(400).json({ error: "Username must contain at least 4 letters" });
+      }
+
+      // Check if username is already taken
+      const existingUser = await pool.query(
+        "SELECT id FROM users WHERE username = $1 AND id != $2",
+        [normalizedUsername, userId],
+      );
+
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: "Username already taken" });
+      }
+
+      // Update user with new username
+      result = await pool.query(
+        "UPDATE users SET username = $1, password_hash = COALESCE($2, password_hash), bio = COALESCE($3, bio) WHERE id = $4 RETURNING id, username, email, bio, avatar, color, role, created_at",
+        [normalizedUsername, passwordHash, bio !== undefined ? (bio || null) : null, userId],
+      );
+    } else {
+      // Update user without changing username
+      result = await pool.query(
+        "UPDATE users SET password_hash = COALESCE($1, password_hash), bio = COALESCE($2, bio) WHERE id = $3 RETURNING id, username, email, bio, avatar, color, role, created_at",
+        [passwordHash, bio !== undefined ? (bio || null) : null, userId],
+      );
+    }
 
     const user = result.rows[0];
 

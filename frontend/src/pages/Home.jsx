@@ -921,19 +921,16 @@ function CreatePostModal({ onClose, onSubmit }) {
 }
 
 function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [bio, setBio] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const usernameRef = useRef(null);
 
   const needsPassword = !currentUser?.hasPassword;
 
   useEffect(() => {
-    usernameRef.current?.focus();
     function onKey(e) {
       if (e.key === "Escape") onClose();
     }
@@ -943,14 +940,6 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
 
   function handleSubmit() {
     setError("");
-    if (!username.trim()) {
-      setError("Username is required.");
-      return;
-    }
-    if (username.length < 3) {
-      setError("Username must be at least 3 characters.");
-      return;
-    }
     // Password validation only required if user doesn't have a password
     if (needsPassword) {
       if (!password) {
@@ -982,7 +971,7 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
         return;
       }
     }
-    onSubmit({ username: username.trim(), password: needsPassword ? password : undefined, bio: bio.trim() });
+    onSubmit({ password: needsPassword ? password : undefined, bio: bio.trim() });
   }
 
   function handleBackdrop(e) {
@@ -1061,32 +1050,6 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
             paddingBottom: "24px",
           }}
         >
-          {/* Username */}
-          <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
-              Username
-            </label>
-            <input
-              ref={usernameRef}
-              type="text"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                setError("");
-              }}
-              placeholder="Choose a username…"
-              maxLength={30}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "12px",
-                paddingBottom: "12px",
-                background: "transparent",
-              }}
-            />
-          </div>
-          <br />
 
           {/* Bio */}
           <div>
@@ -1505,9 +1468,9 @@ export default function Home() {
     }
   }
 
-  async function handleCompleteProfile({ username, password, bio }) {
+  async function handleCompleteProfile({ password, bio }) {
     try {
-      await authAPI.completeProfile(username, password, bio);
+      await authAPI.completeProfile(password, bio);
       setCompleteProfileOpen(false);
       showToast("Profile completed successfully!");
       const userResponse = await authAPI.me();

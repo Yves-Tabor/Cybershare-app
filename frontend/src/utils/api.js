@@ -118,10 +118,18 @@ export const authAPI = {
     return apiRequest("/auth/me");
   },
 
-  completeProfile: async (username, password, bio) => {
+  completeProfile: async (arg1, arg2, arg3) => {
+    let payload = {};
+    if (typeof arg1 === "object" && arg1 !== null) {
+      payload = arg1;
+    } else if (arg3 !== undefined) {
+      payload = { username: arg1, password: arg2, bio: arg3 };
+    } else {
+      payload = { password: arg1, bio: arg2 };
+    }
     return apiRequest("/auth/complete-profile", {
       method: "POST",
-      body: JSON.stringify({ username, password, bio }),
+      body: JSON.stringify(payload),
     });
   },
 

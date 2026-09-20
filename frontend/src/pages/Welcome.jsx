@@ -1056,6 +1056,13 @@ export default function Welcome() {
     setLoading(true);
     setError("");
 
+    const letterCount = (registerForm.username.match(/[a-zA-Z]/g) || []).length;
+    if (letterCount < 4) {
+      setError("Username must contain at least 4 letters.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await authAPI.register(
         registerForm.username,
@@ -1083,7 +1090,7 @@ export default function Welcome() {
           setError("Please enter a valid email address.");
         } else if (usernameErrors.length > 0) {
           setError(
-            "Username must be at least 3 characters and can only contain letters, numbers, and underscores.",
+            usernameErrors[0]?.message || "Username must contain at least 4 letters and can only contain letters, numbers, and underscores.",
           );
         } else {
           const errorMessages = err.details.map((d) => d.message).join(", ");
@@ -1516,7 +1523,7 @@ export default function Welcome() {
                   <input
                     className="ai"
                     type="text"
-                    placeholder="Username"
+                    placeholder="Username (min. 4 letters)"
                     value={registerForm.username}
                     onChange={(e) =>
                       setRegisterForm({
