@@ -347,7 +347,7 @@ const updateNotificationPreferences = async (req, res) => {
   }
 };
 
-// Delete account (soft delete)
+// Delete account (permanent hard delete)
 const deleteAccount = async (req, res) => {
   try {
     const userId = req.userId;
@@ -365,7 +365,7 @@ const deleteAccount = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // If user has a password, verify it
+    // If user has a password, verify it before deletion
     if (user.password_hash) {
       if (!password) {
         return res.status(400).json({ error: 'Password confirmation is required' });
@@ -376,17 +376,17 @@ const deleteAccount = async (req, res) => {
       }
     }
 
-    // Soft delete: set deleted_at
-    await pool.query(
-      'UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [userId]
-    );
+    // Permanently delete the user — all related data (posts, resources, events,
+    // group memberships, scan jobs, comments, notifications, sessions, etc.)
+    // will be removed automatically via ON DELETE CASCADE foreign key constraints.
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 
-    // Delete all sessions immediately
-    await pool.query(
-      'DELETE FROM sessions WHERE user_id = $1',
-      [userId]
-    );
+    // Clear the auth cookie so the browser is immediately logged out
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
 
     res.status(200).json({ message: 'Account deleted successfully' });
   } catch (error) {

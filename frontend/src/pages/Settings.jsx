@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
-import { authAPI, userSettingsAPI } from "../utils/api";
+import { authAPI, userSettingsAPI, clearToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 import "./Settings.css";
 
@@ -1121,6 +1121,8 @@ function DangerZoneSection({ profile, showToast }) {
     setDeleteLoading(true);
     try {
       await userSettingsAPI.deleteAccount(deletePassword);
+      // Clear any locally stored token (Google OAuth Bearer token)
+      clearToken();
       showToast("Account deleted.");
       setConfirmDelete(false);
       // Redirect to welcome page after account deletion

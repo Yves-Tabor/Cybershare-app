@@ -471,11 +471,18 @@ const deleteAccount = async (req, res) => {
       }
     }
 
-    // Delete user (cascades to related records via DB constraints)
+    // Permanently delete user — all related data (posts, resources, events,
+    // group memberships, scan jobs, comments, notifications, sessions, etc.)
+    // cascade automatically via ON DELETE CASCADE foreign key constraints.
     await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 
-    // Clear auth cookie
-    res.clearCookie("token");
+    // Clear auth cookie with same options used when it was set
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
+
     res.status(200).json({ message: "Account deleted successfully" });
   } catch (error) {
     console.error("Delete account error:", error);
