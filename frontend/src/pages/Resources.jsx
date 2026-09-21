@@ -487,34 +487,36 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
                   </p>
                 </div>
               </div>
-              <div
-                className="flex justify-end mt-3 border-t border-[#141414]"
-                style={{ paddingTop: "12px" }}
-              >
-                <button
-                  onClick={() => onDownloadFile(file.id, file.name)}
-                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5"
-                  style={{
-                    paddingLeft: "16px",
-                    paddingRight: "16px",
-                    paddingTop: "6px",
-                    paddingBottom: "6px",
-                  }}
+              {!isOwner && (
+                <div
+                  className="flex justify-end mt-3 border-t border-[#141414]"
+                  style={{ paddingTop: "12px" }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  download
-                </button>
-              </div>
+                  <button
+                    onClick={() => onDownloadFile(file.id, file.name)}
+                    className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5"
+                    style={{
+                      paddingLeft: "16px",
+                      paddingRight: "16px",
+                      paddingTop: "6px",
+                      paddingBottom: "6px",
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    download
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Footer — tags */}
+      {/* Footer — tags + download link for non-publishers */}
       <div
         className="flex items-center justify-between border-t border-[#111] mt-auto"
         style={{ paddingTop: "16px" }}
@@ -541,6 +543,39 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
             </span>
           ))}
         </div>
+
+        {!isOwner && resource.url && (!resource.files || resource.files.length === 0) && (
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            className="flex items-center gap-1.5 text-[11px] font-mono text-[#888] hover:text-white transition-colors border border-[#1e1e1e] hover:border-[#333] rounded-lg no-underline"
+            style={{
+              paddingLeft: "12px",
+              paddingRight: "12px",
+              paddingTop: "6px",
+              paddingBottom: "6px",
+            }}
+            aria-label="Download resource"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            download
+          </a>
+        )}
       </div>
     </div>
   );
