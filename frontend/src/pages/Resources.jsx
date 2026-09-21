@@ -15,7 +15,7 @@ const AVATAR_COLORS = {
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
 
-function UploadForm({ onPublish }) {
+function UploadForm({ onPublish, onClose }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
@@ -82,23 +82,42 @@ function UploadForm({ onPublish }) {
   }
 
   return (
-    <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-transparent">
+    <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-[#0a0a0a]">
       {/* Form header */}
       <div
-        className="border-b border-white flex items-center justify-between"
+        className="border-b border-[#222] flex items-center justify-between"
         style={{
           paddingLeft: "28px",
           paddingRight: "28px",
-          paddingTop: "14px",
-          paddingBottom: "14px",
+          paddingTop: "16px",
+          paddingBottom: "16px",
         }}
       >
-        <span className="text-[9.5px] font-mono font-bold tracking-[0.22em] uppercase text-silver">
-          Platform Resource Interface
+        <span className="text-[10px] font-mono font-bold tracking-[0.22em] uppercase text-silver">
+          Publish Platform Resource
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]" />
-        </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-[#666] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            style={{ padding: "4px" }}
+            aria-label="Close"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div
@@ -324,7 +343,7 @@ function UploadForm({ onPublish }) {
 
 // ─── Resource card ────────────────────────────────────────────────────────────
 
-function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete }) {
+function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
   const isOwner = currentUser && (
     (currentUser.id && resource.userId && currentUser.id === resource.userId) ||
@@ -470,27 +489,30 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
                 className="flex justify-end mt-3 border-t border-[#141414]"
                 style={{ paddingTop: "12px" }}
               >
-                <a
-                  href={`${API_BASE}/resources/files/${file.id}/download`}
-                  download={file.name}
-                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none no-underline"
+                <button
+                  onClick={() => onDownloadFile(file.id, file.name)}
+                  className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5"
                   style={{
                     paddingLeft: "16px",
                     paddingRight: "16px",
                     paddingTop: "6px",
                     paddingBottom: "6px",
-                    display: "inline-block",
                   }}
                 >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
                   download
-                </a>
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Footer — tags + comment */}
+      {/* Footer — tags */}
       <div
         className="flex items-center justify-between border-t border-[#111] mt-auto"
         style={{ paddingTop: "16px" }}
@@ -517,37 +539,6 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
             </span>
           ))}
         </div>
-        {resource.url && resource.url !== "https://cybershare.local" && (
-          <a
-            href={resource.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[11px] font-mono text-[#444] hover:text-[#aaa] transition-colors border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-lg no-underline"
-            style={{
-              paddingLeft: "12px",
-              paddingRight: "12px",
-              paddingTop: "6px",
-              paddingBottom: "6px",
-            }}
-            aria-label="Download resource"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            download
-          </a>
-        )}
       </div>
     </div>
   );
@@ -561,7 +552,7 @@ export default function Resources() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookmarked, setBookmarked] = useState(new Set());
-  const [view, setView] = useState("feed"); // "feed" | "upload"
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef(null);
@@ -632,6 +623,15 @@ export default function Resources() {
     );
   }
 
+  async function handleDownloadFile(fileId, fileName) {
+    try {
+      await resourcesAPI.downloadFile(fileId, fileName);
+    } catch (err) {
+      console.error("Failed to download file:", err);
+      showToast("Failed to download file.");
+    }
+  }
+
   async function handleBookmarkToggle(id) {
     const isBookmarked = bookmarked.has(id);
     
@@ -676,6 +676,10 @@ export default function Resources() {
   }
 
   async function handlePublish({ title, content, url, category, files }) {
+    // Close modal immediately
+    setShowPublishModal(false);
+    showToast("Publishing resource...");
+
     try {
       // Create the resource entry first
       const created = await resourcesAPI.create(title, content, url, category);
@@ -704,7 +708,6 @@ export default function Resources() {
         files: r.files || [],
       }));
       setResources(transformedResources);
-      setView("feed");
       showToast("Resource published.");
     } catch (error) {
       console.error("Failed to publish resource:", error);
@@ -763,52 +766,19 @@ export default function Resources() {
                 </p>
               </div>
 
-              <div
-                className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 self-start sm:self-center"
-                style={{ padding: "4px" }}
-              >
+              <div className="flex items-center gap-2 self-start sm:self-center">
                 <button
-                  onClick={() => {
-                    setView("feed");
-                    setQuery("");
-                  }}
-                  className={`flex items-center justify-center gap-2 rounded-lg text-[12.5px] font-mono transition-colors cursor-pointer border-none ${view === "feed" ? "bg-white text-black font-semibold" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
-                  style={{ padding: "8px 16px" }}
+                  onClick={() => setShowPublishModal(true)}
+                  className="flex items-center justify-center gap-2 rounded-xl text-[12.5px] font-mono font-semibold bg-white text-black hover:bg-[#eee] transition-colors cursor-pointer border-none shadow-sm"
+                  style={{ padding: "10px 20px" }}
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    width="13"
-                    height="13"
+                    width="14"
+                    height="14"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="8" y1="6" x2="21" y2="6" />
-                    <line x1="8" y1="12" x2="21" y2="12" />
-                    <line x1="8" y1="18" x2="21" y2="18" />
-                    <line x1="3" y1="6" x2="3.01" y2="6" />
-                    <line x1="3" y1="12" x2="3.01" y2="12" />
-                    <line x1="3" y1="18" x2="3.01" y2="18" />
-                  </svg>
-                  Resource Feed
-                </button>
-                <button
-                  onClick={() => {
-                    setView("upload");
-                    setQuery("");
-                  }}
-                  className={`flex items-center justify-center gap-2 rounded-lg text-[12.5px] font-mono transition-colors cursor-pointer border-none ${view === "upload" ? "bg-white text-black font-semibold" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
-                  style={{ padding: "8px 16px" }}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="13"
-                    height="13"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
@@ -820,130 +790,141 @@ export default function Resources() {
               </div>
             </div>
 
-            {/* Search bar — only on feed view */}
-            {view === "feed" && (
-              <div className="relative mb-6">
-                <svg
-                  className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"
-                  style={{ left: "16px" }}
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="search by title, author, tag, or filename..."
-                  className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-silver"
-                  style={{
-                    paddingLeft: "40px",
-                    paddingRight: "40px",
-                    paddingTop: "12px",
-                    paddingBottom: "12px",
+            {/* Search bar */}
+            <div className="relative mb-6">
+              <svg
+                className="absolute top-1/2 -translate-y-1/2 text-[#333] pointer-events-none"
+                style={{ left: "16px" }}
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                ref={searchRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="search by title, author, tag, or filename..."
+                className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-silver"
+                style={{
+                  paddingLeft: "40px",
+                  paddingRight: "40px",
+                  paddingTop: "12px",
+                  paddingBottom: "12px",
+                }}
+              />
+              {query && (
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    searchRef.current?.focus();
                   }}
-                />
-                {query && (
-                  <button
-                    onClick={() => {
-                      setQuery("");
-                      searchRef.current?.focus();
-                    }}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer"
-                    style={{ padding: "4px" }}
-                    aria-label="Clear search"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer"
+                  style={{ padding: "4px" }}
+                  aria-label="Clear search"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            )}
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
             <br />
           </div>
 
           {/* Section divider */}
           <div className="flex items-center gap-3 mb-5">
             <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
-              {view === "upload"
-                ? "New Entry"
-                : query
-                  ? `${filteredResources.length} result${filteredResources.length !== 1 ? "s" : ""}`
-                  : "Recent Entries"}
+              {query
+                ? `${filteredResources.length} result${filteredResources.length !== 1 ? "s" : ""}`
+                : "Recent Entries"}
             </p>
             <div className="flex-1 h-px bg-[#151515]" />
           </div>
 
-          {/* Upload form */}
-          {view === "upload" && (
-            <div className="max-w-[600px] mx-auto">
-              <UploadForm onPublish={handlePublish} />
-            </div>
-          )}
-
           {/* Feed — responsive grid */}
-          {view === "feed" &&
-            (filteredResources.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredResources.map((r) => (
-                  <ResourceCard
-                    key={r.id}
-                    resource={r}
-                    isBookmarked={bookmarked.has(r.id)}
-                    onBookmarkToggle={handleBookmarkToggle}
-                    currentUser={currentUser}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#2a2a2a"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <p className="text-[12px] font-mono text-[#333]">
-                  No results for <span className="text-[#555]">"{query}"</span>
-                </p>
+          {filteredResources.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredResources.map((r) => (
+                <ResourceCard
+                  key={r.id}
+                  resource={r}
+                  isBookmarked={bookmarked.has(r.id)}
+                  onBookmarkToggle={handleBookmarkToggle}
+                  currentUser={currentUser}
+                  onDelete={handleDelete}
+                  onDownloadFile={handleDownloadFile}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#2a2a2a"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <p className="text-[12px] font-mono text-[#333]">
+                {query ? (
+                  <>No results for <span className="text-[#555]">"{query}"</span></>
+                ) : (
+                  "No published resources yet"
+                )}
+              </p>
+              {query && (
                 <button
                   onClick={() => setQuery("")}
                   className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
                 >
                   Clear search
                 </button>
-              </div>
-            ))}
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Publish Resource Modal Dialog */}
+      {showPublishModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setShowPublishModal(false)}
+          style={{ padding: "16px" }}
+        >
+          <div className="w-full max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl">
+            <UploadForm
+              onPublish={handlePublish}
+              onClose={() => setShowPublishModal(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Toast */}
       <div

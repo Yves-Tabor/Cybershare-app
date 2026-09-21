@@ -219,6 +219,27 @@ export const resourcesAPI = {
   downloadFileUrl: (fileId) =>
     `${API_BASE_URL}/resources/files/${fileId}/download`,
 
+  downloadFile: async (fileId, fileName) => {
+    const token = getToken();
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(
+      `${API_BASE_URL}/resources/files/${fileId}/download`,
+      { headers, credentials: "include" }
+    );
+    if (!response.ok) throw new Error("Download failed");
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName || "file";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
   update: async (id, title, description, url, category) => {
     return apiRequest(`/resources/${id}`, {
       method: "PATCH",
