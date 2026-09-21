@@ -407,9 +407,17 @@ const clientOrigin = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.replace(/\/$/, "")
   : "http://localhost:5173";
 
+const socketAllowedOrigins = process.env.NODE_ENV === "production"
+  ? [
+      clientOrigin,
+      "https://cybershare.website",
+      "https://www.cybershare.website",
+    ]
+  : [clientOrigin, "http://localhost:5174", "http://localhost:5175"];
+
 const io = new Server(server, {
   cors: {
-    origin: clientOrigin,
+    origin: socketAllowedOrigins,
     credentials: true,
   },
 });

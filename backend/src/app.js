@@ -70,18 +70,36 @@ app.use((req, res, next) => {
 });
 
 // CORS configuration
-const clientOrigin = process.env.CLIENT_URL 
-  ? process.env.CLIENT_URL.replace(/\/$/, "") 
+const clientOrigin = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.replace(/\/$/, "")
   : "http://localhost:5173";
 
-// Allow multiple origins for development
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? clientOrigin 
-  : [clientOrigin, "http://localhost:5174", "http://localhost:5175"];
+// Build an explicit whitelist so every valid origin is covered.
+// In production this includes the custom domain (with and without www)
+// and the Render.com frontend URL. In development we also allow the
+// Vite dev-server ports.
+const allowedOrigins = process.env.NODE_ENV === "production"
+  ? [
+      clientOrigin,                          // e.g. https://cybershare.onrender.com
+      "https://cybershare.website",          // naked domain
+      "https://www.cybershare.website",      // www variant
+    ]
+  : [
+      clientOrigin,
+      "http://localhost:5174",
+      "http://localhost:5175",
+    ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin '${origin}' not allowed`));
+    },
     credentials: true,
   }),
 );
