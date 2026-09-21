@@ -1,11 +1,29 @@
 const pool = require('../config/database');
 
+// Ensure saved_items schema supports custom link columns
+pool.query(`
+  CREATE TABLE IF NOT EXISTS saved_items (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_type VARCHAR(50) NOT NULL,
+    item_id INTEGER,
+    url TEXT,
+    title TEXT,
+    note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS url TEXT;
+  ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS title TEXT;
+  ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS note TEXT;
+  ALTER TABLE saved_items ALTER COLUMN item_id DROP NOT NULL;
+`).catch(err => console.error("Error setting up saved_items table:", err));
+
 const getSavedItems = async (req, res) => {
   try {
     const userId = req.userId;
 
     const result = await pool.query(
-      `SELECT id, item_type, item_id, created_at 
+      `SELECT id, item_type, item_id, url, title, note, created_at 
        FROM saved_items 
        WHERE user_id = $1 
        ORDER BY created_at DESC`,
@@ -16,7 +34,25 @@ const getSavedItems = async (req, res) => {
     for (const row of result.rows) {
       const typeLower = (row.item_type || '').toLowerCase();
 
-      if (typeLower === 'resource') {
+      if (typeLower === 'link') {
+        let domain = row.url || '';
+        try {
+          const u = new URL(/^https?:\/\//i.test(row.url) ? row.url : `https://${row.url}`);
+          domain = u.hostname.replace(/^www\./, "");
+        } catch (e) {}
+
+        items.push({
+          id: row.id,
+          real_id: row.id,
+          type: 'link',
+          category: 'Link',
+          title: row.title || domain,
+          snippet: row.note || `Saved link from ${domain}`,
+          url: row.url,
+          domain: domain,
+          savedAt: new Date(row.created_at).getTime(),
+        });
+      } else if (typeLower === 'resource') {
         const resData = await pool.query(
           `SELECT r.id, r.title, r.description, r.url, r.category,
                   (SELECT id FROM resource_files WHERE resource_id = r.id LIMIT 1) as file_id,
@@ -126,7 +162,7 @@ const saveItem = async (req, res) => {
     const userId = req.userId;
     const { item_type, item_id, url, title, note } = req.body;
 
-    // Handle custom link saving (creates a resource with category 'Link' and saves it)
+    // Handle custom link saving (saves directly to saved_items table, NOT resources!)
     if (item_type?.toLowerCase() === 'link' || (url && !item_id)) {
       if (!url) {
         return res.status(400).json({ error: 'URL is required to save a link' });
@@ -138,34 +174,26 @@ const saveItem = async (req, res) => {
         domain = u.hostname.replace(/^www\./, "");
       } catch (e) {}
 
-      const resourceResult = await pool.query(
-        `INSERT INTO resources (title, description, url, category, user_id)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, title, description, url, category, created_at`,
-        [title?.trim() || domain, note?.trim() || `Saved from ${domain}`, url.trim(), 'Link', userId]
-      );
-      const newResource = resourceResult.rows[0];
-
       const savedResult = await pool.query(
-        `INSERT INTO saved_items (user_id, item_type, item_id)
-         VALUES ($1, 'RESOURCE', $2)
-         ON CONFLICT (user_id, item_type, item_id) DO UPDATE SET created_at = CURRENT_TIMESTAMP
-         RETURNING id, item_type, item_id, created_at`,
-        [userId, newResource.id]
+        `INSERT INTO saved_items (user_id, item_type, url, title, note)
+         VALUES ($1, 'LINK', $2, $3, $4)
+         RETURNING id, item_type, url, title, note, created_at`,
+        [userId, url.trim(), title?.trim() || domain, note?.trim() || `Saved from ${domain}`]
       );
+      const savedRow = savedResult.rows[0];
 
       return res.status(201).json({
         message: 'Link saved',
         item: {
-          id: savedResult.rows[0].id,
-          real_id: newResource.id,
-          type: 'resource',
+          id: savedRow.id,
+          real_id: savedRow.id,
+          type: 'link',
           category: 'Link',
-          title: newResource.title,
-          snippet: newResource.description,
-          url: newResource.url,
+          title: savedRow.title,
+          snippet: savedRow.note,
+          url: savedRow.url,
           domain: domain,
-          savedAt: new Date(savedResult.rows[0].created_at).getTime(),
+          savedAt: new Date(savedRow.created_at).getTime(),
         }
       });
     }

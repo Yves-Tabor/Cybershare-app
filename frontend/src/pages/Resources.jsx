@@ -17,12 +17,13 @@ const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
 
 function UploadForm({ onPublish }) {
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [url, setUrl] = useState("");
   const [category, setCategory] = useState("Guides");
   const [files, setFiles] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
-
 
   const addFiles = useCallback((incoming) => {
     const arr = Array.from(incoming);
@@ -68,12 +69,14 @@ function UploadForm({ onPublish }) {
     setError("");
     onPublish({
       title: title.trim(),
-      content: "",
-      url: "",
+      content: description.trim(),
+      url: url.trim(),
       category,
       files,
     });
     setTitle("");
+    setDescription("");
+    setUrl("");
     setCategory("Guides");
     setFiles([]);
   }
@@ -130,6 +133,45 @@ function UploadForm({ onPublish }) {
           />
         </div>
 
+        {/* Description */}
+        <div>
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
+            Description <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="brief description or details..."
+            rows={3}
+            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a] resize-none"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "14px",
+              paddingBottom: "14px",
+            }}
+          />
+        </div>
+
+        {/* Resource URL / Link */}
+        <div>
+          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
+            Resource Link / URL <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
+          </label>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com/resource"
+            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+            style={{
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "14px",
+              paddingBottom: "14px",
+            }}
+          />
+        </div>
 
         {/* Category */}
         <div>
@@ -284,7 +326,10 @@ function UploadForm({ onPublish }) {
 
 function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
-  const isOwner = currentUser && currentUser.username === resource.author;
+  const isOwner = currentUser && (
+    (currentUser.id && resource.userId && currentUser.id === resource.userId) ||
+    (currentUser.username && resource.author && currentUser.username === resource.author)
+  );
 
   return (
     <div
@@ -533,6 +578,7 @@ export default function Resources() {
         // Transform backend data to match frontend format
         const transformedResources = data.resources.map((r) => ({
           id: r.id,
+          userId: r.user?.id || r.user_id,
           author: r.user?.username || r.username || "Unknown",
           handle: `@${r.user?.username || r.username || "unknown"}`,
           date: new Date(r.createdAt || r.created_at || Date.now()).toLocaleDateString(),
@@ -646,6 +692,7 @@ export default function Resources() {
       const data = await resourcesAPI.getAll();
       const transformedResources = data.resources.map((r) => ({
         id: r.id,
+        userId: r.user?.id || r.user_id,
         author: r.user?.username || r.username || "Unknown",
         handle: `@${r.user?.username || r.username || "unknown"}`,
         date: new Date(r.createdAt || r.created_at || Date.now()).toLocaleDateString(),

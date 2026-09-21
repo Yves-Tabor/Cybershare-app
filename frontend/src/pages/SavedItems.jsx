@@ -22,12 +22,14 @@ const TYPE_META = {
   post: { label: "Post", color: "#7F77DD", bg: "#1a1a2e" },
   resource: { label: "Resource", color: "#BA7517", bg: "#2e2a1a" },
   event: { label: "Event", color: "#1D9E75", bg: "#1a2a2e" },
+  link: { label: "Link", color: "#3B82F6", bg: "#1e293b" },
 };
 
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "post", label: "Posts" },
   { key: "resource", label: "Resources" },
+  { key: "link", label: "Links" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -765,6 +767,24 @@ function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
                 </a>
               )}
 
+              {/* Link action: Visit */}
+              {item.type === "link" && item.url && (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-[#3B82F6]/10 border-[#3B82F6]/40 text-[#3B82F6] hover:bg-[#3B82F6]/25 no-underline"
+                  style={{ padding: "6px 12px" }}
+                >
+                  Visit
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+              )}
+
               {/* Post action: Reshare in groups / global feed */}
               {item.type === "post" && (
                 <button
@@ -906,6 +926,7 @@ export default function SavedItems() {
     post: items.filter((i) => i.type === "post").length,
     event: items.filter((i) => i.type === "event").length,
     resource: items.filter((i) => i.type === "resource").length,
+    link: items.filter((i) => i.type === "link").length,
   };
 
   const filteredItems = items
