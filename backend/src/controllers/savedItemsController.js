@@ -1,22 +1,47 @@
 const pool = require('../config/database');
 
-// Ensure saved_items schema supports custom link columns
-pool.query(`
-  CREATE TABLE IF NOT EXISTS saved_items (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    item_type VARCHAR(50) NOT NULL,
-    item_id INTEGER,
-    url TEXT,
-    title TEXT,
-    note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
-  ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS url TEXT;
-  ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS title TEXT;
-  ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS note TEXT;
-  ALTER TABLE saved_items ALTER COLUMN item_id DROP NOT NULL;
-`).catch(err => console.error("Error setting up saved_items table:", err));
+// Ensure saved_items schema supports custom link columns and migrate legacy link resources
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS saved_items (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        item_type VARCHAR(50) NOT NULL,
+        item_id INTEGER,
+        url TEXT,
+        title TEXT,
+        note TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS url TEXT;
+      ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS title TEXT;
+      ALTER TABLE saved_items ADD COLUMN IF NOT EXISTS note TEXT;
+      ALTER TABLE saved_items ALTER COLUMN item_id DROP NOT NULL;
+    `);
+
+    // Copy legacy 'Link' resources data into saved_items
+    await pool.query(`
+      UPDATE saved_items s
+      SET item_type = 'LINK',
+          url = r.url,
+          title = r.title,
+          note = r.description,
+          item_id = NULL
+      FROM resources r
+      WHERE UPPER(s.item_type) = 'RESOURCE'
+        AND s.item_id = r.id
+        AND r.category = 'Link';
+    `);
+
+    // Remove legacy 'Link' rows from resources table
+    await pool.query(`
+      DELETE FROM resources WHERE category = 'Link';
+    `);
+  } catch (err) {
+    console.error("Error setting up saved_items table / migrating legacy links:", err);
+  }
+})();
 
 const getSavedItems = async (req, res) => {
   try {

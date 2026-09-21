@@ -17,10 +17,11 @@ const getAllResources = async (req, res) => {
              u.id as user_id, u.username, u.avatar
       FROM resources r
       JOIN users u ON r.user_id = u.id
+      WHERE r.category != 'Link'
     `;
     const params = [];
     if (category) {
-      query += ' WHERE r.category = $1';
+      query += ' AND r.category = $1';
       params.push(category);
     }
     query += ' ORDER BY r.created_at DESC';
