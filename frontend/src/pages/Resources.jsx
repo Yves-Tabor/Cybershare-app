@@ -345,10 +345,17 @@ function UploadForm({ onPublish, onClose }) {
 
 function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
+  // isOwner: true when the logged-in user is the publisher of this resource.
+  // Number() cast handles cases where PostgreSQL returns int but comparison needs consistent type.
   const isOwner = Boolean(
-    currentUser && (
-      (currentUser.id != null && resource.userId != null && String(currentUser.id) === String(resource.userId)) ||
-      (currentUser.username && resource.author && currentUser.username.toLowerCase() === resource.author.toLowerCase())
+    currentUser &&
+    (
+      (currentUser.id != null &&
+        resource.userId != null &&
+        Number(currentUser.id) === Number(resource.userId)) ||
+      (currentUser.username &&
+        resource.author &&
+        currentUser.username.toLowerCase() === resource.author.toLowerCase())
     )
   );
 
@@ -599,14 +606,25 @@ export default function Resources() {
   useEffect(() => {
     async function fetchResources() {
       try {
-        const userResponse = await authAPI.me();
-        setCurrentUser(userResponse.user);
+        // Fetch current user separately so a failure here doesn't break resources
+        try {
+          const userResponse = await authAPI.me();
+          if (userResponse?.user) {
+            setCurrentUser(userResponse.user);
+          }
+        } catch (userErr) {
+          console.error("Failed to fetch current user:", userErr);
+          if (userErr.status === 401) {
+            redirectToWelcomeAuth(navigate);
+            return;
+          }
+        }
 
         const data = await resourcesAPI.getAll();
         // Transform backend data to match frontend format
         const transformedResources = data.resources.map((r) => ({
           id: r.id,
-          userId: r.user?.id || r.user_id,
+          userId: r.user?.id ?? r.user_id ?? null,
           author: r.user?.username || r.username || "Unknown",
           handle: `@${r.user?.username || r.username || "unknown"}`,
           date: new Date(r.createdAt || r.created_at || Date.now()).toLocaleDateString(),
@@ -620,14 +638,17 @@ export default function Resources() {
         setResources(transformedResources);
 
         // Fetch saved items to populate the initial bookmark state
-        const savedData = await savedItemsAPI.getAll();
-        const savedResourceIds = new Set(
-          savedData.items.filter((i) => i.type === "resource").map((i) => i.real_id)
-        );
-        setBookmarked(savedResourceIds);
+        try {
+          const savedData = await savedItemsAPI.getAll();
+          const savedResourceIds = new Set(
+            (savedData.items || []).filter((i) => i.type === "resource").map((i) => i.real_id)
+          );
+          setBookmarked(savedResourceIds);
+        } catch (savedErr) {
+          console.error("Failed to fetch saved items:", savedErr);
+        }
       } catch (error) {
         console.error("Failed to fetch resources:", error);
-        // Redirect to login if not authenticated
         if (error.status === 401 || error.message === "API request failed") {
           redirectToWelcomeAuth(navigate);
         }
@@ -733,7 +754,7 @@ export default function Resources() {
       const data = await resourcesAPI.getAll();
       const transformedResources = data.resources.map((r) => ({
         id: r.id,
-        userId: r.user?.id || r.user_id,
+        userId: r.user?.id ?? r.user_id ?? null,
         author: r.user?.username || r.username || "Unknown",
         handle: `@${r.user?.username || r.username || "unknown"}`,
         date: new Date(r.createdAt || r.created_at || Date.now()).toLocaleDateString(),
