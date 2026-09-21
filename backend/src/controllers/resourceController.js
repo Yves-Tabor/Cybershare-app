@@ -110,7 +110,15 @@ const getResourceById = async (req, res) => {
 const createResource = async (req, res) => {
   try {
     const userId = req.userId;
-    const { title, description, url, category } = req.body;
+    let { title, description, url, category } = req.body;
+
+    title = (title || '').trim();
+    description = (description || '').trim();
+    url = (url || '').trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
+    category = (category || 'Guides').trim();
 
     const result = await pool.query(
       `INSERT INTO resources (title, description, url, category, user_id)
