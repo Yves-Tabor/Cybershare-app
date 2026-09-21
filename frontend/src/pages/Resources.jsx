@@ -345,9 +345,11 @@ function UploadForm({ onPublish, onClose }) {
 
 function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
-  const isOwner = currentUser && (
-    (currentUser.id && resource.userId && currentUser.id === resource.userId) ||
-    (currentUser.username && resource.author && currentUser.username === resource.author)
+  const isOwner = Boolean(
+    currentUser && (
+      (currentUser.id != null && resource.userId != null && String(currentUser.id) === String(resource.userId)) ||
+      (currentUser.username && resource.author && currentUser.username.toLowerCase() === resource.author.toLowerCase())
+    )
   );
 
   return (
