@@ -341,250 +341,289 @@ function UploadForm({ onPublish, onClose }) {
   );
 }
 
-// ─── Resource card ────────────────────────────────────────────────────────────
+// ─── Resource detail modal ──────────────────────────────────────────────────────
 
-function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile }) {
+function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile, onClose }) {
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
-  // isOwner: true when the logged-in user is the publisher of this resource.
-  // Number() cast handles cases where PostgreSQL returns int but comparison needs consistent type.
   const isOwner = Boolean(
     currentUser &&
     (
-      (currentUser.id != null &&
-        resource.userId != null &&
-        Number(currentUser.id) === Number(resource.userId)) ||
-      (currentUser.username &&
-        resource.author &&
-        currentUser.username.toLowerCase() === resource.author.toLowerCase())
+      (currentUser.id != null && resource.userId != null && Number(currentUser.id) === Number(resource.userId)) ||
+      (currentUser.username && resource.author && currentUser.username.toLowerCase() === resource.author.toLowerCase())
     )
   );
 
   return (
     <div
-      className="border border-gray rounded-2xl hover:border-gray bg-[#111]/5 transition-colors flex flex-col"
-      style={{
-        paddingLeft: "24px",
-        paddingRight: "24px",
-        paddingTop: "20px",
-        paddingBottom: "20px",
-      }}
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-sm"
+      style={{ padding: '16px' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
-      {/* Author row + bookmark / delete */}
-      <div className="flex items-start justify-between gap-2 mb-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#222]"
-            style={{ background: avatarColor }}
-          >
-            {resource.initials}
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold text-white leading-tight">
-              {resource.author}
-            </p>
-            <p className="text-[11px] text-[#444] font-mono mt-0.5">
-              {resource.handle} · {resource.date}
-            </p>
-          </div>
-        </div>
-
-        {isOwner ? (
-          <button
-            onClick={() => onDelete(resource.id)}
-            className="flex-shrink-0 bg-transparent border-none cursor-pointer text-[#555] hover:text-[#E24B4A] transition-colors mt-0.5"
-            aria-label="Delete resource"
-            style={{ padding: "4px" }}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        ) : (
-          <button
-            onClick={() => onBookmarkToggle(resource.id)}
-            className="flex-shrink-0 bg-transparent border-none cursor-pointer transition-colors mt-0.5"
-            aria-label={isBookmarked ? "Remove bookmark" : "Bookmark resource"}
-            style={{ padding: "4px" }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill={isBookmarked ? "#7F77DD" : "none"}
-              stroke={isBookmarked ? "#7F77DD" : "#444"}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ transition: "all 0.15s ease" }}
-            >
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Title & body */}
-      <p className="app-title-text text-[14px] font-bold text-white mb-1">
-        {resource.title}
-      </p>
-      <p className="text-[13px] text-[#666] mb-3">{resource.content}</p>
-
-      {/* URL Link */}
-      {resource.url && (
-        <a
-          href={resource.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[12px] font-mono text-[#7F77DD] hover:underline mb-4 flex items-center gap-1.5 w-fit"
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-          Go to resource
-        </a>
-      )}
-
-      {/* File attachments */}
-      {resource.files && resource.files.length > 0 && (
-        <div className="space-y-2 mb-5">
-          {resource.files.map((file) => (
-            <div
-              key={file.name}
-              className="border border-[#1a1a1a] rounded-xl bg-[#0a0a0a]"
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "14px",
-                paddingBottom: "14px",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222] flex items-center justify-center flex-shrink-0">
-                  <span className="text-[8px] font-mono font-bold text-[#555]">
-                    File
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-mono text-[#ccc] truncate">
-                    {file.name}
-                  </p>
-                  <p className="text-[11px] font-mono text-[#444] mt-0.5">
-                    {file.size} · {file.type}
-                  </p>
-                </div>
-              </div>
-              {!isOwner && (
-                <div
-                  className="flex justify-end mt-3 border-t border-[#141414]"
-                  style={{ paddingTop: "12px" }}
-                >
-                  <button
-                    onClick={() => onDownloadFile(file.id, file.name)}
-                    className="bg-white text-[#080808] rounded-lg text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5"
-                    style={{
-                      paddingLeft: "16px",
-                      paddingRight: "16px",
-                      paddingTop: "6px",
-                      paddingBottom: "6px",
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    download
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Footer — tags + download link for non-publishers */}
       <div
-        className="flex items-center justify-between border-t border-[#111] mt-auto"
-        style={{ paddingTop: "16px" }}
+        className="w-full max-w-[520px] max-h-[88vh] overflow-y-auto bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl shadow-2xl flex flex-col"
+        style={{ animation: 'modalPop 0.18s cubic-bezier(0.34,1.56,0.64,1) both' }}
       >
-        <div className="flex items-center gap-2 flex-wrap">
-          {resource.tags.map((tag) => (
-            <span
-              key={tag}
-              className={`text-[11px] font-mono rounded-full border cursor-pointer transition-colors ${
-                tag.startsWith("#") && tag !== "#Resource"
-                  ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/5 hover:bg-[#7F77DD]/10"
-                  : tag === "#Resource"
-                    ? "border-[#1D9E75]/50 text-[#1D9E75] bg-[#1D9E75]/5 hover:bg-[#1D9E75]/10"
-                    : "border-[#333] text-[#666] bg-transparent hover:border-[#444] hover:text-[#888]"
-              }`}
-              style={{
-                paddingLeft: "12px",
-                paddingRight: "12px",
-                paddingTop: "4px",
-                paddingBottom: "4px",
-              }}
+        {/* Modal header */}
+        <div
+          className="flex items-center justify-between border-b border-[#161616] flex-shrink-0"
+          style={{ padding: '18px 24px' }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#222]"
+              style={{ background: avatarColor }}
             >
-              {tag}
-            </span>
-          ))}
+              {resource.initials}
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-white leading-tight">{resource.author}</p>
+              <p className="text-[10px] text-[#444] font-mono mt-0.5">{resource.handle} · {resource.date}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {isOwner ? (
+              <button
+                onClick={() => { onDelete(resource.id); onClose(); }}
+                className="bg-transparent border-none cursor-pointer text-[#555] hover:text-[#E24B4A] transition-colors rounded-lg"
+                aria-label="Delete resource"
+                style={{ padding: '6px' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={() => onBookmarkToggle(resource.id)}
+                className="bg-transparent border-none cursor-pointer transition-colors rounded-lg"
+                aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark resource'}
+                style={{ padding: '6px' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={isBookmarked ? '#7F77DD' : 'none'} stroke={isBookmarked ? '#7F77DD' : '#555'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.15s ease' }}>
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="bg-transparent border-none cursor-pointer text-[#555] hover:text-white transition-colors rounded-lg"
+              aria-label="Close"
+              style={{ padding: '6px' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {!isOwner && resource.url && (!resource.files || resource.files.length === 0) && (
-          <a
-            href={resource.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            download
-            className="flex items-center gap-1.5 text-[11px] font-mono text-[#888] hover:text-white transition-colors border border-[#1e1e1e] hover:border-[#333] rounded-lg no-underline"
-            style={{
-              paddingLeft: "12px",
-              paddingRight: "12px",
-              paddingTop: "6px",
-              paddingBottom: "6px",
-            }}
-            aria-label="Download resource"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        {/* Modal body */}
+        <div style={{ padding: '24px' }} className="flex flex-col gap-4 flex-1">
+          {/* Tags */}
+          {resource.tags.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {resource.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={`text-[10px] font-mono rounded-full border ${
+                    tag.startsWith('#') && tag !== '#Resource'
+                      ? 'border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/5'
+                      : tag === '#Resource'
+                        ? 'border-[#1D9E75]/50 text-[#1D9E75] bg-[#1D9E75]/5'
+                        : 'border-[#333] text-[#666]'
+                  }`}
+                  style={{ padding: '3px 10px' }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Title */}
+          <h2 className="text-[17px] font-bold text-white leading-snug">{resource.title}</h2>
+
+          {/* Description */}
+          {resource.content && (
+            <p className="text-[13px] text-[#777] leading-relaxed">{resource.content}</p>
+          )}
+
+          {/* URL link */}
+          {resource.url && (
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[12px] font-mono text-[#7F77DD] hover:underline w-fit"
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            download
-          </a>
-        )}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              Go to resource
+            </a>
+          )}
+
+          {/* File attachments */}
+          {resource.files && resource.files.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-mono font-bold text-[#444] uppercase tracking-[0.15em]">Attachments</p>
+              {resource.files.map((file) => (
+                <div
+                  key={file.name}
+                  className="border border-[#1a1a1a] rounded-xl bg-[#060606]"
+                  style={{ padding: '14px 16px' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222] flex items-center justify-center flex-shrink-0">
+                      <span className="text-[7px] font-mono font-bold text-[#555]">FILE</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-mono text-[#ccc] truncate">{file.name}</p>
+                      <p className="text-[10px] font-mono text-[#444] mt-0.5">{file.size} · {file.type}</p>
+                    </div>
+                    {!isOwner && (
+                      <button
+                        onClick={() => onDownloadFile(file.id, file.name)}
+                        className="bg-white text-[#080808] rounded-lg text-[11px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5 flex-shrink-0"
+                        style={{ padding: '6px 14px' }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* URL-only download for non-publishers with no files */}
+          {!isOwner && resource.url && (!resource.files || resource.files.length === 0) && (
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="flex items-center gap-2 self-start text-[11px] font-mono text-[#888] hover:text-white transition-colors border border-[#1e1e1e] hover:border-[#333] rounded-lg no-underline"
+              style={{ padding: '7px 14px' }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download resource
+            </a>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+// ─── Compact resource row (click to open detail modal) ────────────────────────────
+
+function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile }) {
+  const [open, setOpen] = useState(false);
+  const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
+  const isOwner = Boolean(
+    currentUser &&
+    (
+      (currentUser.id != null && resource.userId != null && Number(currentUser.id) === Number(resource.userId)) ||
+      (currentUser.username && resource.author && currentUser.username.toLowerCase() === resource.author.toLowerCase())
+    )
+  );
+
+  const primaryTag = resource.tags.find((t) => t !== '#Resource') || resource.tags[0] || '';
+
+  return (
+    <>
+      {/* Compact row */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpen(true)}
+        className="group flex items-center gap-3 border border-[#161616] hover:border-[#2a2a2a] rounded-xl bg-[#080808] hover:bg-[#0d0d0d] transition-all cursor-pointer select-none"
+        style={{ padding: '14px 16px' }}
+      >
+        {/* Publisher avatar */}
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#1e1e1e]"
+          style={{ background: avatarColor }}
+        >
+          {resource.initials}
+        </div>
+
+        {/* Title + meta */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-[#ddd] group-hover:text-white transition-colors truncate leading-tight">
+            {resource.title}
+          </p>
+          <p className="text-[10px] font-mono text-[#3a3a3a] mt-0.5 truncate">
+            {resource.author} · {resource.date}
+          </p>
+        </div>
+
+        {/* Right-side indicators */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Category badge */}
+          {primaryTag && (
+            <span
+              className={`hidden sm:inline-block text-[9.5px] font-mono rounded-full border ${
+                primaryTag.startsWith('#') && primaryTag !== '#Resource'
+                  ? 'border-[#7F77DD]/40 text-[#7F77DD]/80 bg-[#7F77DD]/5'
+                  : 'border-[#252525] text-[#555]'
+              }`}
+              style={{ padding: '2px 9px' }}
+            >
+              {primaryTag}
+            </span>
+          )}
+
+          {/* File attachment indicator */}
+          {resource.files && resource.files.length > 0 && (
+            <span className="text-[#2e2e2e] group-hover:text-[#444] transition-colors" title="Has file attachments">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+            </span>
+          )}
+          {resource.url && (!resource.files || resource.files.length === 0) && (
+            <span className="text-[#2e2e2e] group-hover:text-[#444] transition-colors" title="Has link">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </span>
+          )}
+
+          {/* Saved indicator dot */}
+          {!isOwner && isBookmarked && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7F77DD] flex-shrink-0" />
+          )}
+
+          {/* Open chevron */}
+          <svg className="text-[#252525] group-hover:text-[#3a3a3a] transition-colors" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Detail modal */}
+      {open && (
+        <ResourceDetailModal
+          resource={resource}
+          isBookmarked={isBookmarked}
+          onBookmarkToggle={onBookmarkToggle}
+          currentUser={currentUser}
+          onDelete={onDelete}
+          onDownloadFile={onDownloadFile}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -920,7 +959,7 @@ export default function Resources() {
 
           {/* Feed — responsive grid */}
           {filteredResources.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="flex flex-col gap-2">
               {filteredResources.map((r) => (
                 <ResourceCard
                   key={r.id}
