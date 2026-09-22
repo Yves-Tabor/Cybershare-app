@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { eventsAPI, authAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
+import { useTheme } from "../contexts/ThemeContext";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -938,6 +939,7 @@ function CalendarView({ events, onToggleCalendar }) {
 
 export default function Events() {
   const navigate = useNavigate();
+  const { isLight } = useTheme();
   const [events, setEvents] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1148,10 +1150,11 @@ export default function Events() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+        className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-[#e0e0e0]"}`}
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          backgroundImage: `url(${mainBg})`,
+          backgroundImage: isLight ? "none" : `url(${mainBg})`,
+          backgroundColor: isLight ? "#f1f5f9" : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
@@ -1164,10 +1167,11 @@ export default function Events() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-[#e0e0e0]"}`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-        backgroundImage: `url(${mainBg})`,
+        backgroundImage: isLight ? "none" : `url(${mainBg})`,
+        backgroundColor: isLight ? "#f1f5f9" : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -1181,17 +1185,17 @@ export default function Events() {
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-[18px] font-semibold text-white tracking-tight">
+              <h1 className={`text-[18px] font-semibold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                 Events
               </h1>
               <div className="flex items-center gap-3 mt-1">
-                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">
+                <p className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-gray-400 md:text-[#444]"}`}>
                   {events.length} posted
                 </p>
                 {addedCount > 0 && (
                   <>
-                    <span className="text-gray-400 md:text-[#444]">·</span>
-                    <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">
+                    <span className={isLight ? "text-slate-400" : "text-gray-400 md:text-[#444]"}>·</span>
+                    <p className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-gray-400 md:text-[#444]"}`}>
                       {addedCount} in your calendar
                     </p>
                   </>
@@ -1225,15 +1229,15 @@ export default function Events() {
 
           {/* Events / Calendar toggle */}
           <div
-            className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 mb-6"
+            className={`flex rounded-xl gap-1 mb-6 ${isLight ? "bg-slate-100 border border-slate-200" : "bg-[#0a0a0a] border border-[#1c1c1c]"}`}
             style={{ padding: "4px" }}
           >
             <button
               onClick={() => setView("events")}
               className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
                 view === "events"
-                  ? "bg-white text-black"
-                  : "bg-transparent text-white hover:text-[#777]"
+                  ? isLight ? "bg-white text-slate-900 shadow-sm" : "bg-white text-black"
+                  : isLight ? "bg-transparent text-slate-500 hover:text-slate-700" : "bg-transparent text-white hover:text-[#777]"
               }`}
               style={{ padding: "10px 16px" }}
             >
@@ -1260,8 +1264,8 @@ export default function Events() {
               onClick={() => setView("calendar")}
               className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
                 view === "calendar"
-                  ? "bg-white text-black"
-                  : "bg-transparent text-white hover:text-[#777]"
+                  ? isLight ? "bg-white text-slate-900 shadow-sm" : "bg-white text-black"
+                  : isLight ? "bg-transparent text-slate-500 hover:text-slate-700" : "bg-transparent text-white hover:text-[#777]"
               }`}
               style={{ padding: "10px 16px" }}
             >
@@ -1338,12 +1342,12 @@ export default function Events() {
               <br />
 
               <div className="flex items-center gap-3 mb-4">
-                <p className="text-[9.5px] font-mono font-bold text-white tracking-[0.18em] uppercase whitespace-nowrap">
+                <p className={`text-[9.5px] font-mono font-bold tracking-[0.18em] uppercase whitespace-nowrap ${isLight ? "text-slate-400" : "text-white"}`}>
                   {query || filter !== "all"
                     ? `${filteredEvents.length} result${filteredEvents.length !== 1 ? "s" : ""}`
                     : "All events"}
                 </p>
-                <div className="flex-1 h-px bg-white" />
+                <div className={`flex-1 h-px ${isLight ? "bg-slate-200" : "bg-white"}`} />
               </div>
               <br />
 
@@ -1369,7 +1373,7 @@ export default function Events() {
                     height="22"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#222"
+                    stroke={isLight ? "#cbd5e1" : "#222"}
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1379,7 +1383,7 @@ export default function Events() {
                     <line x1="8" y1="2" x2="8" y2="6" />
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
-                  <p className="text-[12px] font-mono text-[#2a2a2a]">
+                  <p className={`text-[12px] font-mono ${isLight ? "text-slate-400" : "text-[#2a2a2a]"}`}>
                     No events found.
                   </p>
                   {filter === "added" && (

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { resourcesAPI, authAPI, savedItemsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
+import { useTheme } from "../contexts/ThemeContext";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -631,6 +632,7 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
 
 export default function Resources() {
   const navigate = useNavigate();
+  const { isLight } = useTheme();
   const [resources, setResources] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -815,10 +817,11 @@ export default function Resources() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+        className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-[#e0e0e0]"}`}
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          backgroundImage: `url(${mainBg})`,
+          backgroundImage: isLight ? "none" : `url(${mainBg})`,
+          backgroundColor: isLight ? "#f1f5f9" : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
@@ -831,16 +834,17 @@ export default function Resources() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-[#e0e0e0]"}`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-        backgroundImage: `url(${mainBg})`,
+        backgroundImage: isLight ? "none" : `url(${mainBg})`,
+        backgroundColor: isLight ? "#f1f5f9" : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="bg-[#080808]/75 min-h-screen w-full">
+      <div className={`min-h-screen w-full ${isLight ? "bg-transparent" : "bg-[#080808]/75"}`}>
         <div
           className="w-full max-w-[1200px] mx-auto flex flex-col items-center"
           style={{
@@ -855,10 +859,10 @@ export default function Resources() {
             {/* Page header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-[18px] font-semibold text-white tracking-tight">
+                <h1 className={`text-[18px] font-semibold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                   Resources
                 </h1>
-                <p className="text-[11px] text-[#444] mt-0.5 font-mono tracking-wide">
+                <p className={`text-[11px] mt-0.5 font-mono tracking-wide ${isLight ? "text-slate-500" : "text-[#444]"}`}>
                   {resources.length} entries · {bookmarked.size} saved
                 </p>
               </div>
@@ -910,7 +914,7 @@ export default function Resources() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="search by title, author, tag, or filename..."
-                className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[12.5px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-silver"
+                className={`w-full rounded-xl text-[12.5px] font-mono outline-none transition-colors ${isLight ? "bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-slate-400" : "bg-[#0a0a0a] border border-silver text-[#ccc] placeholder:text-silver focus:border-[#2a2a2a]"}`}
                 style={{
                   paddingLeft: "40px",
                   paddingRight: "40px",
@@ -949,12 +953,12 @@ export default function Resources() {
 
           {/* Section divider */}
           <div className="flex items-center gap-3 mb-5">
-            <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
+            <p className={`text-[9.5px] font-mono font-bold tracking-[0.18em] uppercase whitespace-nowrap ${isLight ? "text-slate-400" : "text-silver"}`}>
               {query
                 ? `${filteredResources.length} result${filteredResources.length !== 1 ? "s" : ""}`
                 : "Recent Entries"}
             </p>
-            <div className="flex-1 h-px bg-[#151515]" />
+            <div className={`flex-1 h-px ${isLight ? "bg-slate-200" : "bg-[#151515]"}`} />
           </div>
 
           {/* Feed — responsive grid */}
@@ -979,7 +983,7 @@ export default function Resources() {
                 height="22"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#2a2a2a"
+                stroke={isLight ? "#cbd5e1" : "#2a2a2a"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -987,9 +991,9 @@ export default function Resources() {
                 <circle cx="11" cy="11" r="7" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <p className="text-[12px] font-mono text-[#333]">
+              <p className={`text-[12px] font-mono ${isLight ? "text-slate-400" : "text-[#333]"}`}>
                 {query ? (
-                  <>No results for <span className="text-[#555]">"{query}"</span></>
+                  <>No results for <span className={isLight ? "text-slate-500" : "text-[#555]"}>&#34;{query}&#34;</span></>
                 ) : (
                   "No published resources yet"
                 )}
@@ -1014,7 +1018,7 @@ export default function Resources() {
           onClick={(e) => e.target === e.currentTarget && setShowPublishModal(false)}
           style={{ padding: "16px" }}
         >
-          <div className="w-full max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl">
+          <div className={`w-full max-w-[600px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isLight ? "bg-white border border-slate-200" : "bg-[#0a0a0a] border border-[#222]"}`}>
             <UploadForm
               onPublish={handlePublish}
               onClose={() => setShowPublishModal(false)}
@@ -1025,7 +1029,7 @@ export default function Resources() {
 
       {/* Toast */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg px-5 py-2.5 text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-50 transition-all duration-200 ${
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg px-5 py-2.5 text-[12px] font-mono pointer-events-none whitespace-nowrap z-50 transition-all duration-200 ${isLight ? "bg-white border border-slate-200 text-slate-700 shadow-lg" : "bg-[#111] border border-[#2a2a2a] text-[#ccc]"} ${
           toast.visible
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-2"

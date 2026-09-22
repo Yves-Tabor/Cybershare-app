@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { authAPI, userSettingsAPI, clearToken } from "../utils/api";
+import { useTheme } from "../contexts/ThemeContext";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 import "./Settings.css";
 
@@ -227,10 +228,10 @@ const IconCopy = () => (
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
-function Toast({ message, visible }) {
+function Toast({ message, visible, isLight = false }) {
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg text-[12px] font-mono pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${isLight ? "bg-white border border-slate-200 text-slate-700 shadow-lg" : "bg-[#111] border border-[#2a2a2a] text-[#ccc]"} ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
       style={{
         paddingLeft: "20px",
         paddingRight: "20px",
@@ -292,7 +293,7 @@ function SettingRow({ label, description, control }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-b border-white/10 last:border-b-0">
       <div className="min-w-0">
-        <p className="text-[13px] text-white">{label}</p>
+        <p className="text-[13px] text-inherit">{label}</p>
         {description && (
           <p className="text-[11.5px] text-[#888] mt-0.5 leading-relaxed">
             {description}
@@ -374,7 +375,7 @@ function SectionCard({
   return (
     <div className="bg-white/10 md:bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden mb-5">
       <div
-        className="flex items-center justify-between border-b border-white"
+        className={`flex items-center justify-between ${isDanger ? "border-b border-[#E24B4A]/30" : "border-b border-white/10"}`}
         style={{ padding: "16px 24px" }}
       >
         <div
@@ -409,9 +410,9 @@ function NavItem({ section, active, onClick }) {
   const dangerInactive =
     "bg-transparent border-transparent text-[#7a3a3a] hover:text-[#E24B4A]";
   const normalActive =
-    "bg-[#141414] border border-[#222] text-white";
+    "bg-white/10 border border-white/20 text-white";
   const normalInactive =
-    "bg-transparent border-transparent text-[#555] hover:text-[#999]";
+    "bg-transparent border-transparent text-[#888] hover:text-[#ccc]";
   const cls = section.danger
     ? active
       ? dangerActive
@@ -1467,6 +1468,7 @@ const SECTIONS = [
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { isLight } = useTheme();
   const [section, setSection] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
@@ -1536,10 +1538,11 @@ export default function Settings() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center text-white"
+        className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-white"}`}
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          backgroundImage: `url(${mainBg})`,
+          backgroundImage: isLight ? "none" : `url(${mainBg})`,
+          backgroundColor: isLight ? "#f1f5f9" : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
@@ -1552,16 +1555,17 @@ export default function Settings() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-white"
+      className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-white"}`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-        backgroundImage: `url(${mainBg})`,
+        backgroundImage: isLight ? "none" : `url(${mainBg})`,
+        backgroundColor: isLight ? "#f1f5f9" : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="bg-transparent min-h-screen w-full">
+      <div className={`min-h-screen w-full ${isLight ? "bg-transparent" : "bg-transparent"}`}>
         <div
           className="w-full max-w-[900px] mx-auto"
           style={{
@@ -1572,7 +1576,7 @@ export default function Settings() {
           }}
         >
           <div className="mb-7">
-            <h1 className="text-[18px] font-semibold text-white tracking-tight">
+            <h1 className={`text-[18px] font-semibold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
               Settings
             </h1>
             <p className="text-[11px] text-[#534AB7] font-mono mt-1">
@@ -1626,7 +1630,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} isLight={isLight} />
     </div>
   );
 }

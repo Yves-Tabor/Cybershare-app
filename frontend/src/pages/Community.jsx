@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { groupsAPI, authAPI } from "../utils/api";
+import { useTheme } from "../contexts/ThemeContext";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ function Avatar({ initials, color, size = 8 }) {
 // ─── Invite Member Modal ──────────────────────────────────────────────────────
 
 function InviteMemberModal({ groupName, onClose, onInvite }) {
+  const { isLight } = useTheme();
   const [inviteEmail, setInviteEmail] = useState("");
   const [invites, setInvites] = useState([]);
   const [inviteError, setInviteError] = useState("");
@@ -86,10 +88,10 @@ function InviteMemberModal({ groupName, onClose, onInvite }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[540px] ${isLight ? "bg-white border border-slate-200 shadow-2xl text-slate-900" : "bg-white/10 md:bg-white/1 backdrop-blur-md"} rounded-2xl overflow-hidden`}>
         {/* Header */}
         <div
-          className="flex items-center justify-between border-b border-white"
+          className={`flex items-center justify-between border-b ${isLight ? "border-slate-200" : "border-white"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -278,10 +280,16 @@ function InviteMemberModal({ groupName, onClose, onInvite }) {
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
-function Toast({ message, visible }) {
+function Toast({ message, visible, isLight }) {
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg text-[12px] font-mono pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+      } ${
+        isLight
+          ? "bg-slate-900 border border-slate-700 text-white shadow-lg"
+          : "bg-[#111] border border-[#2a2a2a] text-[#ccc]"
+      }`}
       style={{
         paddingLeft: "20px",
         paddingRight: "20px",
@@ -297,6 +305,7 @@ function Toast({ message, visible }) {
 // ─── Ban Member Modal ─────────────────────────────────────────────────────────
 
 function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
+  const { isLight } = useTheme();
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -311,8 +320,8 @@ function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[480px] bg-[#101017] border border-[#E24B4A]/40 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="p-6 border-b border-[#222232] flex items-center justify-between">
+      <div className={`w-full max-w-[480px] ${isLight ? "bg-white border border-red-200 shadow-2xl text-slate-900" : "bg-[#101017] border border-[#E24B4A]/40 text-white shadow-2xl"} rounded-2xl overflow-hidden`}>
+        <div className={`p-6 border-b ${isLight ? "border-slate-200" : "border-[#222232]"} flex items-center justify-between`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#E24B4A]/15 border border-[#E24B4A]/30 flex items-center justify-center text-[#E24B4A]">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -321,25 +330,25 @@ function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
               </svg>
             </div>
             <div>
-              <h3 className="text-[15px] font-semibold text-white">Ban Member</h3>
-              <p className="text-[11px] text-silver font-mono">@{targetUser?.username}</p>
+              <h3 className={`text-[15px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>Ban Member</h3>
+              <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-silver"} font-mono`}>@{targetUser?.username}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-silver hover:text-white bg-transparent border-none cursor-pointer p-1"
+            className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-silver hover:text-white"} bg-transparent border-none cursor-pointer p-1`}
           >
             ✕
           </button>
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/25 rounded-xl p-3.5 text-[12px] text-[#fca5a5] leading-relaxed">
+          <div className={`rounded-xl p-3.5 text-[12px] leading-relaxed ${isLight ? "bg-red-50 border border-red-200 text-red-700" : "bg-[#E24B4A]/10 border border-[#E24B4A]/25 text-[#fca5a5]"}`}>
             <strong>Warning:</strong> Banning <strong>@{targetUser?.username}</strong> will permanently remove them from <strong>{groupName}</strong>. They will <em>never</em> be able to view, search for, or access this group again.
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+            <label className={`block text-[11px] font-mono font-bold tracking-wider uppercase ${isLight ? "text-slate-600" : "text-silver"} mb-1.5`}>
               Reason for Ban (Optional)
             </label>
             <input
@@ -347,16 +356,16 @@ function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g., Harassment, continuous spam, community rule violations"
-              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-4 py-2.5 text-[13px] text-white outline-none focus:border-[#E24B4A] transition-colors placeholder:text-silver/50"
+              className={`w-full rounded-xl px-4 py-2.5 text-[13px] outline-none transition-colors ${isLight ? "bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-red-500" : "bg-[#181824] border border-[#2e2e45] text-white placeholder:text-silver/50 focus:border-[#E24B4A]"}`}
             />
           </div>
         </div>
 
-        <div className="p-5 bg-[#0b0b10] border-t border-[#222232] flex items-center justify-end gap-3">
+        <div className={`p-5 border-t flex items-center justify-end gap-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#0b0b10] border-[#222232]"}`}>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-[12px] font-mono text-silver hover:text-white bg-transparent border border-gray rounded-xl cursor-pointer transition-colors"
+            className={`px-4 py-2 text-[12px] font-mono rounded-xl cursor-pointer transition-colors bg-transparent border ${isLight ? "border-slate-300 text-slate-600 hover:bg-slate-200 hover:text-slate-900" : "border-gray text-silver hover:text-white"}`}
           >
             Cancel
           </button>
@@ -376,6 +385,7 @@ function BanMemberModal({ targetUser, groupName, onClose, onConfirm }) {
 // ─── Report Member Modal ──────────────────────────────────────────────────────
 
 function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
+  const { isLight } = useTheme();
   const [reason, setReason] = useState("Harassment or bullying");
   const [details, setDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -444,8 +454,8 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[500px] bg-[#101017] border border-[#f59e0b]/40 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="p-6 border-b border-[#222232] flex items-center justify-between">
+      <div className={`w-full max-w-[500px] ${isLight ? "bg-white border border-amber-200 shadow-2xl text-slate-900" : "bg-[#101017] border border-[#f59e0b]/40 shadow-2xl"} rounded-2xl overflow-hidden`}>
+        <div className={`p-6 border-b ${isLight ? "border-slate-200" : "border-[#222232]"} flex items-center justify-between`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#f59e0b]/15 border border-[#f59e0b]/30 flex items-center justify-center text-[#f59e0b]">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -455,20 +465,20 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
               </svg>
             </div>
             <div>
-              <h3 className="text-[15px] font-semibold text-white">Report User</h3>
-              <p className="text-[11px] text-silver font-mono">@{targetUser?.username} in {groupName}</p>
+              <h3 className={`text-[15px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>Report User</h3>
+              <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-silver"} font-mono`}>@{targetUser?.username} in {groupName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-silver hover:text-white bg-transparent border-none cursor-pointer p-1"
+            className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-silver hover:text-white"} bg-transparent border-none cursor-pointer p-1`}
           >
             ✕
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="bg-[#181824] border border-[#2e2e45] rounded-xl p-3 text-[12px] text-silver leading-relaxed flex items-center gap-2.5">
+          <div className={`rounded-xl p-3 text-[12px] leading-relaxed flex items-center gap-2.5 ${isLight ? "bg-amber-50 border border-amber-200 text-amber-900" : "bg-[#181824] border border-[#2e2e45] text-silver"}`}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" className="flex-shrink-0">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
@@ -477,16 +487,16 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+            <label className={`block text-[11px] font-mono font-bold tracking-wider uppercase ${isLight ? "text-slate-600" : "text-silver"} mb-1.5`}>
               Reason / Category
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-3.5 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors cursor-pointer"
+              className={`w-full rounded-xl px-3.5 py-2.5 text-[13px] outline-none transition-colors cursor-pointer ${isLight ? "bg-slate-50 border border-slate-300 text-slate-900 focus:border-amber-500" : "bg-[#181824] border border-[#2e2e45] text-white focus:border-[#f59e0b]"}`}
             >
               {REASONS.map((r) => (
-                <option key={r} value={r} className="bg-[#101017] text-white">
+                <option key={r} value={r} className={isLight ? "bg-white text-slate-900" : "bg-[#101017] text-white"}>
                   {r}
                 </option>
               ))}
@@ -494,7 +504,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-silver mb-1.5">
+            <label className={`block text-[11px] font-mono font-bold tracking-wider uppercase ${isLight ? "text-slate-600" : "text-silver"} mb-1.5`}>
               Incident Details & Evidence
             </label>
             <textarea
@@ -502,7 +512,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Describe what occurred, quotes, or relevant message context..."
-              className="w-full bg-[#181824] border border-[#2e2e45] rounded-xl px-4 py-2.5 text-[13px] text-white outline-none focus:border-[#f59e0b] transition-colors placeholder:text-silver/50 resize-none"
+              className={`w-full rounded-xl px-4 py-2.5 text-[13px] outline-none transition-colors resize-none ${isLight ? "bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-amber-500" : "bg-[#181824] border border-[#2e2e45] text-white placeholder:text-silver/50 focus:border-[#f59e0b]"}`}
             />
           </div>
 
@@ -511,7 +521,7 @@ function ReportMemberModal({ targetUser, groupName, onClose, currentUser }) {
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-[12px] font-mono text-silver hover:text-white bg-transparent border border-gray rounded-xl cursor-pointer transition-colors"
+              className={`px-4 py-2 text-[12px] font-mono rounded-xl cursor-pointer transition-colors bg-transparent border ${isLight ? "border-slate-300 text-slate-600 hover:bg-slate-200 hover:text-slate-900" : "border-gray text-silver hover:text-white"}`}
             >
               Cancel
             </button>
@@ -547,6 +557,7 @@ function ManageMembersModal({
   onUnban,
   onInvite,
 }) {
+  const { isLight } = useTheme();
   const [tab, setTab] = useState("members");
   const [search, setSearch] = useState("");
   const [bans, setBans] = useState([]);
@@ -598,23 +609,23 @@ function ManageMembersModal({
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[640px] max-h-[85vh] flex flex-col bg-[#101017] border border-gray rounded-2xl overflow-hidden shadow-2xl">
+      <div className={`w-full max-w-[640px] max-h-[85vh] flex flex-col ${isLight ? "bg-white border border-slate-200 shadow-2xl text-slate-900" : "bg-[#101017] border border-gray shadow-2xl"} rounded-2xl overflow-hidden`}>
         {/* Modal Header */}
-        <div className="p-5 border-b border-[#222232] flex items-center justify-between flex-shrink-0">
+        <div className={`p-5 border-b ${isLight ? "border-slate-200" : "border-[#222232]"} flex items-center justify-between flex-shrink-0`}>
           <div>
-            <h3 className="text-[16px] font-semibold text-white flex items-center gap-2">
+            <h3 className={`text-[16px] font-semibold ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
               <span>Members & Administration</span>
-              <span className="text-[11px] font-mono text-[#818cf8] bg-[#818cf8]/10 px-2 py-0.5 rounded-full border border-[#818cf8]/30">
+              <span className={`text-[11px] font-mono ${isLight ? "bg-indigo-50 border border-indigo-200 text-indigo-700" : "text-[#818cf8] bg-[#818cf8]/10 border border-[#818cf8]/30"} px-2 py-0.5 rounded-full`}>
                 {group.name}
               </span>
             </h3>
-            <p className="text-[11px] text-silver font-mono mt-0.5">
+            <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-silver"} font-mono mt-0.5`}>
               Creator is Main Admin. Main Admin can name/unname other Admins.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-silver hover:text-white bg-transparent border-none cursor-pointer p-1"
+            className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-silver hover:text-white"} bg-transparent border-none cursor-pointer p-1`}
           >
             ✕
           </button>
@@ -622,13 +633,17 @@ function ManageMembersModal({
 
         {/* Tab switcher */}
         {(isOwner || isAdmin) && (
-          <div className="flex border-b border-[#222232] bg-[#0b0b10] px-5 flex-shrink-0">
+          <div className={`flex border-b ${isLight ? "border-slate-200 bg-slate-50" : "border-[#222232] bg-[#0b0b10]"} px-5 flex-shrink-0`}>
             <button
               onClick={() => setTab("members")}
               className={`py-3 px-4 text-[12px] font-mono border-b-2 cursor-pointer transition-colors bg-transparent ${
                 tab === "members"
-                  ? "border-[#7F77DD] text-white font-bold"
-                  : "border-transparent text-silver hover:text-white"
+                  ? isLight
+                    ? "border-indigo-600 text-slate-900 font-bold"
+                    : "border-[#7F77DD] text-white font-bold"
+                  : isLight
+                    ? "border-transparent text-slate-500 hover:text-slate-900"
+                    : "border-transparent text-silver hover:text-white"
               }`}
             >
               Active Members ({memberList.length})
@@ -637,8 +652,12 @@ function ManageMembersModal({
               onClick={() => setTab("bans")}
               className={`py-3 px-4 text-[12px] font-mono border-b-2 cursor-pointer transition-colors bg-transparent flex items-center gap-1.5 ${
                 tab === "bans"
-                  ? "border-[#E24B4A] text-[#fca5a5] font-bold"
-                  : "border-transparent text-silver hover:text-white"
+                  ? isLight
+                    ? "border-red-600 text-red-600 font-bold"
+                    : "border-[#E24B4A] text-[#fca5a5] font-bold"
+                  : isLight
+                    ? "border-transparent text-slate-500 hover:text-slate-900"
+                    : "border-transparent text-silver hover:text-white"
               }`}
             >
               <span>Banned Users</span>
@@ -878,6 +897,7 @@ function ManageMembersModal({
 // ─── Create Group Modal ───────────────────────────────────────────────────────
 
 function CreateGroupModal({ onClose, onCreate }) {
+  const { isLight } = useTheme();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Research");
@@ -948,10 +968,10 @@ function CreateGroupModal({ onClose, onCreate }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[540px] ${isLight ? "bg-white border border-slate-200 shadow-2xl text-slate-900" : "bg-white/10 md:bg-white/1 backdrop-blur-md"} rounded-2xl overflow-hidden`}>
         {/* Header */}
         <div
-          className="flex items-center justify-between border-b border-white"
+          className={`flex items-center justify-between border-b ${isLight ? "border-slate-200" : "border-white"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -986,7 +1006,7 @@ function CreateGroupModal({ onClose, onCreate }) {
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-white hover:text-white"} transition-colors bg-transparent border-none cursor-pointer`}
             style={{ padding: "4px" }}
           >
             <svg
@@ -1204,10 +1224,10 @@ function CreateGroupModal({ onClose, onCreate }) {
 
           {/* Preview */}
           <div
-            className="border border-gray rounded-xl bg-gray"
+            className={`border rounded-xl ${isLight ? "bg-slate-50 border-slate-200" : "bg-gray border-gray"}`}
             style={{ padding: "16px" }}
           >
-            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">
+            <p className={`text-[9.5px] font-mono ${isLight ? "text-slate-500" : "text-silver"} tracking-[0.15em] uppercase mb-3`}>
               Preview
             </p>
             <div className="flex items-start gap-3">
@@ -1223,7 +1243,7 @@ function CreateGroupModal({ onClose, onCreate }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="app-title-text text-[13px] font-semibold text-white truncate">
+                  <p className={`app-title-text text-[13px] font-semibold ${isLight ? "text-slate-900" : "text-white"} truncate`}>
                     {name || "Group name"}
                   </p>
                   <span
@@ -1240,7 +1260,7 @@ function CreateGroupModal({ onClose, onCreate }) {
                     {category}
                   </span>
                 </div>
-                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">
+                <p className={`text-[12px] ${isLight ? "text-slate-600" : "text-silver"} leading-relaxed line-clamp-2`}>
                   {description || "Your description will appear here."}
                 </p>
               </div>
@@ -1248,13 +1268,13 @@ function CreateGroupModal({ onClose, onCreate }) {
           </div>
 
           {formError && (
-            <p className="text-[11px] text-white font-mono">{formError}</p>
+            <p className={`text-[11px] ${isLight ? "text-red-600" : "text-white"} font-mono`}>{formError}</p>
           )}
         </div>
 
         {/* Footer */}
         <div
-          className="flex justify-end gap-2.5 border-t border-white bg-white/10"
+          className={`flex justify-end gap-2.5 border-t ${isLight ? "bg-slate-50 border-slate-200" : "border-white bg-white/10"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -1264,7 +1284,7 @@ function CreateGroupModal({ onClose, onCreate }) {
         >
           <button
             onClick={onClose}
-            className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
+            className={`border rounded-lg text-[12px] transition-colors cursor-pointer ${isLight ? "border-slate-300 text-slate-700 bg-white hover:bg-slate-100" : "bg-transparent border-white text-white hover:text-silver"}`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -1276,7 +1296,7 @@ function CreateGroupModal({ onClose, onCreate }) {
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className={`flex items-center gap-1.5 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${isLight ? "bg-indigo-600 text-white" : "bg-[#080808] text-white"}`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -1307,9 +1327,14 @@ function CreateGroupModal({ onClose, onCreate }) {
 // ─── Group card (directory listing) ──────────────────────────────────────────
 
 function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
+  const { isLight } = useTheme();
   return (
     <div
-      className="border border-gray rounded-2xl hover:border-gray bg-[#111]/5 transition-colors"
+      className={`rounded-2xl transition-colors ${
+        isLight
+          ? "bg-white border border-slate-200 shadow-sm hover:border-slate-300 text-slate-900"
+          : "border border-gray hover:border-gray bg-[#111]/5 text-white"
+      }`}
       style={{
         paddingLeft: "20px",
         paddingRight: "20px",
@@ -1334,7 +1359,9 @@ function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <button
               onClick={() => onOpen(group)}
-              className="text-[14px] font-semibold text-white hover:text-[#ccc] transition-colors bg-transparent border-none cursor-pointer text-left"
+              className={`text-[14px] font-semibold transition-colors bg-transparent border-none cursor-pointer text-left ${
+                isLight ? "text-slate-900 hover:text-indigo-600" : "text-white hover:text-[#ccc]"
+              }`}
               style={{ padding: "0" }}
             >
               {group.name}
@@ -1379,7 +1406,7 @@ function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
               </span>
             )}
           </div>
-          <p className="text-[12.5px] text-silver leading-relaxed mb-3 line-clamp-2">
+          <p className={`text-[12.5px] ${isLight ? "text-slate-600" : "text-silver"} leading-relaxed mb-3 line-clamp-2`}>
             {group.description}
           </p>
 
@@ -1401,7 +1428,9 @@ function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpen(group)}
-                className="text-[11px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+                className={`text-[11px] font-mono transition-colors bg-transparent border-none cursor-pointer ${
+                  isLight ? "text-slate-500 hover:text-slate-900" : "text-silver hover:text-white"
+                }`}
                 style={{ paddingLeft: "0", paddingRight: "0" }}
               >
                 View
@@ -1424,8 +1453,12 @@ function GroupCard({ group, onJoin, onOpen, isOwner, onDelete }) {
                   onClick={() => onJoin(group.id)}
                   className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
                     group.joined
-                      ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
-                      : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                      ? isLight
+                        ? "border-slate-300 text-slate-500 hover:border-red-400 hover:text-red-600 bg-transparent"
+                        : "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
+                      : isLight
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100"
+                        : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
                   }`}
                   style={{
                     paddingLeft: "12px",
@@ -1458,6 +1491,7 @@ function GroupPost({
   onOpenReport,
   currentUser,
 }) {
+  const { isLight } = useTheme();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const inputRef = useRef(null);
@@ -1470,7 +1504,11 @@ function GroupPost({
 
   return (
     <div
-      className="border border-gray rounded-xl hover:border-gray bg-[#111]/5 transition-colors"
+      className={`rounded-xl transition-colors ${
+        isLight
+          ? "bg-white border border-slate-200 shadow-sm text-slate-900"
+          : "border border-gray hover:border-gray bg-[#111]/5 text-white"
+      }`}
       style={{
         paddingLeft: "20px",
         paddingRight: "20px",
@@ -1489,12 +1527,12 @@ function GroupPost({
           </div>
           <div className="flex-1 min-w-0">
             <span
-              className="text-[12px] font-semibold text-white"
+              className={`text-[12px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}
               style={{ paddingRight: "8px" }}
             >
               {post.author}
             </span>
-            <span className="text-[11px] text-silver font-mono">
+            <span className={`text-[11px] ${isLight ? "text-slate-500" : "text-silver"} font-mono`}>
               {timeAgo(post.ts)}
             </span>
           </div>
@@ -1504,7 +1542,7 @@ function GroupPost({
           {onOpenReport && post.authorId && post.authorId !== currentUser?.id && (
             <button
               onClick={() => onOpenReport({ id: post.authorId, username: post.author })}
-              className="text-silver/50 hover:text-[#f59e0b] hover:bg-[#f59e0b]/10 p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+              className={`${isLight ? "text-slate-400 hover:text-amber-600 hover:bg-amber-50" : "text-silver/50 hover:text-[#f59e0b] hover:bg-[#f59e0b]/10"} p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center`}
               title="Report user / message"
             >
               <svg
@@ -1527,7 +1565,7 @@ function GroupPost({
           {isAdmin && onDeletePost && (
             <button
               onClick={() => onDeletePost(groupId, post.id)}
-              className="text-silver/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10 p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+              className={`${isLight ? "text-slate-400 hover:text-red-600 hover:bg-red-50" : "text-silver/50 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"} p-1.5 rounded-lg bg-transparent border-none cursor-pointer transition-all flex items-center justify-center`}
               title="Delete post (Admin only)"
             >
               <svg
@@ -1550,7 +1588,7 @@ function GroupPost({
         </div>
       </div>
 
-      <p className="text-[13px] text-white leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]">
+      <p className={`text-[13px] ${isLight ? "text-slate-800" : "text-white"} leading-relaxed mb-3.5 pl-[calc(1.75rem+0.625rem)]`}>
         {post.body}
       </p>
 
@@ -1560,7 +1598,7 @@ function GroupPost({
             <img 
               src={`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/groups/${groupId}/posts/${post.id}/attachment`} 
               alt={post.attachment_name} 
-              className="max-w-full md:max-w-[350px] max-h-[300px] rounded-lg border border-gray object-cover"
+              className={`max-w-full md:max-w-[350px] max-h-[300px] rounded-lg border object-cover ${isLight ? "border-slate-200" : "border-gray"}`}
             />
           ) : (
             <a 
@@ -1568,7 +1606,9 @@ function GroupPost({
               download={post.attachment_name}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#1a1a2e] border border-[#7F77DD]/30 rounded-lg px-3 py-2 hover:bg-[#7F77DD]/10 transition-colors text-white text-[12px] no-underline max-w-full"
+              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-[12px] no-underline max-w-full ${
+                isLight ? "bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100" : "bg-[#1a1a2e] border border-[#7F77DD]/30 text-white hover:bg-[#7F77DD]/10"
+              }`}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -1587,7 +1627,7 @@ function GroupPost({
         <button
           onClick={() => onLike(groupId, post.id)}
           className="flex items-center gap-1.5 text-[11.5px] bg-transparent border-none cursor-pointer transition-colors"
-          style={{ color: post.liked ? "#E24B4A" : "silver" }}
+          style={{ color: post.liked ? "#E24B4A" : isLight ? "#64748b" : "silver" }}
         >
           <svg
             viewBox="0 0 24 24"
@@ -1608,7 +1648,9 @@ function GroupPost({
             setShowComments((v) => !v);
             setTimeout(() => inputRef.current?.focus(), 50);
           }}
-          className="flex items-center gap-1.5 text-[11.5px] text-silver hover:text-white bg-transparent border-none cursor-pointer transition-colors"
+          className={`flex items-center gap-1.5 text-[11.5px] bg-transparent border-none cursor-pointer transition-colors ${
+            isLight ? "text-slate-500 hover:text-slate-900" : "text-silver hover:text-white"
+          }`}
         >
           <svg
             viewBox="0 0 24 24"
@@ -1630,7 +1672,7 @@ function GroupPost({
       {showComments && (
         <div className="mt-4 pl-[calc(1.75rem+0.625rem)] space-y-3">
           {post.comments.length > 0 && (
-            <div className="space-y-2.5 border-l border-gray pl-3">
+            <div className={`space-y-2.5 border-l pl-3 ${isLight ? "border-slate-200" : "border-gray"}`}>
               {post.comments.map((c) => (
                 <div key={c.id} className="flex gap-2">
                   <div
@@ -1643,19 +1685,19 @@ function GroupPost({
                     <div className="flex items-center justify-between">
                       <div>
                         <span
-                          className="text-[11px] font-semibold text-[#888]"
+                          className={`text-[11px] font-semibold ${isLight ? "text-slate-700" : "text-[#888]"}`}
                           style={{ paddingRight: "8px" }}
                         >
                           {c.author}
                         </span>
-                        <span className="text-[10px] text-silver font-mono ml-1.5">
+                        <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-silver"} font-mono ml-1.5`}>
                           {timeAgo(c.ts)}
                         </span>
                       </div>
                       {isAdmin && onDeleteComment && (
                         <button
                           onClick={() => onDeleteComment(groupId, post.id, c.id)}
-                          className="text-silver/40 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10 p-1 rounded bg-transparent border-none cursor-pointer transition-all flex items-center justify-center"
+                          className={`${isLight ? "text-slate-400 hover:text-red-600 hover:bg-red-50" : "text-silver/40 hover:text-[#E24B4A] hover:bg-[#E24B4A]/10"} p-1 rounded bg-transparent border-none cursor-pointer transition-all flex items-center justify-center`}
                           title="Delete comment (Admin only)"
                         >
                           <svg
@@ -1674,7 +1716,7 @@ function GroupPost({
                         </button>
                       )}
                     </div>
-                    <p className="text-[12px] text-white mt-0.5 leading-relaxed">
+                    <p className={`text-[12px] ${isLight ? "text-slate-800" : "text-white"} mt-0.5 leading-relaxed`}>
                       {c.body}
                     </p>
                   </div>
@@ -1691,7 +1733,9 @@ function GroupPost({
               {ME.initials}
             </div>
             <div
-              className="flex-1 flex items-center gap-2 bg-[#0d0d0d] border border-silver rounded-lg focus-within:border-white transition-colors"
+              className={`flex-1 flex items-center gap-2 rounded-lg border transition-colors ${
+                isLight ? "bg-slate-50 border-slate-300 focus-within:border-indigo-500" : "bg-[#0d0d0d] border-silver focus-within:border-white"
+              }`}
               style={{
                 paddingLeft: "12px",
                 paddingRight: "12px",
@@ -1706,7 +1750,9 @@ function GroupPost({
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitComment()}
                 placeholder="Write a comment..."
-                className="flex-1 bg-transparent border-none outline-none text-[12px] text-white placeholder:text-silver font-mono"
+                className={`flex-1 bg-transparent border-none outline-none text-[12px] font-mono ${
+                  isLight ? "text-slate-900 placeholder:text-slate-400" : "text-white placeholder:text-silver"
+                }`}
               />
               <button
                 onClick={submitComment}
@@ -1754,6 +1800,7 @@ function GroupDetail({
   isAdmin,
   currentUser,
 }) {
+  const { isLight } = useTheme();
   const [postText, setPostText] = useState("");
   const [attachment, setAttachment] = useState(null);
   const fileInputRef = useRef(null);
@@ -1783,7 +1830,9 @@ function GroupDetail({
       {/* Back nav */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-[12px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer mb-6"
+        className={`flex items-center gap-2 text-[12px] font-mono transition-colors bg-transparent border-none cursor-pointer mb-6 ${
+          isLight ? "text-slate-500 hover:text-slate-900" : "text-silver hover:text-white"
+        }`}
         style={{ padding: "0" }}
       >
         <svg
@@ -1804,7 +1853,9 @@ function GroupDetail({
 
       {/* Group header card */}
       <div
-        className="border border-gray rounded-2xl mb-5 bg-[#111]/5"
+        className={`rounded-2xl mb-5 ${
+          isLight ? "bg-white border border-slate-200 shadow-sm text-slate-900" : "border border-gray bg-[#111]/5 text-white"
+        }`}
         style={{
           paddingLeft: "24px",
           paddingRight: "24px",
@@ -1829,7 +1880,7 @@ function GroupDetail({
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h2 className="text-[16px] font-semibold text-white">
+                <h2 className={`text-[16px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
                   {group.name}
                 </h2>
                 <span
@@ -1872,7 +1923,7 @@ function GroupDetail({
                   </span>
                 )}
               </div>
-              <p className="text-[12.5px] text-silver leading-relaxed mb-3 max-w-lg">
+              <p className={`text-[12.5px] ${isLight ? "text-slate-600" : "text-silver"} leading-relaxed mb-3 max-w-lg`}>
                 {group.description}
               </p>
               <div className="flex items-center gap-3 flex-wrap">
@@ -1896,10 +1947,12 @@ function GroupDetail({
                 </div>
                 <button
                   onClick={onOpenManageMembers}
-                  className="text-[11px] text-silver hover:text-white font-mono bg-transparent border-none cursor-pointer flex items-center gap-1 transition-colors"
+                  className={`text-[11px] font-mono bg-transparent border-none cursor-pointer flex items-center gap-1 transition-colors ${
+                    isLight ? "text-slate-500 hover:text-slate-900" : "text-silver hover:text-white"
+                  }`}
                 >
                   <span>{group.memberCount.toLocaleString()} members</span>
-                  <span className="text-[#818cf8] underline ml-1">
+                  <span className={`${isLight ? "text-indigo-600" : "text-[#818cf8]"} underline ml-1`}>
                     {isOwner || isAdmin ? "· Manage" : "· View list"}
                   </span>
                 </button>
@@ -1910,7 +1963,9 @@ function GroupDetail({
             {group.joined && (
               <button
                 onClick={onOpenManageMembers}
-                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-[#7F77DD]/30 text-[#A5B4FC] hover:bg-[#7F77DD]/10 transition-all cursor-pointer bg-transparent"
+                className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer bg-transparent ${
+                  isLight ? "border-indigo-200 text-indigo-600 hover:bg-indigo-50" : "border-[#7F77DD]/30 text-[#A5B4FC] hover:bg-[#7F77DD]/10"
+                }`}
                 style={{
                   paddingLeft: "12px",
                   paddingRight: "12px",
@@ -1939,7 +1994,9 @@ function GroupDetail({
             {(isOwner || isAdmin) && (
               <button
                 onClick={() => onInvite(group.id)}
-                className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border border-gray text-silver hover:text-white hover:border-gray transition-all cursor-pointer bg-transparent"
+                className={`flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer bg-transparent ${
+                  isLight ? "border-slate-300 text-slate-600 hover:bg-slate-100" : "border-gray text-silver hover:text-white hover:border-gray"
+                }`}
                 style={{
                   paddingLeft: "12px",
                   paddingRight: "12px",
@@ -1981,8 +2038,12 @@ function GroupDetail({
                 onClick={() => onJoin(group.id)}
                 className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
                   group.joined
-                    ? "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
-                    : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                    ? isLight
+                      ? "border-slate-300 text-slate-500 hover:border-red-400 hover:text-red-600 bg-transparent"
+                      : "border-[#222] text-[#444] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] bg-transparent"
+                    : isLight
+                      ? "bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100"
+                      : "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] hover:bg-[#7F77DD]/20"
                 }`}
                 style={{
                   paddingLeft: "16px",
@@ -2002,7 +2063,9 @@ function GroupDetail({
       {/* Compose box — only for members */}
       {group.joined && (
         <div
-          className="border border-gray rounded-2xl mb-4 bg-[#111]/5"
+          className={`rounded-2xl mb-4 ${
+            isLight ? "bg-white border border-slate-200 shadow-sm text-slate-900" : "border border-gray bg-[#111]/5 text-white"
+          }`}
           style={{
             paddingLeft: "20px",
             paddingRight: "20px",
@@ -2023,28 +2086,36 @@ function GroupDetail({
                 onChange={(e) => setPostText(e.target.value)}
                 placeholder={`Share something with ${group.name}…`}
                 rows={3}
-                className="w-full bg-transparent border-none outline-none text-[13px] text-white resize-none placeholder:text-silver leading-relaxed"
+                className={`w-full bg-transparent border-none outline-none text-[13px] resize-none leading-relaxed ${
+                  isLight ? "text-slate-900 placeholder:text-slate-400" : "text-white placeholder:text-silver"
+                }`}
               />
               
               {attachment && (
-                <div className="flex items-center gap-2 mt-2 bg-[#080808]/50 border border-gray rounded-md px-2 py-1.5 w-max max-w-[80%]">
+                <div className={`flex items-center gap-2 mt-2 border rounded-md px-2 py-1.5 w-max max-w-[80%] ${
+                  isLight ? "bg-slate-100 border-slate-200 text-slate-700" : "bg-[#080808]/50 border-gray text-silver"
+                }`}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                   </svg>
-                  <span className="text-[11px] text-silver truncate">{attachment.name}</span>
+                  <span className="text-[11px] truncate">{attachment.name}</span>
                   <button 
                     onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ""; }}
-                    className="ml-1 text-silver hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
+                    className={`ml-1 bg-transparent border-none cursor-pointer flex items-center justify-center ${
+                      isLight ? "text-slate-400 hover:text-slate-700" : "text-silver hover:text-white"
+                    }`}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
               )}
 
-              <div className="flex justify-between mt-2 pt-2 border-t border-gray items-center">
+              <div className={`flex justify-between mt-2 pt-2 border-t items-center ${isLight ? "border-slate-200" : "border-gray"}`}>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center justify-center text-silver hover:text-white bg-transparent border-none cursor-pointer transition-colors"
+                  className={`flex items-center justify-center bg-transparent border-none cursor-pointer transition-colors ${
+                    isLight ? "text-slate-400 hover:text-slate-700" : "text-silver hover:text-white"
+                  }`}
                   title="Attach file (max 2MB)"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2061,7 +2132,9 @@ function GroupDetail({
                 <button
                   onClick={handlePost}
                   disabled={!postText.trim() && !attachment}
-                  className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
+                  className={`flex items-center gap-1.5 rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isLight ? "bg-indigo-600 text-white" : "bg-[#080808] text-white"
+                  }`}
                   style={{
                     paddingLeft: "14px",
                     paddingRight: "14px",
@@ -2093,10 +2166,12 @@ function GroupDetail({
       {/* Section label */}
       <br />
       <div className="flex items-center gap-3 mb-4">
-        <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
+        <p className={`text-[9.5px] font-mono font-bold tracking-[0.18em] uppercase whitespace-nowrap ${
+          isLight ? "text-slate-500" : "text-silver"
+        }`}>
           {group.posts.length} post{group.posts.length !== 1 ? "s" : ""}
         </p>
-        <div className="flex-1 h-px bg-gray" />
+        <div className={`flex-1 h-px ${isLight ? "bg-slate-200" : "bg-gray"}`} />
       </div>
 
       {/* Posts */}
@@ -2143,6 +2218,7 @@ function GroupDetail({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Community() {
+  const { isLight } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [groups, setGroups] = useState([]);
@@ -2685,10 +2761,12 @@ export default function Community() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+        className={`min-h-screen flex items-center justify-center ${
+          isLight ? "text-slate-900 bg-[#f1f5f9]" : "text-[#e0e0e0]"
+        }`}
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          backgroundImage: `url(${mainBg})`,
+          backgroundImage: isLight ? "none" : `url(${mainBg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
@@ -2701,10 +2779,12 @@ export default function Community() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      className={`min-h-screen flex items-center justify-center ${
+        isLight ? "text-slate-900 bg-[#f1f5f9]" : "text-[#e0e0e0]"
+      }`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-        backgroundImage: `url(${mainBg})`,
+        backgroundImage: isLight ? "none" : `url(${mainBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -2724,17 +2804,19 @@ export default function Community() {
             <>
               <div className="flex items-start justify-between mb-7">
                 <div>
-                  <h1 className="text-[18px] font-semibold text-white tracking-tight">
+                  <h1 className={`text-[18px] font-semibold tracking-tight ${
+                    isLight ? "text-slate-900" : "text-white"
+                  }`}>
                     Community
                   </h1>
                   <div className="flex items-center gap-3 mt-1">
-                    <p className="text-[11px] text-silver font-mono">
+                    <p className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-silver"}`}>
                       {groups.length} groups
                     </p>
                     {joinedCount > 0 && (
                       <>
-                        <span className="text-gray">·</span>
-                        <p className="text-[11px] text-silver font-mono">
+                        <span className={isLight ? "text-slate-300" : "text-gray"}>·</span>
+                        <p className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-silver"}`}>
                           {joinedCount} joined
                         </p>
                       </>
@@ -2743,7 +2825,9 @@ export default function Community() {
                 </div>
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+                  className={`flex items-center gap-2 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${
+                    isLight ? "bg-indigo-600 text-white" : "text-white bg-white/10 hover:bg-white/20"
+                  }`}
                   style={{
                     paddingLeft: "16px",
                     paddingRight: "16px",
@@ -2772,7 +2856,9 @@ export default function Community() {
               <div className="flex gap-2.5 mb-6">
                 <div className="relative flex-1">
                   <svg
-                    className="absolute top-1/2 -translate-y-1/2 text-silver pointer-events-none"
+                    className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${
+                      isLight ? "text-slate-400" : "text-silver"
+                    }`}
                     width="13"
                     height="13"
                     viewBox="0 0 24 24"
@@ -2793,7 +2879,11 @@ export default function Community() {
                     onChange={(e) => setQuery(e.target.value)}
                     onClick={() => setSearchOpen(true)}
                     placeholder="Search groups..."
-                    className="w-full md:w-fit bg-transparent border md:border-silver border-transparent rounded-xl text-[12.5px] font-mono text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+                    className={`w-full md:w-fit rounded-xl text-[12.5px] font-mono outline-none transition-colors ${
+                      isLight
+                        ? "bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500"
+                        : "bg-transparent border md:border-silver border-transparent text-white placeholder:text-silver focus:border-gray"
+                    }`}
                     style={{
                       paddingLeft: "36px",
                       paddingRight: "16px",
@@ -2804,7 +2894,9 @@ export default function Community() {
                   {searchOpen && query && (
                     <div
                       ref={searchPopupRef}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray rounded-xl shadow-lg z-50"
+                      className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg z-50 ${
+                        isLight ? "bg-white border border-slate-200" : "bg-white border border-gray"
+                      }`}
                       style={{
                         paddingLeft: "16px",
                         paddingRight: "16px",
@@ -2819,15 +2911,21 @@ export default function Community() {
                     </div>
                   )}
                 </div>
-                <div className="flex bg-transparent border border-silver rounded-xl overflow-hidden">
+                <div className={`flex rounded-xl overflow-hidden border ${
+                  isLight ? "border-slate-300 bg-white" : "border-silver bg-transparent"
+                }`}>
                   {["all", "joined"].map((f) => (
                     <button
                       key={f}
                       onClick={() => setFilter(f)}
                       className={`text-[11.5px] font-mono capitalize transition-colors cursor-pointer border-none ${
                         filter === f
-                          ? "bg-white hover:bg-gray-500 text-black"
-                          : "bg-transparent text-silver hover:text-blue-400"
+                          ? isLight
+                            ? "bg-indigo-600 text-white"
+                            : "bg-white hover:bg-gray-500 text-black"
+                          : isLight
+                            ? "bg-transparent text-slate-600 hover:text-indigo-600"
+                            : "bg-transparent text-silver hover:text-blue-400"
                       }`}
                       style={{
                         paddingLeft: "16px",
@@ -2845,12 +2943,14 @@ export default function Community() {
 
               {/* Section divider */}
               <div className="flex items-center gap-3 mb-4">
-                <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
+                <p className={`text-[9.5px] font-mono font-bold tracking-[0.18em] uppercase whitespace-nowrap ${
+                  isLight ? "text-slate-500" : "text-silver"
+                }`}>
                   {query || filter !== "all"
                     ? `${filteredGroups.length} result${filteredGroups.length !== 1 ? "s" : ""}`
                     : "All groups"}
                 </p>
-                <div className="flex-1 h-px bg-white" />
+                <div className={`flex-1 h-px ${isLight ? "bg-slate-300" : "bg-white"}`} />
               </div>
               <br />
 
@@ -2875,7 +2975,7 @@ export default function Community() {
                     height="22"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="gray"
+                    stroke={isLight ? "#94a3b8" : "gray"}
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -2885,13 +2985,15 @@ export default function Community() {
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
-                  <p className="text-[12px] font-mono text-silver">
+                  <p className={`text-[12px] font-mono ${isLight ? "text-slate-500" : "text-silver"}`}>
                     No groups found.
                   </p>
                   {filter === "joined" && (
                     <button
                       onClick={() => setFilter("all")}
-                      className="text-[11px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                      className={`text-[11px] font-mono transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2 ${
+                        isLight ? "text-slate-600 hover:text-indigo-600" : "text-silver hover:text-white"
+                      }`}
                     >
                       Browse all groups
                     </button>
@@ -2987,7 +3089,7 @@ export default function Community() {
         />
       )}
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} isLight={isLight} />
     </div>
   );
 }

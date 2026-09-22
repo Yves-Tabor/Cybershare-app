@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mainBg from "../assets/mainBg.png";
 import { savedItemsAPI, groupsAPI, postsAPI } from "../utils/api";
+import { useTheme } from "../contexts/ThemeContext";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -842,6 +843,7 @@ function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
 
 export default function SavedItems() {
   const navigate = useNavigate();
+  const { isLight } = useTheme();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -946,10 +948,11 @@ export default function SavedItems() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+      className={`min-h-screen flex items-center justify-center ${isLight ? "text-slate-900" : "text-[#e0e0e0]"}`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-        backgroundImage: `url(${mainBg})`,
+        backgroundImage: isLight ? "none" : `url(${mainBg})`,
+        backgroundColor: isLight ? "#f1f5f9" : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -963,15 +966,15 @@ export default function SavedItems() {
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-[18px] font-semibold text-white tracking-tight">
+              <h1 className={`text-[18px] font-semibold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                 Saved Items
               </h1>
               <div className="flex items-center gap-3 mt-1">
-                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">
+                <p className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-gray-400 md:text-[#444]"}`}>
                   {items.length} saved
                 </p>
-                <span className="text-gray-400 md:text-[#444]">·</span>
-                <p className="text-[11px] text-gray-400 md:text-[#444] font-mono">
+                <span className={isLight ? "text-slate-400" : "text-gray-400 md:text-[#444]"}>·</span>
+                <p className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-gray-400 md:text-[#444]"}`}>
                   for you
                 </p>
               </div>
@@ -1036,8 +1039,8 @@ export default function SavedItems() {
                     key={f.key}
                     onClick={() => setFilter(f.key)}
                     className={`flex items-center gap-1.5 text-[11.5px] font-mono transition-colors cursor-pointer border-none ${active
-                      ? "bg-white text-black"
-                      : "bg-transparent text-white hover:text-[#777]"
+                      ? isLight ? "bg-slate-800 text-white" : "bg-white text-black"
+                      : isLight ? "bg-transparent text-slate-500 hover:text-slate-700" : "bg-transparent text-white hover:text-[#777]"
                       }`}
                     style={{ padding: "10px 16px" }}
                   >
@@ -1051,12 +1054,12 @@ export default function SavedItems() {
           <br />
 
           <div className="flex items-center gap-3 mb-4">
-            <p className="text-[9.5px] font-mono font-bold text-white tracking-[0.18em] uppercase whitespace-nowrap">
+            <p className={`text-[9.5px] font-mono font-bold tracking-[0.18em] uppercase whitespace-nowrap ${isLight ? "text-slate-400" : "text-white"}`}>
               {query || filter !== "all"
                 ? `${filteredItems.length} result${filteredItems.length !== 1 ? "s" : ""}`
                 : "All saved items"}
             </p>
-            <div className="flex-1 h-px bg-white" />
+            <div className={`flex-1 h-px ${isLight ? "bg-slate-200" : "bg-white"}`} />
           </div>
           <br />
 
@@ -1093,14 +1096,14 @@ export default function SavedItems() {
                 height="22"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#222"
+                stroke={isLight ? "#cbd5e1" : "#222"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
               </svg>
-              <p className="text-[12px] font-mono text-[#2a2a2a] text-center max-w-[260px]">
+              <p className={`text-[12px] font-mono text-center max-w-[260px] ${isLight ? "text-slate-400" : "text-[#2a2a2a]"}`}>
                 Nothing saved yet. Bookmark posts and events as you browse, or
                 save a link directly.
               </p>
