@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTheme } from "../contexts/ThemeContext";
 
 const AVATAR_COLORS = [
   "#534AB7", "#0F6E56", "#993C1D",
@@ -29,7 +30,7 @@ function timeAgo(ts) {
   return "just now";
 }
 
-function CommentItem({ comment, onReply, depth = 0 }) {
+function CommentItem({ comment, onReply, depth = 0, isLight = false }) {
   const avatarColor = getAvatarColor(comment.user.username);
   const initials = getInitials(comment.user.username);
 
@@ -49,13 +50,21 @@ function CommentItem({ comment, onReply, depth = 0 }) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[12px] font-semibold text-white">{comment.user.username}</span>
-          <span className="text-[10px] text-[#555]">{timeAgo(comment.createdAt)}</span>
+          <span className={`text-[12px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
+            {comment.user.username}
+          </span>
+          <span className={`text-[10px] ${isLight ? "text-slate-400" : "text-[#555]"}`}>
+            {timeAgo(comment.createdAt)}
+          </span>
         </div>
-        <p className="text-[12.5px] text-[#b0b3b8] leading-relaxed mb-2">{comment.content}</p>
+        <p className={`text-[12.5px] leading-relaxed mb-2 ${isLight ? "text-slate-700" : "text-[#b0b3b8]"}`}>
+          {comment.content}
+        </p>
         <button
           onClick={() => onReply(comment.id)}
-          className="text-[11px] text-[#555] hover:text-[#888] bg-transparent border-none cursor-pointer transition-colors"
+          className={`text-[11px] bg-transparent border-none cursor-pointer transition-colors ${
+            isLight ? "text-slate-500 hover:text-slate-800" : "text-[#555] hover:text-[#888]"
+          }`}
         >
           Reply
         </button>
@@ -65,6 +74,7 @@ function CommentItem({ comment, onReply, depth = 0 }) {
 }
 
 function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
+  const { isLight } = useTheme();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -182,21 +192,40 @@ function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div
+      className={`fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-colors ${
+        isLight ? "bg-slate-900/40" : "bg-black/50"
+      }`}
+    >
       <div
         ref={popupRef}
-        className="bg-[#141414] border border-[#222] rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
-        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
+        className={`rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col transition-all duration-200 ${
+          isLight
+            ? "bg-white border border-slate-200 text-slate-900 shadow-2xl"
+            : "bg-[#141414] border border-[#222] text-[#e0e0e0] shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+        }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#222]">
+        <div
+          className={`flex items-center justify-between p-4 border-b ${
+            isLight ? "border-slate-100 bg-slate-50/50" : "border-[#222]"
+          }`}
+        >
           <div>
-            <h3 className="text-[14px] font-semibold text-white">Comments</h3>
-            <p className="text-[11px] text-[#555] mt-0.5">Post by {postAuthor}</p>
+            <h3 className={`text-[14px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
+              Comments
+            </h3>
+            <p className={`text-[11px] mt-0.5 ${isLight ? "text-slate-500" : "text-[#555]"}`}>
+              Post by {postAuthor}
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-[#222] hover:bg-[#2a2a2a] flex items-center justify-center text-[#555] hover:text-white transition-colors border-none cursor-pointer"
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors border-none cursor-pointer ${
+              isLight
+                ? "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-900"
+                : "bg-[#222] text-[#555] hover:bg-[#2a2a2a] hover:text-white"
+            }`}
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -209,26 +238,31 @@ function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
         <div className="flex-1 overflow-y-auto p-4" style={{ minHeight: "200px" }}>
           {loading && comments.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-[12px] text-[#555]">Loading comments...</p>
+              <p className={`text-[12px] ${isLight ? "text-slate-400" : "text-[#555]"}`}>
+                Loading comments...
+              </p>
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke={isLight ? "#cbd5e1" : "#333"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              <p className="text-[12px] text-[#555]">No comments yet. Be the first to comment!</p>
+              <p className={`text-[12px] ${isLight ? "text-slate-400" : "text-[#555]"}`}>
+                No comments yet. Be the first to comment!
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {topLevelComments.map(comment => (
                 <div key={comment.id}>
-                  <CommentItem comment={comment} onReply={handleReply} />
+                  <CommentItem comment={comment} onReply={handleReply} isLight={isLight} />
                   {buildCommentTree(comment.id).map(reply => (
                     <CommentItem
                       key={reply.id}
                       comment={reply}
                       onReply={handleReply}
                       depth={1}
+                      isLight={isLight}
                     />
                   ))}
                 </div>
@@ -238,13 +272,17 @@ function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
         </div>
 
         {/* Comment Input */}
-        <div className="p-4 border-t border-[#222]">
+        <div className={`p-4 border-t ${isLight ? "border-slate-100 bg-slate-50/50" : "border-[#222]"}`}>
           {replyTo && (
-            <div className="flex items-center justify-between mb-2 px-2 py-1 bg-[#1a1a1a] rounded-lg">
-              <span className="text-[11px] text-[#888]">Replying to comment...</span>
+            <div className={`flex items-center justify-between mb-2 px-2.5 py-1.5 rounded-lg ${
+              isLight ? "bg-slate-100 text-slate-700" : "bg-[#1a1a1a] text-[#888]"
+            }`}>
+              <span className="text-[11px]">Replying to comment...</span>
               <button
                 onClick={() => setReplyTo(null)}
-                className="text-[11px] text-[#555] hover:text-white bg-transparent border-none cursor-pointer"
+                className={`text-[11px] bg-transparent border-none cursor-pointer ${
+                  isLight ? "text-slate-500 hover:text-slate-900" : "text-[#555] hover:text-white"
+                }`}
               >
                 Cancel
               </button>
@@ -256,7 +294,11 @@ function CommentPopup({ isOpen, onClose, postId, postAuthor }) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
-              className="flex-1 bg-[#1a1a1a] border border-[#222] rounded-lg px-3 py-2 text-[12.5px] text-white outline-none focus:border-[#333] transition-colors placeholder:text-[#555]"
+              className={`flex-1 rounded-lg px-3 py-2 text-[12.5px] outline-none transition-colors ${
+                isLight
+                  ? "bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#7F77DD]"
+                  : "bg-[#1a1a1a] border border-[#222] text-white placeholder:text-[#555] focus:border-[#333]"
+              }`}
               disabled={loading}
             />
             <button

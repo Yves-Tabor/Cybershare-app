@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useFindingInsight } from '../hooks/useFindingInsight';
 import { CASCADE_ENABLED } from '../utils/cascadeUtils';
+import { useTheme } from '../contexts/ThemeContext';
 
 const severityColors = {
   critical: '#E24B4A',
@@ -11,6 +12,7 @@ const severityColors = {
 };
 
 function FindingInsightModal({ finding, isOpen, onClose }) {
+  const { isLight } = useTheme();
   const [showExplanation, setShowExplanation] = useState(false);
   const [userChoice, setUserChoice] = useState(null); // 'explain' | 'skip' | null
   const modalRef = useRef(null);
@@ -127,7 +129,9 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85"
+      className={`fixed inset-0 z-50 flex items-center justify-center transition-colors ${
+        isLight ? "bg-slate-900/40 backdrop-blur-sm" : "bg-black/85"
+      }`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
@@ -135,7 +139,11 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
     >
       <div
         ref={modalRef}
-        className="w-full max-w-[500px] bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-6 m-4 max-h-[90vh] overflow-y-auto"
+        className={`w-full max-w-[500px] rounded-xl p-6 m-4 max-h-[90vh] overflow-y-auto transition-all duration-200 ${
+          isLight
+            ? "bg-white border border-slate-200 text-slate-900 shadow-2xl"
+            : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#e0e0e0]"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -151,20 +159,24 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
               >
                 {finding.severity.toUpperCase()}
               </span>
-              <span className="text-[10px] font-mono text-[#555]">
+              <span className={`text-[10px] font-mono ${isLight ? "text-slate-400" : "text-[#555]"}`}>
                 {finding.category}
               </span>
             </div>
             <h2
               id="modal-title"
-              className="text-[15px] font-semibold text-white leading-tight"
+              className={`text-[15px] font-semibold leading-tight ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}
             >
               {finding.title}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="ml-4 text-[#555] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`ml-4 transition-colors bg-transparent border-none cursor-pointer ${
+              isLight ? "text-slate-400 hover:text-slate-900" : "text-[#555] hover:text-white"
+            }`}
             aria-label="Close modal"
           >
             <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -177,19 +189,27 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
         {/* Initial choice screen */}
         {!userChoice && !showExplanation && (
           <div className="space-y-4">
-            <p className="text-[12px] text-[#b0b3b8] leading-relaxed">
+            <p className={`text-[12px] leading-relaxed ${isLight ? "text-slate-600" : "text-[#b0b3b8]"}`}>
               Would you like a plain-language explanation of this finding?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => handleChoice('explain')}
-                className="flex-1 bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[12px] font-mono text-[#7F77DD] py-3 px-4 hover:bg-[#7F77DD]/20 transition-colors cursor-pointer"
+                className={`flex-1 rounded-lg text-[12px] font-mono py-3 px-4 transition-colors cursor-pointer ${
+                  isLight
+                    ? "bg-violet-50 border border-violet-200 text-violet-700 hover:bg-violet-100"
+                    : "bg-[#7F77DD]/10 border border-[#7F77DD]/30 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                }`}
               >
                 Explain in plain terms
               </button>
               <button
                 onClick={() => handleChoice('skip')}
-                className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#888] py-3 px-4 hover:border-[#3a3a3a] hover:text-white transition-colors cursor-pointer"
+                className={`flex-1 rounded-lg text-[12px] font-mono py-3 px-4 transition-colors cursor-pointer ${
+                  isLight
+                    ? "bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
+                    : "bg-[#1a1a1a] border border-[#2a2a2a] text-[#888] hover:border-[#3a3a3a] hover:text-white"
+                }`}
               >
                 No thanks, show raw finding
               </button>
@@ -217,16 +237,18 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
                 </button>
               </div>
             ) : !hasInsight ? (
-              <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-                <p className="text-[12px] text-[#b0b3b8] mb-3">
+              <div className={`rounded-lg p-4 ${
+                isLight ? "bg-slate-50 border border-slate-200 text-slate-600" : "bg-[#1a1a1a] border border-[#2a2a2a] text-[#b0b3b8]"
+              }`}>
+                <p className="text-[12px] mb-3">
                   No automated explanation available for this finding yet.
                 </p>
                 {finding.recommendation && (
                   <div>
-                    <p className="text-[10px] font-semibold text-[#ccc] mb-2">
+                    <p className={`text-[10px] font-semibold mb-2 ${isLight ? "text-slate-800" : "text-[#ccc]"}`}>
                       Scanner recommendation
                     </p>
-                    <p className="text-[11px] text-[#b0b3b8]">
+                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-[#b0b3b8]"}`}>
                       {finding.recommendation}
                     </p>
                   </div>
@@ -236,11 +258,13 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
               <>
                 {/* Explanation */}
                 {getExplanation() && (
-                  <div className="bg-[#1a2e1a]/30 border border-[#1a2e1a]/50 rounded-lg p-4">
-                    <p className="text-[10px] font-semibold text-[#639922] mb-2">
+                  <div className={`rounded-lg p-4 ${
+                    isLight ? "bg-emerald-50/80 border border-emerald-200" : "bg-[#1a2e1a]/30 border border-[#1a2e1a]/50"
+                  }`}>
+                    <p className="text-[10px] font-semibold text-[#0D9488] mb-2">
                       What this means
                     </p>
-                    <p className="text-[12px] text-[#b0b3b8] leading-relaxed">
+                    <p className={`text-[12px] leading-relaxed ${isLight ? "text-emerald-950" : "text-[#b0b3b8]"}`}>
                       {getExplanation()}
                     </p>
                   </div>
@@ -248,17 +272,21 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
 
                 {/* Remediation steps */}
                 {getRemediationSteps().length > 0 && (
-                  <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-                    <p className="text-[10px] font-semibold text-[#ccc] mb-3">
+                  <div className={`rounded-lg p-4 ${
+                    isLight ? "bg-slate-50 border border-slate-200" : "bg-[#1a1a1a] border border-[#2a2a2a]"
+                  }`}>
+                    <p className={`text-[10px] font-semibold mb-3 ${isLight ? "text-slate-800" : "text-[#ccc]"}`}>
                       How to fix it
                     </p>
                     <ol className="space-y-2">
                       {getRemediationSteps().map((step, index) => (
                         <li
                           key={index}
-                          className="text-[12px] text-[#b0b3b8] leading-relaxed flex gap-2"
+                          className={`text-[12px] leading-relaxed flex gap-2 ${
+                            isLight ? "text-slate-700" : "text-[#b0b3b8]"
+                          }`}
                         >
-                          <span className="text-[#7F77DD] font-mono shrink-0">
+                          <span className="text-[#7F77DD] font-mono shrink-0 font-bold">
                             {index + 1}.
                           </span>
                           <span>{step}</span>
@@ -270,11 +298,13 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
 
                 {/* Original recommendation */}
                 {finding.recommendation && (
-                  <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-                    <p className="text-[10px] font-semibold text-[#ccc] mb-2">
+                  <div className={`rounded-lg p-4 ${
+                    isLight ? "bg-slate-50 border border-slate-200" : "bg-[#1a1a1a] border border-[#2a2a2a]"
+                  }`}>
+                    <p className={`text-[10px] font-semibold mb-2 ${isLight ? "text-slate-800" : "text-[#ccc]"}`}>
                       Scanner recommendation
                     </p>
-                    <p className="text-[11px] text-[#b0b3b8]">
+                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-[#b0b3b8]"}`}>
                       {finding.recommendation}
                     </p>
                   </div>
@@ -284,7 +314,11 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
                 {getTags().length > 0 && (
                   <a
                     href={`/main/community?tags=${getTags().join(',')}`}
-                    className="block w-full bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2.5 px-3 text-center hover:bg-[#7F77DD]/20 transition-colors no-underline"
+                    className={`block w-full rounded-lg text-[11px] font-mono py-2.5 px-3 text-center transition-colors no-underline ${
+                      isLight
+                        ? "bg-violet-50 border border-violet-200 text-violet-700 hover:bg-violet-100"
+                        : "bg-[#7F77DD]/10 border border-[#7F77DD]/30 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onClose();
@@ -299,7 +333,11 @@ function FindingInsightModal({ finding, isOpen, onClose }) {
             {/* Close button */}
             <button
               onClick={onClose}
-              className="w-full bg-[#141414] border border-[#2a2a2a] rounded-lg text-[12px] font-mono tracking-widest uppercase text-[#ccc] py-3 cursor-pointer hover:border-[#3a3a3a] hover:text-white transition-colors"
+              className={`w-full rounded-lg text-[12px] font-mono tracking-widest uppercase py-3 cursor-pointer transition-colors ${
+                isLight
+                  ? "bg-slate-900 text-white hover:bg-slate-800"
+                  : "bg-[#141414] border border-[#2a2a2a] text-[#ccc] hover:border-[#3a3a3a] hover:text-white"
+              }`}
             >
               Got it
             </button>

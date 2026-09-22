@@ -4,6 +4,7 @@ import mainBg from "../assets/mainBg.png";
 import { Link } from "react-router-dom";
 import { postsAPI, authAPI, commentsAPI, savedItemsAPI } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
+import { useTheme } from "../contexts/ThemeContext";
 
 const TAGS = {
   "Threat Intel": { bg: "#1a1a2e", color: "#7F77DD" },
@@ -80,18 +81,24 @@ function transformPost(p) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ProfilePopup({ user, onClose }) {
+function ProfilePopup({ user, onClose, isLight }) {
   const bio = user?.bio || "Contributor";
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      className={`fixed inset-0 z-[100] flex items-center justify-center transition-colors ${
+        isLight ? "bg-slate-900/40 backdrop-blur-sm" : "bg-black/80"
+      }`}
       style={{ padding: "16px" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[320px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[320px] rounded-2xl overflow-hidden transition-all duration-200 ${
+        isLight
+          ? "bg-white border border-slate-200 shadow-2xl text-slate-900"
+          : "bg-[#0c0c0c] border border-[#1e1e1e] text-white"
+      }`}>
         <div
-          className="border-b border-[#141414]"
+          className={`border-b ${isLight ? "border-slate-100 bg-slate-50/50" : "border-[#141414]"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -107,10 +114,10 @@ function ProfilePopup({ user, onClose }) {
               {user?.username?.slice(0, 2).toUpperCase() || "??"}
             </div>
             <div>
-              <p className="text-[14px] font-semibold text-white">
+              <p className={`text-[14px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
                 @{user?.username || "Unknown"}
               </p>
-              <p className="text-[11px] text-[#888]">User</p>
+              <p className={`text-[11px] ${isLight ? "text-slate-400" : "text-[#888]"}`}>User</p>
             </div>
           </div>
         </div>
@@ -122,10 +129,10 @@ function ProfilePopup({ user, onClose }) {
             paddingBottom: "20px",
           }}
         >
-          <p className="text-[12px] text-[#888] leading-relaxed">{bio}</p>
+          <p className={`text-[12px] leading-relaxed ${isLight ? "text-slate-600" : "text-[#888]"}`}>{bio}</p>
         </div>
         <div
-          className="flex justify-end border-t border-[#141414]"
+          className={`flex justify-end border-t ${isLight ? "border-slate-100 bg-slate-50/50" : "border-[#141414]"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -135,7 +142,9 @@ function ProfilePopup({ user, onClose }) {
         >
           <button
             onClick={onClose}
-            className="bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className={`rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${
+              isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-[#080808]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -163,6 +172,7 @@ function PostCard({
   onCommentRemove,
   onProfileClick,
 }) {
+  const { isLight } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -259,8 +269,12 @@ function PostCard({
 
   return (
     <div
-      className="rounded-2xl p-4 border-b-1 border-t-1 border-[#222] transition-colors"
-      style={{ padding: "10px" }}
+      className={`rounded-2xl transition-all mb-3 ${
+        isLight
+          ? "bg-white border border-slate-200/90 shadow-sm"
+          : "border-b-1 border-t-1 border-[#222]"
+      }`}
+      style={{ padding: "14px 16px" }}
     >
       <div className="flex gap-3">
         {/* Avatar */}
@@ -277,10 +291,10 @@ function PostCard({
           {/* Header */}
           <div className="flex items-center gap-3 mb-2">
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-semibold text-white leading-tight">
+              <div className={`text-[13px] font-semibold leading-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                 {post.author}
               </div>
-              <div className="text-[11px] text-[#555] mt-0.5">
+              <div className={`text-[11px] mt-0.5 ${isLight ? "text-slate-400" : "text-[#555]"}`}>
                 {timeAgo(post.ts)}
               </div>
             </div>
@@ -291,8 +305,9 @@ function PostCard({
                 paddingRight: "10px",
                 paddingTop: "4px",
                 paddingBottom: "4px",
-                background: tag.bg,
+                background: isLight ? (tag.color + "18") : tag.bg,
                 color: tag.color,
+                border: isLight ? `1px solid ${tag.color}30` : undefined,
               }}
             >
               {post.cat}
@@ -300,7 +315,9 @@ function PostCard({
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="text-[#555] hover:text-white bg-transparent border-none cursor-pointer transition-colors p-1"
+                className={`bg-transparent border-none cursor-pointer transition-colors p-1 ${
+                  isLight ? "text-slate-400 hover:text-slate-700" : "text-[#555] hover:text-white"
+                }`}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -318,7 +335,13 @@ function PostCard({
                 </svg>
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-8 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-xl z-10 min-w-[140px]">
+                <div
+                  className={`absolute right-0 top-8 rounded-lg shadow-xl z-10 min-w-[140px] overflow-hidden ${
+                    isLight
+                      ? "bg-white border border-slate-200 shadow-slate-200/80"
+                      : "bg-[#1a1a1a] border border-[#2a2a2a]"
+                  }`}
+                >
                   {!isCreator && (
                     <>
                       <button
@@ -326,7 +349,11 @@ function PostCard({
                           onReport(post.id);
                           setMenuOpen(false);
                         }}
-                        className="w-full text-left text-[12px] text-[#e0e0e0] hover:bg-[#2a2a2a] transition-colors cursor-pointer border-none px-3 py-2"
+                        className={`w-full text-left text-[12px] transition-colors cursor-pointer border-none px-3 py-2 ${
+                          isLight
+                            ? "text-slate-700 hover:bg-slate-100"
+                            : "text-[#e0e0e0] hover:bg-[#2a2a2a]"
+                        }`}
                       >
                         Report post
                       </button>
@@ -335,7 +362,11 @@ function PostCard({
                           onSave(post.id);
                           setMenuOpen(false);
                         }}
-                        className="w-full text-left text-[12px] text-[#e0e0e0] hover:bg-[#2a2a2a] transition-colors cursor-pointer border-none px-3 py-2"
+                        className={`w-full text-left text-[12px] transition-colors cursor-pointer border-none px-3 py-2 ${
+                          isLight
+                            ? "text-slate-700 hover:bg-slate-100"
+                            : "text-[#e0e0e0] hover:bg-[#2a2a2a]"
+                        }`}
                       >
                         Save post
                       </button>
@@ -347,7 +378,9 @@ function PostCard({
                         onDelete(post.id);
                         setMenuOpen(false);
                       }}
-                      className="w-full text-left text-[12px] text-[#E24B4A] hover:bg-[#2a2a2a] transition-colors cursor-pointer border-none px-3 py-2"
+                      className={`w-full text-left text-[12px] text-[#E24B4A] transition-colors cursor-pointer border-none px-3 py-2 ${
+                        isLight ? "hover:bg-red-50" : "hover:bg-[#2a2a2a]"
+                      }`}
                     >
                       Delete post
                     </button>
@@ -358,7 +391,11 @@ function PostCard({
           </div>
 
           {/* Body */}
-          <p className="text-[13.5px] text-[#b0b3b8] leading-[1.65] mb-4 text-center">
+          <p
+            className={`text-[13.5px] leading-[1.65] mb-4 text-center ${
+              isLight ? "text-slate-700" : "text-[#b0b3b8]"
+            }`}
+          >
             {post.body}
           </p>
 
@@ -368,7 +405,13 @@ function PostCard({
               onClick={() => onLike(post.id)}
               disabled={likePending}
               className="flex items-center gap-1.5 text-[12px] bg-transparent border-none cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ color: post.liked ? "#E24B4A" : "#555" }}
+              style={{
+                color: post.liked
+                  ? "#E24B4A"
+                  : isLight
+                  ? "#64748b"
+                  : "#555",
+              }}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -388,7 +431,13 @@ function PostCard({
             <button
               onClick={() => setShowComments(!showComments)}
               className="flex items-center gap-1.5 text-[12px] bg-transparent border-none cursor-pointer transition-colors"
-              style={{ color: showComments ? "#E24B4A" : "#555" }}
+              style={{
+                color: showComments
+                  ? "#E24B4A"
+                  : isLight
+                  ? "#64748b"
+                  : "#555",
+              }}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -408,7 +457,11 @@ function PostCard({
 
           {/* Comments Section */}
           {showComments && (
-            <div className="mt-4 pt-4 border-t border-[#222]">
+            <div
+              className={`mt-4 pt-4 border-t ${
+                isLight ? "border-slate-200" : "border-[#222]"
+              }`}
+            >
               {/* Comment Input */}
               <div className="flex gap-2 mb-4">
                 <input
@@ -417,7 +470,11 @@ function PostCard({
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
                   placeholder="Add a comment..."
-                  className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-[12px] text-white outline-none focus:border-[#444] transition-colors px-3 py-2"
+                  className={`flex-1 rounded-lg text-[12px] outline-none transition-colors px-3 py-2 ${
+                    isLight
+                      ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                      : "bg-[#1a1a1a] border border-[#2a2a2a] text-white focus:border-[#444]"
+                  }`}
                 />
                 <button
                   onClick={handleAddComment}
@@ -431,7 +488,11 @@ function PostCard({
               {/* Comments List */}
               <div className="flex flex-col gap-3">
                 {comments.length === 0 ? (
-                  <p className="text-[12px] text-[#555] text-center py-2">
+                  <p
+                    className={`text-[12px] text-center py-2 ${
+                      isLight ? "text-slate-400" : "text-[#555]"
+                    }`}
+                  >
                     No comments yet
                   </p>
                 ) : (
@@ -442,7 +503,7 @@ function PostCard({
                         className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{
                           background:
-                            comment.user?.color || 
+                            comment.user?.color ||
                             AVATAR_COLORS[comment.user.id % AVATAR_COLORS.length],
                         }}
                       >
@@ -450,10 +511,18 @@ function PostCard({
                       </button>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[11px] font-semibold text-white">
+                          <span
+                            className={`text-[11px] font-semibold ${
+                              isLight ? "text-slate-900" : "text-white"
+                            }`}
+                          >
                             {comment.user.username}
                           </span>
-                          <span className="text-[10px] text-[#555]">
+                          <span
+                            className={`text-[10px] ${
+                              isLight ? "text-slate-400" : "text-[#555]"
+                            }`}
+                          >
                             {timeAgo(comment.ts)}
                           </span>
                           {currentUser?.id === comment.user.id && (
@@ -465,7 +534,11 @@ function PostCard({
                             </button>
                           )}
                         </div>
-                        <p className="text-[12px] text-[#b0b3b8]">
+                        <p
+                          className={`text-[12px] ${
+                            isLight ? "text-slate-600" : "text-[#b0b3b8]"
+                          }`}
+                        >
                           {comment.content}
                         </p>
                       </div>
@@ -482,6 +555,7 @@ function PostCard({
 }
 
 function MyPostCard({ post }) {
+  const { isLight } = useTheme();
   const tag = TAGS[post.cat] || TAGS["Discussion"];
   const parts = post.body.split(" — ");
   const title = parts.length > 1 ? parts[0] : "Post";
@@ -489,7 +563,11 @@ function MyPostCard({ post }) {
 
   return (
     <div
-      className="border border-[#2a2a2a] rounded-2xl hover:border-[#333] bg-[#111]/5 transition-colors mb-3"
+      className={`rounded-2xl transition-colors mb-3 ${
+        isLight
+          ? "bg-white border border-slate-200/90 shadow-sm hover:border-slate-300"
+          : "border border-[#2a2a2a] rounded-2xl hover:border-[#333] bg-[#111]/5"
+      }`}
       style={{
         paddingLeft: "20px",
         paddingRight: "20px",
@@ -501,23 +579,28 @@ function MyPostCard({ post }) {
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0"
           style={{
-            background: tag.bg,
+            background: isLight ? tag.color + "18" : tag.bg,
             color: tag.color,
-            border: `1px solid ${tag.color}22`,
+            border: isLight ? `1px solid ${tag.color}35` : `1px solid ${tag.color}22`,
           }}
         >
           {post.cat.slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="app-title-text text-[14px] font-semibold text-white">
+            <span
+              className={`app-title-text text-[14px] font-semibold ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}
+            >
               {title}
             </span>
             <span
               className="text-[10px] font-mono rounded-md"
               style={{
-                background: tag.bg,
+                background: isLight ? tag.color + "18" : tag.bg,
                 color: tag.color,
+                border: isLight ? `1px solid ${tag.color}30` : undefined,
                 paddingLeft: "8px",
                 paddingRight: "8px",
                 paddingTop: "2px",
@@ -527,14 +610,26 @@ function MyPostCard({ post }) {
               {post.cat}
             </span>
           </div>
-          <p className="text-[12.5px] text-[#888] leading-relaxed mb-3 line-clamp-2">
+          <p
+            className={`text-[12.5px] leading-relaxed mb-3 line-clamp-2 ${
+              isLight ? "text-slate-600" : "text-[#888]"
+            }`}
+          >
             {body}
           </p>
           <div className="flex items-center gap-4">
-            <div className="text-[11px] font-mono text-[#555]">
+            <div
+              className={`text-[11px] font-mono ${
+                isLight ? "text-slate-400" : "text-[#555]"
+              }`}
+            >
               {timeAgo(post.ts)}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#555]">
+            <div
+              className={`flex items-center gap-1.5 text-[11px] font-mono ${
+                isLight ? "text-slate-400" : "text-[#555]"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="12"
@@ -549,7 +644,11 @@ function MyPostCard({ post }) {
               </svg>
               {post.likes}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#555]">
+            <div
+              className={`flex items-center gap-1.5 text-[11px] font-mono ${
+                isLight ? "text-slate-400" : "text-[#555]"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="12"
@@ -572,6 +671,7 @@ function MyPostCard({ post }) {
 }
 
 function Pagination({ page, totalPages, onPageChange }) {
+  const { isLight } = useTheme();
   const pages = [];
 
   for (let i = 1; i <= totalPages; i++) {
@@ -588,11 +688,12 @@ function Pagination({ page, totalPages, onPageChange }) {
     <div className="flex items-center justify-center gap-1.5 mt-8">
       <button
         onClick={() => onPageChange(page - 1)}
-
         disabled={page === 1}
-
-        className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#151515] border border-[#2a2a2a] text-[#777] text-[13px] cursor-pointer transition-colors hover:bg-[#1e1e1e] hover:text-white disabled:opacity-25 disabled:cursor-default"
-
+        className={`flex items-center justify-center w-8 h-8 rounded-lg text-[13px] cursor-pointer transition-colors disabled:opacity-25 disabled:cursor-default ${
+          isLight
+            ? "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
+            : "bg-[#151515] border border-[#2a2a2a] text-[#777] hover:bg-[#1e1e1e] hover:text-white"
+        }`}
         aria-label="Previous"
       >
         <svg
@@ -613,19 +714,23 @@ function Pagination({ page, totalPages, onPageChange }) {
         p.type === "ellipsis" ? (
           <span
             key={`e-${idx}`}
-            className="text-[12px] text-[#444] w-8 text-center"
+            className={`text-[12px] w-8 text-center ${
+              isLight ? "text-slate-400" : "text-[#444]"
+            }`}
           >
             …
           </span>
         ) : (
           <button
             key={p.value}
-
             onClick={() => onPageChange(p.value)}
-
             className={`flex items-center justify-center w-8 h-8 rounded-lg text-[13px] cursor-pointer transition-colors border ${
               p.value === page
-                ? "bg-white text-[#080808] border-white font-semibold"
+                ? isLight
+                  ? "bg-slate-900 text-white border-slate-900 font-semibold shadow-sm"
+                  : "bg-white text-[#080808] border-white font-semibold"
+                : isLight
+                ? "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
                 : "bg-[#151515] border-[#2a2a2a] text-[#888] hover:bg-[#1e1e1e] hover:text-white"
             }`}
           >
@@ -636,11 +741,12 @@ function Pagination({ page, totalPages, onPageChange }) {
 
       <button
         onClick={() => onPageChange(page + 1)}
-
         disabled={page === totalPages}
-
-        className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#151515] border border-[#2a2a2a] text-[#777] text-[13px] cursor-pointer transition-colors hover:bg-[#1e1e1e] hover:text-white disabled:opacity-25 disabled:cursor-default"
-
+        className={`flex items-center justify-center w-8 h-8 rounded-lg text-[13px] cursor-pointer transition-colors disabled:opacity-25 disabled:cursor-default ${
+          isLight
+            ? "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
+            : "bg-[#151515] border border-[#2a2a2a] text-[#777] hover:bg-[#1e1e1e] hover:text-white"
+        }`}
         aria-label="Next"
       >
         <svg
@@ -661,6 +767,7 @@ function Pagination({ page, totalPages, onPageChange }) {
 }
 
 function CreatePostModal({ onClose, onSubmit }) {
+  const { isLight } = useTheme();
   const [cat, setCat] = useState("Threat Intel");
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
@@ -691,14 +798,24 @@ function CreatePostModal({ onClose, onSubmit }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center"
+      className={`fixed inset-0 z-[100] flex items-center justify-center ${
+        isLight ? "bg-slate-900/50 backdrop-blur-sm" : "bg-black/80"
+      }`}
       style={{ padding: "16px" }}
       onClick={handleBackdrop}
     >
-      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+      <div
+        className={`w-full max-w-[540px] rounded-2xl overflow-hidden ${
+          isLight
+            ? "bg-white border border-slate-200 shadow-2xl"
+            : "bg-white/10 md:bg-white/1 backdrop-blur-md"
+        }`}
+      >
         {/* Header */}
         <div
-          className="flex items-center justify-between border-b border-white"
+          className={`flex items-center justify-between border-b ${
+            isLight ? "border-slate-200 bg-slate-50/60" : "border-white"
+          }`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -707,10 +824,16 @@ function CreatePostModal({ onClose, onSubmit }) {
           }}
         >
           <div
-            className="flex items-center bg-white gap-2.5 rounded-md"
-            style={{ padding: "10px" }}
+            className={`flex items-center gap-2.5 rounded-md ${
+              isLight ? "bg-slate-100" : "bg-white"
+            }`}
+            style={{ padding: "8px 12px" }}
           >
-            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
+            <div
+              className={`w-6 h-6 rounded-md flex items-center justify-center ${
+                isLight ? "bg-white border border-slate-200" : "bg-gray border border-gray"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="12"
@@ -725,13 +848,19 @@ function CreatePostModal({ onClose, onSubmit }) {
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
-            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
+            <span
+              className={`app-title-text text-[13px] font-semibold ${
+                isLight ? "text-slate-900" : "text-[#080808]"
+              }`}
+            >
               Create a post
             </span>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`transition-colors bg-transparent border-none cursor-pointer ${
+              isLight ? "text-slate-400 hover:text-slate-700" : "text-white hover:text-white"
+            }`}
             style={{ padding: "4px" }}
           >
             <svg
@@ -761,7 +890,11 @@ function CreatePostModal({ onClose, onSubmit }) {
         >
           {/* Category */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">
+            <label
+              className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2.5 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}
+            >
               Category
             </label>
             <div className="flex flex-wrap gap-2">
@@ -771,7 +904,13 @@ function CreatePostModal({ onClose, onSubmit }) {
                   <button
                     key={c}
                     onClick={() => setCat(c)}
-                    className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${cat === c ? "border-current font-semibold" : "border-silver text-silver bg-transparent hover:border-white hover:text-white"}`}
+                    className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
+                      cat === c
+                        ? "border-current font-semibold"
+                        : isLight
+                        ? "border-slate-200 text-slate-600 bg-white hover:border-slate-400 hover:text-slate-900"
+                        : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
+                    }`}
                     style={{
                       paddingLeft: "12px",
                       paddingRight: "12px",
@@ -780,7 +919,7 @@ function CreatePostModal({ onClose, onSubmit }) {
                       ...(cat === c
                         ? {
                             color: cTag.color,
-                            background: cTag.bg,
+                            background: isLight ? cTag.color + "18" : cTag.bg,
                             borderColor: cTag.color + "55",
                           }
                         : {}),
@@ -796,7 +935,11 @@ function CreatePostModal({ onClose, onSubmit }) {
 
           {/* Content */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label
+              className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}
+            >
               Content
             </label>
             <textarea
@@ -808,33 +951,36 @@ function CreatePostModal({ onClose, onSubmit }) {
               }}
               placeholder="Share something with the community…"
               rows={5}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "12px",
-                paddingBottom: "12px",
-                background: "transparent",
-              }}
+              className={`w-full text-[13px] outline-none transition-colors resize-none rounded-lg p-3 ${
+                isLight
+                  ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                  : "border-b border-silver text-white focus:border-gray placeholder:text-silver bg-transparent"
+              }`}
             />
           </div>
           <br />
 
           {/* Preview */}
           <div
-            className="border border-gray rounded-xl bg-gray"
+            className={`rounded-xl border ${
+              isLight ? "border-slate-200 bg-slate-50" : "border-gray bg-gray"
+            }`}
             style={{ padding: "16px" }}
           >
-            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">
+            <p
+              className={`text-[9.5px] font-mono tracking-[0.15em] uppercase mb-3 ${
+                isLight ? "text-slate-500" : "text-silver"
+              }`}
+            >
               Preview
             </p>
             <div className="flex items-start gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0"
                 style={{
-                  background: selectedTag.bg,
+                  background: isLight ? selectedTag.color + "18" : selectedTag.bg,
                   color: selectedTag.color,
-                  border: `1px solid ${selectedTag.color}22`,
+                  border: isLight ? `1px solid ${selectedTag.color}35` : `1px solid ${selectedTag.color}22`,
                 }}
               >
                 {cat.slice(0, 2).toUpperCase()}
@@ -844,8 +990,9 @@ function CreatePostModal({ onClose, onSubmit }) {
                   <span
                     className="text-[10px] font-mono rounded-md flex-shrink-0"
                     style={{
-                      background: selectedTag.bg,
+                      background: isLight ? selectedTag.color + "18" : selectedTag.bg,
                       color: selectedTag.color,
+                      border: isLight ? `1px solid ${selectedTag.color}30` : undefined,
                       paddingLeft: "8px",
                       paddingRight: "8px",
                       paddingTop: "2px",
@@ -855,7 +1002,11 @@ function CreatePostModal({ onClose, onSubmit }) {
                     {cat}
                   </span>
                 </div>
-                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">
+                <p
+                  className={`text-[12px] leading-relaxed line-clamp-2 ${
+                    isLight ? "text-slate-600" : "text-silver"
+                  }`}
+                >
                   {body || "Your post content will appear here."}
                 </p>
               </div>
@@ -869,7 +1020,9 @@ function CreatePostModal({ onClose, onSubmit }) {
 
         {/* Footer */}
         <div
-          className="flex justify-end gap-2.5 border-t border-white bg-white/10"
+          className={`flex justify-end gap-2.5 border-t ${
+            isLight ? "border-slate-200 bg-slate-50" : "border-white bg-white/10"
+          }`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -879,7 +1032,11 @@ function CreatePostModal({ onClose, onSubmit }) {
         >
           <button
             onClick={onClose}
-            className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
+            className={`rounded-lg text-[12px] transition-colors cursor-pointer ${
+              isLight
+                ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                : "bg-transparent border border-white text-white hover:text-silver"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -891,7 +1048,9 @@ function CreatePostModal({ onClose, onSubmit }) {
           </button>
           <button
             onClick={handleSubmit}
-            className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className={`flex items-center gap-1.5 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${
+              isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-[#080808] text-white"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -921,6 +1080,7 @@ function CreatePostModal({ onClose, onSubmit }) {
 }
 
 function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
+  const { isLight } = useTheme();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [bio, setBio] = useState("");
@@ -980,14 +1140,24 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center"
+      className={`fixed inset-0 z-[100] flex items-center justify-center ${
+        isLight ? "bg-slate-900/50 backdrop-blur-sm" : "bg-black/80"
+      }`}
       style={{ padding: "16px" }}
       onClick={handleBackdrop}
     >
-      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+      <div
+        className={`w-full max-w-[540px] rounded-2xl overflow-hidden ${
+          isLight
+            ? "bg-white border border-slate-200 shadow-2xl"
+            : "bg-white/10 md:bg-white/1 backdrop-blur-md"
+        }`}
+      >
         {/* Header */}
         <div
-          className="flex items-center justify-between border-b border-white"
+          className={`flex items-center justify-between border-b ${
+            isLight ? "border-slate-200 bg-slate-50/60" : "border-white"
+          }`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -996,10 +1166,16 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
           }}
         >
           <div
-            className="flex items-center bg-white gap-2.5 rounded-md"
-            style={{ padding: "10px" }}
+            className={`flex items-center gap-2.5 rounded-md ${
+              isLight ? "bg-slate-100" : "bg-white"
+            }`}
+            style={{ padding: "8px 12px" }}
           >
-            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
+            <div
+              className={`w-6 h-6 rounded-md flex items-center justify-center ${
+                isLight ? "bg-white border border-slate-200" : "bg-gray border border-gray"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="12"
@@ -1014,14 +1190,20 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
                 <circle cx="12" cy="7" r="4" />
               </svg>
             </div>
-            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
+            <span
+              className={`app-title-text text-[13px] font-semibold ${
+                isLight ? "text-slate-900" : "text-[#080808]"
+              }`}
+            >
               Complete your profile
             </span>
           </div>
           {!needsPassword && (
             <button
               onClick={onClose}
-              className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              className={`transition-colors bg-transparent border-none cursor-pointer ${
+                isLight ? "text-slate-400 hover:text-slate-700" : "text-white hover:text-white"
+              }`}
               style={{ padding: "4px" }}
             >
               <svg
@@ -1050,10 +1232,13 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
             paddingBottom: "24px",
           }}
         >
-
           {/* Bio */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label
+              className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}
+            >
               Bio
             </label>
             <textarea
@@ -1065,21 +1250,22 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
               placeholder="Tell us about yourself…"
               maxLength={160}
               rows={2}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver resize-none"
-              style={{
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                paddingTop: "12px",
-                paddingBottom: "12px",
-                background: "transparent",
-              }}
+              className={`w-full text-[13px] outline-none transition-colors resize-none rounded-lg p-3 ${
+                isLight
+                  ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                  : "border-b border-silver text-white focus:border-gray placeholder:text-silver bg-transparent"
+              }`}
             />
           </div>
           <br />
 
           {/* Password */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label
+              className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}
+            >
               Password
             </label>
             <div className="relative">
@@ -1091,19 +1277,18 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
                   setError("");
                 }}
                 placeholder="Create a password…"
-                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver pr-10"
-                style={{
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                  paddingTop: "12px",
-                  paddingBottom: "12px",
-                  background: "transparent",
-                }}
+                className={`w-full text-[13px] outline-none transition-colors rounded-lg p-3 pr-10 ${
+                  isLight
+                    ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                    : "border-b border-silver text-white focus:border-gray placeholder:text-silver bg-transparent"
+                }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-silver hover:text-white bg-transparent border-none cursor-pointer"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer ${
+                  isLight ? "text-slate-400 hover:text-slate-700" : "text-silver hover:text-white"
+                }`}
               >
                 {showPassword ? (
                   <svg
@@ -1141,7 +1326,11 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label
+              className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}
+            >
               Confirm Password
             </label>
             <div className="relative">
@@ -1153,19 +1342,18 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
                   setError("");
                 }}
                 placeholder="Confirm your password…"
-                className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver pr-10"
-                style={{
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                  paddingTop: "12px",
-                  paddingBottom: "12px",
-                  background: "transparent",
-                }}
+                className={`w-full text-[13px] outline-none transition-colors rounded-lg p-3 pr-10 ${
+                  isLight
+                    ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                    : "border-b border-silver text-white focus:border-gray placeholder:text-silver bg-transparent"
+                }`}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-silver hover:text-white bg-transparent border-none cursor-pointer"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer ${
+                  isLight ? "text-slate-400 hover:text-slate-700" : "text-silver hover:text-white"
+                }`}
               >
                 {showConfirmPassword ? (
                   <svg
@@ -1207,7 +1395,9 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
 
         {/* Footer */}
         <div
-          className="flex justify-end gap-2.5 border-t border-white bg-white/10"
+          className={`flex justify-end gap-2.5 border-t ${
+            isLight ? "border-slate-200 bg-slate-50" : "border-white bg-white/10"
+          }`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -1218,7 +1408,11 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
           {!needsPassword && (
             <button
               onClick={onClose}
-              className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
+              className={`rounded-lg text-[12px] transition-colors cursor-pointer ${
+                isLight
+                  ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                  : "bg-transparent border border-white text-white hover:text-silver"
+              }`}
               style={{
                 paddingLeft: "16px",
                 paddingRight: "16px",
@@ -1231,7 +1425,9 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
           )}
           <button
             onClick={handleSubmit}
-            className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className={`flex items-center gap-1.5 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${
+              isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-[#080808] text-white"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -1260,9 +1456,14 @@ function CompleteProfileModal({ onClose, onSubmit, currentUser }) {
 }
 
 function Toast({ message, visible }) {
+  const { isLight } = useTheme();
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-[#333] rounded-lg text-[13px] text-[#e0e0e0] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg text-[13px] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${
+        isLight
+          ? "bg-white border border-slate-200 text-slate-800 shadow-xl"
+          : "bg-[#1e1e1e] border border-[#333] text-[#e0e0e0]"
+      } ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
       }`}
       style={{
@@ -1280,6 +1481,7 @@ function Toast({ message, visible }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Home() {
+  const { isLight } = useTheme();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -1497,37 +1699,44 @@ export default function Home() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
+        className={`min-h-screen flex items-center justify-center ${
+          isLight ? "cs-theme-page text-slate-700" : "text-[#e0e0e0]"
+        }`}
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          backgroundImage: `url(${mainBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundAttachment: "fixed",
+          ...(isLight
+            ? {}
+            : {
+                backgroundImage: `url(${mainBg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundAttachment: "fixed",
+              }),
         }}
       >
-        <p>Loading...</p>
+        <p className="font-mono text-sm">Loading...</p>
       </div>
     );
   }
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center text-[#e0e0e0]"
-
+      className={`min-h-screen flex items-center justify-center ${
+        isLight ? "cs-theme-page text-slate-800" : "text-[#e0e0e0]"
+      }`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-
-        backgroundImage: `url(${mainBg})`,
-
-        backgroundSize: "cover",
-
-        backgroundPosition: "center",
-
-        backgroundAttachment: "fixed",
+        ...(isLight
+          ? {}
+          : {
+              backgroundImage: `url(${mainBg})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundAttachment: "fixed",
+            }),
       }}
     >
-      <div className="bg-[#080808]/5 min-h-screen">
+      <div className={`min-h-screen w-full ${isLight ? "" : "bg-[#080808]/5"}`}>
         <div
           className="w-[375px] sm:w-[768px] lg:w-[1200px] mx-auto"
           style={{
@@ -1538,16 +1747,22 @@ export default function Home() {
           }}
         >
           {/* Top bar */}
-
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-[20px] font-semibold text-white tracking-tight">
+            <h1
+              className={`text-[20px] font-semibold tracking-tight ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}
+            >
               Home
             </h1>
 
             <button
               onClick={() => setModalOpen(true)}
-
-              className="flex items-center gap-2 bg-transparent text-white rounded-lg text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+              className={`flex items-center gap-2 rounded-lg text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-all border-none ${
+                isLight
+                  ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
+                  : "bg-transparent text-white"
+              }`}
               style={{
                 paddingLeft: "20px",
                 paddingRight: "20px",
@@ -1577,7 +1792,11 @@ export default function Home() {
             <div className="flex">
               <Link to="/main/community">
                 <button
-                  className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all"
+                  className={`flex items-center gap-2 bg-transparent rounded-lg text-[13px] font-medium cursor-pointer transition-all ${
+                    isLight
+                      ? "text-slate-700 hover:bg-slate-200/80 hover:text-slate-950"
+                      : "text-[#aaa] hover:bg-[#1a1a1a] hover:text-white hover:border-[#333]"
+                  }`}
                   style={{
                     paddingLeft: "20px",
                     paddingRight: "20px",
@@ -1606,7 +1825,11 @@ export default function Home() {
 
               <Link to="/main/scanner">
                 <button
-                  className="flex items-center gap-2 bg-transparent rounded-lg text-[#aaa] text-[13px] font-medium cursor-pointer hover:bg-[#1a1a1a] hover:text-white hover:border-[#333] transition-all"
+                  className={`flex items-center gap-2 bg-transparent rounded-lg text-[13px] font-medium cursor-pointer transition-all ${
+                    isLight
+                      ? "text-slate-700 hover:bg-slate-200/80 hover:text-slate-950"
+                      : "text-[#aaa] hover:bg-[#1a1a1a] hover:text-white hover:border-[#333]"
+                  }`}
                   style={{
                     paddingLeft: "20px",
                     paddingRight: "20px",
@@ -1635,12 +1858,24 @@ export default function Home() {
             </div>
 
             <div
-              className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1"
+              className={`flex rounded-xl gap-1 ${
+                isLight
+                  ? "bg-slate-200/80 border border-slate-300/80"
+                  : "bg-[#0a0a0a] border border-[#1c1c1c]"
+              }`}
               style={{ padding: "4px" }}
             >
               <button
                 onClick={() => setView("all")}
-                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${view === "all" ? "bg-white text-black" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
+                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
+                  view === "all"
+                    ? isLight
+                      ? "bg-white text-slate-900 shadow-sm font-semibold"
+                      : "bg-white text-black"
+                    : isLight
+                    ? "bg-transparent text-slate-600 hover:text-slate-900"
+                    : "bg-transparent text-[#aaa] hover:text-[#fff]"
+                }`}
                 style={{ padding: "10px 16px" }}
               >
                 <svg
@@ -1664,7 +1899,15 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setView("my")}
-                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${view === "my" ? "bg-white text-black" : "bg-transparent text-[#aaa] hover:text-[#fff]"}`}
+                className={`flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-colors cursor-pointer border-none ${
+                  view === "my"
+                    ? isLight
+                      ? "bg-white text-slate-900 shadow-sm font-semibold"
+                      : "bg-white text-black"
+                    : isLight
+                    ? "bg-transparent text-slate-600 hover:text-slate-900"
+                    : "bg-transparent text-[#aaa] hover:text-[#fff]"
+                }`}
                 style={{ padding: "10px 16px" }}
               >
                 <svg
@@ -1687,10 +1930,18 @@ export default function Home() {
           {view === "my" && (
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <p className="app-title-text text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
+                <p
+                  className={`app-title-text text-[11px] font-semibold tracking-[0.12em] uppercase ${
+                    isLight ? "text-slate-500" : "text-[#444]"
+                  }`}
+                >
                   My Posts
                 </p>
-                <div className="flex-1 h-px bg-[#1a1a1a]" />
+                <div
+                  className={`flex-1 h-px ${
+                    isLight ? "bg-slate-200" : "bg-[#1a1a1a]"
+                  }`}
+                />
               </div>
               <div className="flex flex-col gap-3">
                 {currentUser &&
@@ -1710,14 +1961,18 @@ export default function Home() {
                       height="22"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#222"
+                      stroke={isLight ? "#94a3b8" : "#222"}
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
-                    <p className="text-[12px] font-mono text-[#2a2a2a]">
+                    <p
+                      className={`text-[12px] font-mono ${
+                        isLight ? "text-slate-400" : "text-[#2a2a2a]"
+                      }`}
+                    >
                       You haven't posted anything yet.
                     </p>
                   </div>
@@ -1729,10 +1984,18 @@ export default function Home() {
           {view === "all" && (
             <>
               <div className="flex items-center gap-3 mb-4">
-                <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase">
+                <p
+                  className={`text-[11px] font-semibold tracking-[0.12em] uppercase ${
+                    isLight ? "text-slate-500" : "text-[#444]"
+                  }`}
+                >
                   Recent posts
                 </p>
-                <div className="flex-1 h-px bg-[#1a1a1a]" />
+                <div
+                  className={`flex-1 h-px ${
+                    isLight ? "bg-slate-200" : "bg-[#1a1a1a]"
+                  }`}
+                />
               </div>
 
               <div ref={feedRef} className="flex flex-col gap-4">

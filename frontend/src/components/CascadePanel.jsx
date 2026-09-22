@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useFindingInsight } from '../hooks/useFindingInsight';
 import { cascadeAPI } from '../utils/api';
 import { CASCADE_ENABLED } from '../utils/cascadeUtils';
+import { useTheme } from '../contexts/ThemeContext';
 
 function CascadePanel({ finding, scanId, onDismiss }) {
+  const { isLight } = useTheme();
   const [dismissed, setDismissed] = useState(() => {
     try {
       return sessionStorage.getItem('cascade_panel_dismissed') === 'true';
@@ -72,18 +74,28 @@ function CascadePanel({ finding, scanId, onDismiss }) {
 
   return (
     <div className="cascade-panel fixed bottom-4 right-4 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-right-4 duration-300">
-      <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl shadow-2xl overflow-hidden">
+      <div className={`rounded-xl shadow-2xl overflow-hidden transition-all duration-200 ${
+        isLight
+          ? "bg-white border border-slate-200 text-slate-900 shadow-[0_12px_36px_rgba(15,23,42,0.12)]"
+          : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#e0e0e0]"
+      }`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e1e1e]">
+        <div className={`flex items-center justify-between px-4 py-3 border-b ${
+          isLight ? "border-slate-100 bg-slate-50/50" : "border-[#1e1e1e]"
+        }`}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#7F77DD]" />
-            <span className="text-[11px] font-mono font-semibold text-[#ccc] uppercase tracking-wider">
+            <span className={`text-[11px] font-mono font-semibold uppercase tracking-wider ${
+              isLight ? "text-slate-700" : "text-[#ccc]"
+            }`}>
               Related Discussions
             </span>
           </div>
           <button
             onClick={handleDismiss}
-            className="text-[#555] hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1"
+            className={`transition-colors bg-transparent border-none cursor-pointer p-1 ${
+              isLight ? "text-slate-400 hover:text-slate-900" : "text-[#555] hover:text-white"
+            }`}
             aria-label="Dismiss panel"
           >
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -106,19 +118,29 @@ function CascadePanel({ finding, scanId, onDismiss }) {
             </div>
           ) : relatedGroups.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-[10px] text-[#555] font-mono uppercase tracking-wider">
+              <p className={`text-[10px] font-mono uppercase tracking-wider ${
+                isLight ? "text-slate-500" : "text-[#555]"
+              }`}>
                 Groups discussing this topic
               </p>
               {relatedGroups.slice(0, 3).map((group) => (
                 <a
                   key={group.id}
                   href={`/main/community?group=${group.id}`}
-                  className="block bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 hover:border-[#3a3a3a] transition-colors no-underline"
+                  className={`block rounded-lg p-3 transition-colors no-underline ${
+                    isLight
+                      ? "bg-slate-50 border border-slate-200 hover:border-slate-300 hover:bg-slate-100/70"
+                      : "bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#3a3a3a]"
+                  }`}
                 >
-                  <p className="text-[12px] font-semibold text-[#ccc] mb-1">
+                  <p className={`text-[12px] font-semibold mb-1 ${
+                    isLight ? "text-slate-900" : "text-[#ccc]"
+                  }`}>
                     {group.name}
                   </p>
-                  <p className="text-[10px] text-[#666]">
+                  <p className={`text-[10px] ${
+                    isLight ? "text-slate-500" : "text-[#666]"
+                  }`}>
                     {group.category} • {group.member_count} members
                   </p>
                 </a>
@@ -134,7 +156,7 @@ function CascadePanel({ finding, scanId, onDismiss }) {
             </div>
           ) : (
             <div className="text-center py-4">
-              <p className="text-[11px] text-[#555] mb-2">
+              <p className={`text-[11px] mb-2 ${isLight ? "text-slate-500" : "text-[#555]"}`}>
                 No related discussions yet
               </p>
               <a
@@ -148,8 +170,10 @@ function CascadePanel({ finding, scanId, onDismiss }) {
 
           {/* Quick Rating */}
           {!ratingSubmitted && (
-            <div className="pt-3 border-t border-[#1e1e1e]">
-              <p className="text-[10px] text-[#555] font-mono uppercase tracking-wider mb-2">
+            <div className={`pt-3 border-t ${isLight ? "border-slate-100" : "border-[#1e1e1e]"}`}>
+              <p className={`text-[10px] font-mono uppercase tracking-wider mb-2 ${
+                isLight ? "text-slate-500" : "text-[#555]"
+              }`}>
                 How's this report working for you?
               </p>
               <div className="flex gap-2 justify-center">
@@ -161,7 +185,9 @@ function CascadePanel({ finding, scanId, onDismiss }) {
                     className={`w-8 h-8 rounded-lg border transition-all cursor-pointer font-mono text-[11px] ${
                       quickRating === rating
                         ? 'bg-[#7F77DD] border-[#7F77DD] text-white'
-                        : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:border-[#3a3a3a] hover:text-white'
+                        : isLight
+                          ? 'bg-slate-100 border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900'
+                          : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:border-[#3a3a3a] hover:text-white'
                     } ${ratingLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     aria-label={`Rate ${rating} out of 5`}
                   >
@@ -173,8 +199,8 @@ function CascadePanel({ finding, scanId, onDismiss }) {
           )}
 
           {ratingSubmitted && (
-            <div className="pt-3 border-t border-[#1e1e1e] text-center">
-              <p className="text-[11px] text-[#639922]">
+            <div className={`pt-3 border-t text-center ${isLight ? "border-slate-100" : "border-[#1e1e1e]"}`}>
+              <p className="text-[11px] text-[#0D9488] font-semibold">
                 Thanks for your feedback!
               </p>
             </div>

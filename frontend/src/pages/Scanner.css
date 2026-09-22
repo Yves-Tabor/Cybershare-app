@@ -8,6 +8,11 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+html.light .scanner-nav-bar {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 .scanner-nav-inner {
   padding-left: 24px;
   padding-right: 24px;

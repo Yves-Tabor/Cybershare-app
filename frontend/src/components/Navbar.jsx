@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { authAPI, notificationsAPI, clearToken, getToken } from "../utils/api";
 import { redirectToWelcomeAuth } from "../utils/authRedirect";
+import { useTheme } from "../contexts/ThemeContext";
 
 const SITE_CONFIG = {
   name: "Cybershare",
@@ -283,6 +284,7 @@ function UserPanel({
   panelRef,
   navigate,
 }) {
+  const { isLight, toggleTheme } = useTheme();
   const [showClearAll, setShowClearAll] = useState(false);
   const clearAllTimer = useRef(null);
 
@@ -325,20 +327,20 @@ function UserPanel({
         top: 46,
         right: 8,
         width: 300,
-        backgroundColor: "#ffffff",
-        border: "1px solid #e5e5e5",
+        backgroundColor: isLight ? "#ffffff" : "#141414",
+        border: isLight ? "1px solid #e2e8f0" : "1px solid #262626",
         borderRadius: 16,
         overflow: "hidden",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
+        boxShadow: isLight ? "0 10px 40px rgba(0,0,0,0.12)" : "0 10px 40px rgba(0,0,0,0.65)",
         zIndex: 9999,
       }}
     >
       {/* User header */}
       <div
         style={{
-          padding: "18px 20px",
-          borderBottom: "1px solid #f0f0f0",
-          background: "#fafafa",
+          padding: "16px 18px",
+          borderBottom: isLight ? "1px solid #f1f5f9" : "1px solid #222222",
+          background: isLight ? "#f8fafc" : "#181818",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -348,7 +350,7 @@ function UserPanel({
               height: "40px",
               borderRadius: "50%",
               background: "#7F77DD",
-              border: "2px solid #ffffff",
+              border: isLight ? "2px solid #ffffff" : "2px solid #2a2a2a",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -373,21 +375,70 @@ function UserPanel({
                 color: "#ffffff",
                 borderRadius: "999px",
                 padding: "3px 8px",
-                flexShrink: 0,
+                display: "inline-block",
               }}
             >
               {user?.role || "Member"}
             </span>
-            <p
-              style={{
-                margin: "2px 0 0",
-                fontSize: "11px",
-                fontFamily: "monospace",
-                color: "#666",
-              }}
-            >
-              {user?.username || "user"}
-            </p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "3px" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  fontWeight: "600",
+                  color: isLight ? "#0f172a" : "#e0e0e0",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: "145px",
+                }}
+                title={user?.username || "user"}
+              >
+                {user?.username || "user"}
+              </p>
+              {/* Theme toggle icon button on the right of username */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={isLight ? "Switch to dark theme" : "Switch to light theme"}
+                aria-label={isLight ? "Switch to dark theme" : "Switch to light theme"}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "26px",
+                  height: "26px",
+                  borderRadius: "7px",
+                  border: isLight ? "1px solid #cbd5e1" : "1px solid #333333",
+                  background: isLight ? "#ffffff" : "#222222",
+                  color: isLight ? "#475569" : "#fbbf24",
+                  cursor: "pointer",
+                  padding: 0,
+                  flexShrink: 0,
+                  transition: "all 0.15s ease",
+                  boxShadow: isLight ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
+                }}
+              >
+                {isLight ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
         <div
@@ -408,7 +459,7 @@ function UserPanel({
             }}
           />
           <span
-            style={{ fontSize: "10px", fontFamily: "monospace", color: "#666" }}
+            style={{ fontSize: "10px", fontFamily: "monospace", color: isLight ? "#64748b" : "#888888" }}
           >
             Active · Joined {joinedDate}
           </span>
@@ -421,8 +472,9 @@ function UserPanel({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "10px 20px",
-          borderBottom: "1px solid #f0f0f0",
+          padding: "10px 18px",
+          borderBottom: isLight ? "1px solid #f1f5f9" : "1px solid #222222",
+          background: isLight ? "#ffffff" : "#141414",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -433,7 +485,7 @@ function UserPanel({
               fontWeight: "bold",
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "#666",
+              color: isLight ? "#475569" : "#888888",
             }}
           >
             Notifications
@@ -461,13 +513,13 @@ function UserPanel({
               style={{
                 fontSize: "10px",
                 fontFamily: "monospace",
-                color: "#666",
+                color: isLight ? "#64748b" : "#888888",
                 background: "transparent",
                 border: "none",
                 cursor: "pointer",
               }}
-              onMouseEnter={(e) => (e.target.style.color = "#111")}
-              onMouseLeave={(e) => (e.target.style.color = "#666")}
+              onMouseEnter={(e) => (e.target.style.color = isLight ? "#0f172a" : "#ffffff")}
+              onMouseLeave={(e) => (e.target.style.color = isLight ? "#64748b" : "#888888")}
             >
               mark all read
             </button>
@@ -493,7 +545,7 @@ function UserPanel({
       </div>
 
       {/* Notification list */}
-      <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+      <div style={{ maxHeight: "300px", overflowY: "auto", background: isLight ? "#ffffff" : "#141414" }}>
         {notifications.length === 0 ? (
           <div
             style={{
@@ -510,7 +562,7 @@ function UserPanel({
               height="20"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#ccc"
+              stroke={isLight ? "#94a3b8" : "#444"}
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -522,7 +574,7 @@ function UserPanel({
               style={{
                 fontSize: "11px",
                 fontFamily: "monospace",
-                color: "#999",
+                color: isLight ? "#64748b" : "#888888",
                 margin: 0,
               }}
             >
@@ -566,18 +618,26 @@ function UserPanel({
                 display: "flex",
                 alignItems: "flex-start",
                 gap: "12px",
-                padding: "12px 20px",
-                background: notif.unread ? "#f5f3ff" : "transparent",
+                padding: "12px 18px",
+                background: notif.unread
+                  ? (isLight ? "#f5f3ff" : "rgba(127, 119, 221, 0.12)")
+                  : "transparent",
                 borderBottom:
-                  i !== notifications.length - 1 ? "1px solid #f0f0f0" : "none",
+                  i !== notifications.length - 1
+                    ? (isLight ? "1px solid #f1f5f9" : "1px solid #1e1e1e")
+                    : "none",
                 cursor: "pointer",
                 transition: "background 0.15s",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = notif.unread ? "#ede9fc" : "#f9f9f9";
+                e.currentTarget.style.background = notif.unread
+                  ? (isLight ? "#ede9fe" : "rgba(127, 119, 221, 0.2)")
+                  : (isLight ? "#f8fafc" : "#1a1a1a");
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = notif.unread ? "#f5f3ff" : "transparent";
+                e.currentTarget.style.background = notif.unread
+                  ? (isLight ? "#f5f3ff" : "rgba(127, 119, 221, 0.12)")
+                  : "transparent";
               }}
             >
               <div
@@ -590,9 +650,9 @@ function UserPanel({
                   justifyContent: "center",
                   flexShrink: 0,
                   marginTop: "2px",
-                  background: notif.unread ? "#7F77DD" : "#f0f0f0",
-                  border: notif.unread ? "none" : "1px solid #e5e5e5",
-                  color: notif.unread ? "#ffffff" : "#999",
+                  background: notif.unread ? "#7F77DD" : (isLight ? "#f1f5f9" : "#222222"),
+                  border: notif.unread ? "none" : (isLight ? "1px solid #e2e8f0" : "1px solid #2e2e2e"),
+                  color: notif.unread ? "#ffffff" : (isLight ? "#64748b" : "#888888"),
                 }}
               >
                 <NotifIcon type={notif.type} />
@@ -603,7 +663,9 @@ function UserPanel({
                     margin: 0,
                     fontSize: "12px",
                     lineHeight: 1.4,
-                    color: notif.unread ? "#111" : "#666",
+                    color: notif.unread
+                      ? (isLight ? "#0f172a" : "#ffffff")
+                      : (isLight ? "#475569" : "#a1a1aa"),
                   }}
                 >
                   {notif.message}
@@ -613,7 +675,7 @@ function UserPanel({
                     margin: "4px 0 0",
                     fontSize: "10px",
                     fontFamily: "monospace",
-                    color: "#999",
+                    color: isLight ? "#94a3b8" : "#71717a",
                   }}
                 >
                   {notif.time}
@@ -639,12 +701,12 @@ function UserPanel({
       {/* Footer */}
       <div
         style={{
-          borderTop: "1px solid #f0f0f0",
+          borderTop: isLight ? "1px solid #f1f5f9" : "1px solid #222222",
           display: "flex",
           alignItems: "center",
-          padding: "12px 20px",
+          padding: "12px 18px",
           gap: "0",
-          background: "#fafafa",
+          background: isLight ? "#f8fafc" : "#181818",
         }}
       >
         <Link
@@ -655,16 +717,16 @@ function UserPanel({
             textAlign: "center",
             fontSize: "11px",
             fontFamily: "monospace",
-            color: "#666",
+            color: isLight ? "#475569" : "#888888",
             textDecoration: "none",
           }}
-          onMouseEnter={(e) => (e.target.style.color = "#111")}
-          onMouseLeave={(e) => (e.target.style.color = "#666")}
+          onMouseEnter={(e) => (e.target.style.color = isLight ? "#0f172a" : "#ffffff")}
+          onMouseLeave={(e) => (e.target.style.color = isLight ? "#475569" : "#888888")}
         >
           settings
         </Link>
         <div
-          style={{ width: "1px", background: "#e5e5e5", alignSelf: "stretch" }}
+          style={{ width: "1px", background: isLight ? "#e2e8f0" : "#2a2a2a", alignSelf: "stretch" }}
         />
         <button
           onClick={onSignOut}
@@ -688,6 +750,7 @@ function UserPanel({
 }
 
 export default function Navbar() {
+  const { isLight } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -932,12 +995,16 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-[60] flex items-center justify-between bg-[#080808]"
+        className={`sticky top-0 z-[60] flex items-center justify-between transition-colors duration-200 ${
+          isLight
+            ? "bg-white/95 border-b border-slate-200/90 shadow-sm backdrop-blur-md"
+            : "bg-[#080808] border-b border-[#181818]"
+        }`}
         style={{
-          paddingLeft: "5px",
-          paddingRight: "5px",
-          paddingTop: "5px",
-          paddingBottom: "5px",
+          paddingLeft: "8px",
+          paddingRight: "8px",
+          paddingTop: "6px",
+          paddingBottom: "6px",
         }}
       >
         <button
@@ -946,7 +1013,11 @@ export default function Navbar() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="nav-panel"
-          className="flex items-center justify-center w-9 h-9 rounded-full text-[#e0e0e0]/80 hover:text-white hover:bg-white/[0.06] transition-colors"
+          className={`flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+            isLight
+              ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              : "text-[#e0e0e0]/80 hover:text-white hover:bg-white/[0.06]"
+          }`}
         >
           <HamburgerIcon open={open} />
         </button>
@@ -957,12 +1028,18 @@ export default function Navbar() {
           style={{ fontFamily: "'Chelsea Market', cursive" }}
         >
           <div
-            className="w-7 h-7 rounded-md bg-white text-black grid place-items-center font-bold text-[11px]"
+            className={`w-7 h-7 rounded-md grid place-items-center font-bold text-[11px] ${
+              isLight ? "bg-slate-900 text-white" : "bg-white text-black"
+            }`}
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             {SITE_CONFIG.logoMark}
           </div>
-          <span className="text-[15px] tracking-tight text-white">
+          <span
+            className={`text-[15px] tracking-tight ${
+              isLight ? "text-slate-900 font-semibold" : "text-white"
+            }`}
+          >
             {SITE_CONFIG.name}
           </span>
         </Link>
@@ -972,7 +1049,11 @@ export default function Navbar() {
           onClick={toggleUser}
           aria-label="Account"
           aria-expanded={userOpen}
-          className="flex items-center justify-center w-9 h-9 rounded-full text-[#e0e0e0]/80 hover:text-white hover:bg-white/[0.06] transition-colors"
+          className={`flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+            isLight
+              ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              : "text-[#e0e0e0]/80 hover:text-white hover:bg-white/[0.06]"
+          }`}
           style={{ position: "relative" }}
         >
           <UserIcon />
@@ -995,7 +1076,7 @@ export default function Navbar() {
                 fontWeight: "bold",
                 lineHeight: 1,
                 padding: "0 3px",
-                border: "1.5px solid #080808",
+                border: isLight ? "1.5px solid #ffffff" : "1.5px solid #080808",
               }}
             >
               {notifications.filter((n) => n.unread).length > 9
@@ -1026,7 +1107,13 @@ export default function Navbar() {
         className={`fixed top-9 left-0 right-0 bottom-0 z-[55] flex transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Sidebar background panel */}
-        <div className="w-[220px] flex-shrink-0 h-full bg-[#111] border-r border-[#222] relative">
+        <div
+          className={`w-[220px] flex-shrink-0 h-full relative transition-colors ${
+            isLight
+              ? "bg-white border-r border-slate-200 shadow-xl"
+              : "bg-[#111] border-r border-[#222]"
+          }`}
+        >
           {/* Nav items float ON TOP of the sidebar */}
           <nav
             id="nav-panel"
@@ -1041,10 +1128,14 @@ export default function Navbar() {
                 key={item.label}
                 to={item.path}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 w-full text-[#cfd2d8] hover:text-white transition-colors text-[13px] sm:text-[14px] font-medium whitespace-nowrap"
+                className={`flex items-center gap-3 w-full transition-colors text-[13px] sm:text-[14px] font-medium whitespace-nowrap px-3 rounded-lg ${
+                  isLight
+                    ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                    : "text-[#cfd2d8] hover:text-white hover:bg-white/[0.04]"
+                }`}
                 style={{ paddingTop: "8px", paddingBottom: "8px" }}
               >
-                <span className="text-[#cfd2d8] flex-shrink-0">
+                <span className={`flex-shrink-0 ${isLight ? "text-slate-500" : "text-[#cfd2d8]"}`}>
                   {item.icon}
                 </span>
                 {item.label}
@@ -1056,7 +1147,9 @@ export default function Navbar() {
         {/* Dismiss area */}
         <div
           onClick={() => setOpen(false)}
-          className="flex-1 h-full bg-black/80 backdrop-blur-sm cursor-default"
+          className={`flex-1 h-full backdrop-blur-sm cursor-default ${
+            isLight ? "bg-slate-900/30" : "bg-black/80"
+          }`}
         />
       </div>
     </>

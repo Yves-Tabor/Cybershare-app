@@ -55,18 +55,74 @@
     --light-sub: #666;
     --font-display: "Lora", serif;
     --font-body: "DM Sans", sans-serif;
+
+    /* Theme tokens - Dark */
+    --cs-bg-page: #080808;
+    --cs-bg-card: #141414;
+    --cs-bg-card-hover: #1c1c1c;
+    --cs-bg-subtle: #121212;
+    --cs-bg-input: #1a1a1a;
+    --cs-bg-overlay: rgba(0, 0, 0, 0.8);
+    --cs-border: #222222;
+    --cs-border-subtle: #1a1a1a;
+    --cs-border-hover: #333333;
+    --cs-text-main: #f3f4f6;
+    --cs-text-sub: #9ca3af;
+    --cs-text-muted: #6b7280;
+    --cs-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --cs-shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+html.light {
+    --black: #f8f9fa;
+    --dark: #ffffff;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --muted: #64748b;
+    --sub: #475569;
+    --text: #0f172a;
+    --white: #ffffff;
+    --light-bg: #f8f9fa;
+    --light-card: #ffffff;
+    --light-border: #e2e8f0;
+    --light-text: #0f172a;
+    --light-sub: #475569;
+
+    /* Theme tokens - Light */
+    --cs-bg-page: #f8f9fa;
+    --cs-bg-card: #ffffff;
+    --cs-bg-card-hover: #f1f5f9;
+    --cs-bg-subtle: #f8fafc;
+    --cs-bg-input: #ffffff;
+    --cs-bg-overlay: rgba(15, 23, 42, 0.45);
+    --cs-border: #e2e8f0;
+    --cs-border-subtle: #f1f5f9;
+    --cs-border-hover: #cbd5e1;
+    --cs-text-main: #0f172a;
+    --cs-text-sub: #475569;
+    --cs-text-muted: #64748b;
+    --cs-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 25px -5px rgba(0, 0, 0, 0.04);
+    --cs-shadow-modal: 0 20px 50px rgba(15, 23, 42, 0.16);
 }
 
 body {
     font-family: var(--font-body), sans-serif;
-    background: var(--black);
-    color: var(--text);
+    background: var(--cs-bg-page);
+    color: var(--cs-text-main);
     overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.light body:not(.welcome-page) {
+    background: #f8f9fa;
+    color: #0f172a;
 }
 
 body.welcome-page {
     --font-display: "Manrope", sans-serif;
     --font-body: "Work Sans", sans-serif;
+    background: #080808 !important;
+    color: #e0e0e0 !important;
 }
 
 h1,
@@ -1446,3 +1502,80 @@ nav {
         grid-template-columns: 1fr;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT THEME GLOBAL ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page Background in Light Mode */
+html.light .cs-theme-page {
+    background-color: #f8f9fa !important;
+    background-image: 
+        radial-gradient(#e2e8f0 1.2px, transparent 1.2px),
+        linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(248,249,250,0.95) 100%) !important;
+    background-size: 24px 24px, 100% 100% !important;
+    background-attachment: fixed !important;
+    color: #0f172a !important;
+}
+
+/* Modals & Popups Backdrops in Light Mode */
+html.light .cs-modal-backdrop {
+    background-color: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Modal Card Surface in Light Mode */
+html.light .cs-modal-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16) !important;
+}
+
+/* Modal Header in Light Mode */
+html.light .cs-modal-header {
+    background-color: #ffffff !important;
+    border-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Generic Cards in Light Mode */
+html.light .cs-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 16px -4px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Inputs in Light Mode */
+html.light .cs-input {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+html.light .cs-input::placeholder {
+    color: #94a3b8 !important;
+}
+html.light .cs-input:focus {
+    border-color: #7F77DD !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(127, 119, 221, 0.2) !important;
+}
+
+/* Light Mode Scrollbars */
+html.light ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+html.light ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+html.light ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+

@@ -7,6 +7,7 @@ import { redirectToWelcomeAuth } from "../utils/authRedirect";
 import FindingInsightModal from "../components/FindingInsightModal";
 import CascadePanel from "../components/CascadePanel";
 import EndOfReviewFeedback from "../components/EndOfReviewFeedback";
+import { useTheme } from "../contexts/ThemeContext";
 import "./Scanner.css";
 
 const SCAN_POLL_INTERVAL_MS = 2000;
@@ -104,24 +105,41 @@ function IconLoader({ size = 14 }) {
 
 // ─── Disclosure modal ─────────────────────────────────────────────────────────
 function DisclosureModal({ onClose }) {
+  const { isLight } = useTheme();
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 scanner-modal-overlay"
+      className={`fixed inset-0 z-50 flex items-center justify-center scanner-modal-overlay ${
+        isLight ? "bg-slate-900/50 backdrop-blur-sm" : "bg-black/85"
+      }`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[500px] bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl scanner-modal-content">
+      <div
+        className={`w-full max-w-[500px] rounded-xl scanner-modal-content ${
+          isLight
+            ? "bg-white border border-slate-200 shadow-2xl text-slate-900"
+            : "bg-[#0a0a0a] border border-[#1e1e1e]"
+        }`}
+      >
         <div className="flex items-center gap-2.5 mb-5">
           <IconShield size={15} className="text-[#7F77DD]" />
           <span className="text-[10.5px] font-mono font-bold tracking-[0.18em] uppercase text-[#7F77DD]">
             Authorization Disclosure
           </span>
         </div>
-        <p className="text-[13px] text-[#888] leading-relaxed mb-7">
+        <p
+          className={`text-[13px] leading-relaxed mb-7 ${
+            isLight ? "text-slate-600" : "text-[#888]"
+          }`}
+        >
           {DISCLOSURE_TEXT}
         </p>
         <button
           onClick={onClose}
-          className="w-full bg-[#141414] border border-[#2a2a2a] rounded-lg text-[12px] font-mono tracking-widest uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white transition-colors scanner-modal-button"
+          className={`w-full rounded-lg text-[12px] font-mono tracking-widest uppercase cursor-pointer transition-colors scanner-modal-button ${
+            isLight
+              ? "bg-slate-900 text-white hover:bg-slate-800 border-none shadow-sm"
+              : "bg-[#141414] border border-[#2a2a2a] text-[#ccc] hover:border-[#3a3a3a] hover:text-white"
+          }`}
         >
           Understood
         </button>
@@ -132,6 +150,7 @@ function DisclosureModal({ onClose }) {
 
 // ─── Scan Result Component ───────────────────────────────────────────────────────
 function ScanResult({ scan }) {
+  const { isLight } = useTheme();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedFinding, setSelectedFinding] = useState(null);
@@ -195,8 +214,8 @@ function ScanResult({ scan }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <IconLoader size={16} className="text-[#555]" />
-        <span className="text-[12px] text-[#555] ml-2">Loading results...</span>
+        <IconLoader size={16} className={isLight ? "text-slate-400" : "text-[#555]"} />
+        <span className={`text-[12px] ml-2 ${isLight ? "text-slate-500" : "text-[#555]"}`}>Loading results...</span>
       </div>
     );
   }
@@ -204,7 +223,7 @@ function ScanResult({ scan }) {
   if (!results) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-[12px] font-mono text-[#2a2a2a]">
+        <p className={`text-[12px] font-mono ${isLight ? "text-slate-400" : "text-[#2a2a2a]"}`}>
           Failed to load results
         </p>
       </div>
@@ -222,13 +241,19 @@ function ScanResult({ scan }) {
   return (
     <div className="space-y-6">
       {/* Scan Summary */}
-      <div className="border border-[#1a1a1a] rounded-xl p-4">
+      <div
+        className={`rounded-xl p-4 ${
+          isLight
+            ? "border border-slate-200 bg-slate-50/70"
+            : "border border-[#1a1a1a]"
+        }`}
+      >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-[13px] font-semibold text-white">
+            <p className={`text-[13px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
               {results.scan.targetUrl}
             </p>
-            <p className="text-[11px] text-[#555] mt-1">
+            <p className={`text-[11px] mt-1 ${isLight ? "text-slate-400" : "text-[#555]"}`}>
               {new Date(results.scan.createdAt).toLocaleString()}
             </p>
           </div>
@@ -246,12 +271,12 @@ function ScanResult({ scan }) {
             >
               {results.scan.securityScore}
             </p>
-            <p className="text-[10px] text-[#555]">Security Score</p>
+            <p className={`text-[10px] ${isLight ? "text-slate-400" : "text-[#555]"}`}>Security Score</p>
           </div>
         </div>
         <div className="flex gap-4">
-          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
-            <p className="text-[10px] text-[#555] mb-1">Critical</p>
+          <div className={`flex-1 rounded-lg p-3 ${isLight ? "bg-white border border-slate-200 shadow-sm" : "bg-[#1a1a1a]"}`}>
+            <p className={`text-[10px] mb-1 ${isLight ? "text-slate-400" : "text-[#555]"}`}>Critical</p>
             <p
               className="text-[18px] font-semibold"
               style={{ color: severityColors.critical }}
@@ -259,8 +284,8 @@ function ScanResult({ scan }) {
               {results.severityCounts.critical}
             </p>
           </div>
-          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
-            <p className="text-[10px] text-[#555] mb-1">High</p>
+          <div className={`flex-1 rounded-lg p-3 ${isLight ? "bg-white border border-slate-200 shadow-sm" : "bg-[#1a1a1a]"}`}>
+            <p className={`text-[10px] mb-1 ${isLight ? "text-slate-400" : "text-[#555]"}`}>High</p>
             <p
               className="text-[18px] font-semibold"
               style={{ color: severityColors.high }}
@@ -268,8 +293,8 @@ function ScanResult({ scan }) {
               {results.severityCounts.high}
             </p>
           </div>
-          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
-            <p className="text-[10px] text-[#555] mb-1">Medium</p>
+          <div className={`flex-1 rounded-lg p-3 ${isLight ? "bg-white border border-slate-200 shadow-sm" : "bg-[#1a1a1a]"}`}>
+            <p className={`text-[10px] mb-1 ${isLight ? "text-slate-400" : "text-[#555]"}`}>Medium</p>
             <p
               className="text-[18px] font-semibold"
               style={{ color: severityColors.medium }}
@@ -277,8 +302,8 @@ function ScanResult({ scan }) {
               {results.severityCounts.medium}
             </p>
           </div>
-          <div className="flex-1 bg-[#1a1a1a] rounded-lg p-3">
-            <p className="text-[10px] text-[#555] mb-1">Low</p>
+          <div className={`flex-1 rounded-lg p-3 ${isLight ? "bg-white border border-slate-200 shadow-sm" : "bg-[#1a1a1a]"}`}>
+            <p className={`text-[10px] mb-1 ${isLight ? "text-slate-400" : "text-[#555]"}`}>Low</p>
             <p
               className="text-[18px] font-semibold"
               style={{ color: severityColors.low }}
@@ -291,22 +316,26 @@ function ScanResult({ scan }) {
 
       {/* Findings */}
       <div>
-        <p className="text-[11px] font-semibold text-[#444] tracking-[0.12em] uppercase mb-2">
+        <p className={`text-[11px] font-semibold tracking-[0.12em] uppercase mb-2 ${isLight ? "text-slate-500" : "text-[#444]"}`}>
           Findings ({results.totalFindings})
         </p>
-        <p className="text-[12px] text-[#888] mb-4">
+        <p className={`text-[12px] mb-4 ${isLight ? "text-slate-600" : "text-[#888]"}`}>
           Click on any finding to view a plain-language explanation and related community discussions.
         </p>
         {results.findings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <p className="text-[12px] text-[#555]">No findings detected</p>
+            <p className={`text-[12px] ${isLight ? "text-slate-400" : "text-[#555]"}`}>No findings detected</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {results.findings.map((result) => (
               <div
                 key={result.id}
-                className="border border-[#1a1a1a] rounded-xl p-4"
+                className={`rounded-xl p-4 ${
+                  isLight
+                    ? "border border-slate-200 bg-white shadow-sm"
+                    : "border border-[#1a1a1a]"
+                }`}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
@@ -314,30 +343,31 @@ function ScanResult({ scan }) {
                       <span
                         className="text-[10px] font-mono rounded-md px-2 py-1"
                         style={{
-                          background: severityColors[result.severity] + "20",
+                          background: severityColors[result.severity] + (isLight ? "18" : "20"),
                           color: severityColors[result.severity],
+                          border: isLight ? `1px solid ${severityColors[result.severity]}30` : undefined,
                         }}
                       >
                         {result.severity.toUpperCase()}
                       </span>
-                      <span className="text-[10px] font-mono text-[#555]">
+                      <span className={`text-[10px] font-mono ${isLight ? "text-slate-400" : "text-[#555]"}`}>
                         {result.category}
                       </span>
                     </div>
-                    <p className="text-[13px] font-semibold text-white mb-2">
+                    <p className={`text-[13px] font-semibold mb-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                       {result.title}
                     </p>
                     {result.description && (
-                      <p className="text-[12px] text-[#b0b3b8] mb-3">
+                      <p className={`text-[12px] mb-3 ${isLight ? "text-slate-600" : "text-[#b0b3b8]"}`}>
                         {result.description}
                       </p>
                     )}
                     {result.recommendation && (
-                      <div className="bg-[#1a2e1a] rounded-lg p-3">
-                        <p className="text-[10px] font-semibold text-[#639922] mb-1">
+                      <div className={`rounded-lg p-3 ${isLight ? "bg-emerald-50 border border-emerald-200/60" : "bg-[#1a2e1a]"}`}>
+                        <p className={`text-[10px] font-semibold mb-1 ${isLight ? "text-emerald-800" : "text-[#639922]"}`}>
                           Recommendation
                         </p>
-                        <p className="text-[11px] text-[#b0b3b8]">
+                        <p className={`text-[11px] ${isLight ? "text-emerald-950" : "text-[#b0b3b8]"}`}>
                           {result.recommendation}
                         </p>
                       </div>
@@ -347,7 +377,11 @@ function ScanResult({ scan }) {
                 {!['good-news', 'info'].includes(result.severity) && (
                   <button
                     onClick={() => handleFindingClick(result)}
-                    className="mt-3 w-full bg-[#7F77DD]/10 border border-[#7F77DD]/30 rounded-lg text-[11px] font-mono text-[#7F77DD] py-2 px-3 hover:bg-[#7F77DD]/20 transition-colors cursor-pointer"
+                    className={`mt-3 w-full rounded-lg text-[11px] font-mono py-2 px-3 transition-colors cursor-pointer ${
+                      isLight
+                        ? "bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100"
+                        : "bg-[#7F77DD]/10 border border-[#7F77DD]/30 text-[#7F77DD] hover:bg-[#7F77DD]/20"
+                    }`}
                     aria-label={`Get automated explanation for ${result.title}`}
                   >
                     Get automated explanation
@@ -404,6 +438,7 @@ function timeAgo(dateStr) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Scanner() {
+  const { isLight } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -667,24 +702,32 @@ export default function Scanner() {
 
   return (
     <div
-      className="min-h-screen text-[#e0e0e0]"
+      className={`min-h-screen ${
+        isLight ? "cs-theme-page text-slate-800" : "text-[#e0e0e0]"
+      }`}
       style={{
         fontFamily: "'DM Sans', sans-serif",
-        backgroundImage: `url(${mainBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
+        ...(isLight
+          ? {}
+          : {
+              backgroundImage: `url(${mainBg})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundAttachment: "fixed",
+            }),
       }}
     >
-      {/* ── Scanline overlay ── */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0"
-        aria-hidden="true"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
-        }}
-      />
+      {/* ── Scanline overlay (dark mode only) ── */}
+      {!isLight && (
+        <div
+          className="fixed inset-0 pointer-events-none z-0"
+          aria-hidden="true"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
+          }}
+        />
+      )}
 
       {/* ── Sticky nav bar ── */}
       <div className="sticky top-0 z-50 scanner-nav-bar">
@@ -692,11 +735,19 @@ export default function Scanner() {
           {/* Header */}
           <header className="flex items-center justify-between scanner-nav-header">
             <div className="flex items-center gap-2.5">
-              <IconShield size={18} className="text-white" />
-              <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-white hidden sm:inline">
+              <IconShield size={18} className={isLight ? "text-indigo-600" : "text-white"} />
+              <span
+                className={`text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase hidden sm:inline ${
+                  isLight ? "text-slate-900" : "text-white"
+                }`}
+              >
                 Platform Security Layer
               </span>
-              <span className="text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase text-white sm:hidden">
+              <span
+                className={`text-[10.5px] font-mono font-bold tracking-[0.2em] uppercase sm:hidden ${
+                  isLight ? "text-slate-900" : "text-white"
+                }`}
+              >
                 PSL
               </span>
             </div>
@@ -712,7 +763,11 @@ export default function Scanner() {
                       : "bg-[#E24B4A]"
                   }`}
                 />
-                <span className="text-[10px] font-mono tracking-widest uppercase text-[#444]">
+                <span
+                  className={`text-[10px] font-mono tracking-widest uppercase ${
+                    isLight ? "text-slate-500" : "text-[#444]"
+                  }`}
+                >
                   {redisStatus === null ? "Checking" : redisStatus ? "Online" : "Offline"}
                 </span>
               </div>
@@ -720,14 +775,24 @@ export default function Scanner() {
           </header>
 
           {/* Toggle Bar */}
-          <div className="flex bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl gap-1 scanner-toggle-bar">
+          <div
+            className={`flex rounded-xl gap-1 scanner-toggle-bar ${
+              isLight
+                ? "bg-slate-200/80 border border-slate-300/80"
+                : "bg-[#0a0a0a] border border-[#1c1c1c]"
+            }`}
+          >
             {VIEWS.map((v) => (
               <button
                 key={v.key}
                 onClick={() => setView(v.key)}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-mono transition-all duration-200 cursor-pointer border-none scanner-toggle-button ${
                   view === v.key
-                    ? "bg-white text-black shadow-sm"
+                    ? isLight
+                      ? "bg-white text-slate-900 shadow-sm font-semibold"
+                      : "bg-white text-black shadow-sm"
+                    : isLight
+                    ? "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/40"
                     : "bg-transparent text-[#aaa] hover:text-[#fff] hover:bg-white/5"
                 }`}
               >
@@ -740,8 +805,6 @@ export default function Scanner() {
 
       {/* ── Content ── */}
       <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[900px] mx-auto scanner-content">
-          {/* spacer — header + toggle bar height */}
-
           {/* Service Error Alert Banner */}
           {serviceError && (
             <div className="mb-6 p-4 rounded-xl bg-[#E24B4A]/10 border border-[#E24B4A]/30 flex items-start gap-3 text-[#E24B4A] shadow-lg">
@@ -750,13 +813,19 @@ export default function Scanner() {
                 <p className="text-[12px] font-mono font-bold uppercase tracking-wider">
                   Service Unavailable (503)
                 </p>
-                <p className="text-[12px] text-[#ddd] mt-1 leading-relaxed">
+                <p
+                  className={`text-[12px] mt-1 leading-relaxed ${
+                    isLight ? "text-slate-700" : "text-[#ddd]"
+                  }`}
+                >
                   {serviceError}
                 </p>
               </div>
               <button
                 onClick={() => setServiceError("")}
-                className="text-[11px] font-mono text-[#888] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+                className={`text-[11px] font-mono transition-colors bg-transparent border-none cursor-pointer ${
+                  isLight ? "text-slate-500 hover:text-slate-900" : "text-[#888] hover:text-white"
+                }`}
               >
                 Dismiss
               </button>
@@ -766,11 +835,28 @@ export default function Scanner() {
           {/* Main card */}
           <main className="flex-1">
             {view === "scanner" && (
-              <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
+              <div
+                className={`rounded-2xl overflow-hidden backdrop-blur-sm ${
+                  isLight
+                    ? "border border-slate-200/90 bg-white/90 shadow-sm"
+                    : "border border-silver bg-gray"
+                }`}
+              >
                 {/* Card top strip */}
-                <div className="border-b border-[#141414] flex items-center gap-3 scanner-card-header">
-                  <IconScan size={14} className="text-[#555]" />
-                  <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
+                <div
+                  className={`flex items-center gap-3 scanner-card-header border-b ${
+                    isLight ? "border-slate-200 bg-slate-50/60" : "border-[#141414]"
+                  }`}
+                >
+                  <IconScan
+                    size={14}
+                    className={isLight ? "text-indigo-600" : "text-[#555]"}
+                  />
+                  <span
+                    className={`text-[10px] font-mono tracking-[0.18em] uppercase ${
+                      isLight ? "text-slate-500 font-semibold" : "text-[#444]"
+                    }`}
+                  >
                     Target Configuration
                   </span>
                 </div>
@@ -780,7 +866,9 @@ export default function Scanner() {
                   <div>
                     <label
                       htmlFor="scan-url"
-                      className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-gray-400 mb-2.5"
+                      className={`block text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2.5 ${
+                        isLight ? "text-slate-700" : "text-gray-400"
+                      }`}
                     >
                       Enter website URL
                     </label>
@@ -799,10 +887,17 @@ export default function Scanner() {
                         }
                         placeholder="https://example.com"
                         disabled={scanning}
-                        className={`w-full bg-[#0a0a0a] border rounded-xl text-[15px] font-mono text-silver outline-none transition-colors placeholder:text-[#282828] disabled:opacity-40 scanner-input ${urlError
-                            ? "border-[#E24B4A]/60 focus:border-[#E24B4A]"
-                            : "border-[#1e1e1e] focus:border-[#2e2e2e]"
-                          }`}
+                        className={`w-full border rounded-xl text-[15px] font-mono outline-none transition-colors disabled:opacity-40 scanner-input ${
+                          isLight
+                            ? "bg-slate-50 text-slate-900 placeholder:text-slate-400 " +
+                              (urlError
+                                ? "border-red-400 focus:border-red-500"
+                                : "border-slate-200 focus:border-slate-400")
+                            : "bg-[#0a0a0a] text-silver placeholder:text-[#282828] " +
+                              (urlError
+                                ? "border-[#E24B4A]/60 focus:border-[#E24B4A]"
+                                : "border-[#1e1e1e] focus:border-[#2e2e2e]")
+                        }`}
                       />
                       {url && !scanning && (
                         <button
@@ -811,7 +906,11 @@ export default function Scanner() {
                             setUrlError("");
                             inputRef.current?.focus();
                           }}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#333] hover:text-[#666] transition-colors bg-transparent border-none cursor-pointer scanner-clear-button"
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors bg-transparent border-none cursor-pointer scanner-clear-button ${
+                            isLight
+                              ? "text-slate-400 hover:text-slate-700"
+                              : "text-[#333] hover:text-[#666]"
+                          }`}
                           aria-label="Clear URL"
                         >
                           <svg
@@ -839,19 +938,27 @@ export default function Scanner() {
 
                   {/* Authorization checkbox */}
                   <div
-                    className={`border rounded-xl transition-colors cursor-pointer ${accepted
-                        ? "border-[#7F77DD]/30 bg-[#7F77DD]/5"
+                    className={`border rounded-xl transition-colors cursor-pointer scanner-checkbox ${
+                      accepted
+                        ? isLight
+                          ? "border-indigo-300 bg-indigo-50/50"
+                          : "border-[#7F77DD]/30 bg-[#7F77DD]/5"
+                        : isLight
+                        ? "border-dashed border-slate-300 hover:border-slate-400 bg-slate-50/40"
                         : "border-dashed border-[#222] hover:border-[#2e2e2e]"
-                      } scanner-checkbox`}
+                    }`}
                     onClick={() => !scanning && setAccepted((v) => !v)}
                   >
                     <div className="flex items-start gap-4">
                       {/* Custom checkbox */}
                       <div
-                        className={`mt-0.5 w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-all ${accepted
+                        className={`mt-0.5 w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-all ${
+                          accepted
                             ? "bg-[#7F77DD] border-[#7F77DD]"
+                            : isLight
+                            ? "bg-white border-slate-300"
                             : "bg-transparent border-[#333]"
-                          }`}
+                        }`}
                       >
                         {accepted && (
                           <svg
@@ -868,7 +975,11 @@ export default function Scanner() {
                           </svg>
                         )}
                       </div>
-                      <p className="text-[12px] font-mono leading-relaxed text-silver select-none">
+                      <p
+                        className={`text-[12px] font-mono leading-relaxed select-none ${
+                          isLight ? "text-slate-700" : "text-silver"
+                        }`}
+                      >
                         I acknowledge I have authorization to conduct a security
                         scan including header analysis, fingerprinting, and
                         disclosure checks.{" "}
@@ -889,12 +1000,19 @@ export default function Scanner() {
                   <button
                     onClick={startScan}
                     disabled={!canScan}
-                    className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 scanner-scan-button ${scanning
-                        ? "bg-transparent border-[#1e1e1e] text-[#444] cursor-not-allowed"
+                    className={`w-full rounded-xl text-[13px] font-mono tracking-[0.12em] uppercase border transition-all flex items-center justify-center gap-2.5 scanner-scan-button ${
+                      scanning
+                        ? isLight
+                          ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                          : "bg-transparent border-[#1e1e1e] text-[#444] cursor-not-allowed"
                         : canScan
-                          ? "bg-[#0f0f0f] border-[#7F77DD]/50 text-[#7F77DD] hover:bg-[#7F77DD]/8 hover:border-[#7F77DD] cursor-pointer active:scale-[0.99]"
-                          : "bg-transparent border-[#181818] text-[#333] cursor-not-allowed"
-                      }`}
+                        ? isLight
+                          ? "bg-slate-900 border-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm active:scale-[0.99]"
+                          : "bg-[#0f0f0f] border-[#7F77DD]/50 text-[#7F77DD] hover:bg-[#7F77DD]/8 hover:border-[#7F77DD] cursor-pointer active:scale-[0.99]"
+                        : isLight
+                        ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-transparent border-[#181818] text-[#333] cursor-not-allowed"
+                    }`}
                   >
                     {scanning ? (
                       <>
@@ -927,8 +1045,18 @@ export default function Scanner() {
 
                   {/* Progress steps — only visible once scan starts */}
                   {stepIndex >= 0 && (
-                    <div className="border border-[#141414] rounded-xl space-y-2.5 scanner-progress">
-                      <p className="text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase text-[#333] mb-3.5">
+                    <div
+                      className={`rounded-xl space-y-2.5 scanner-progress border ${
+                        isLight
+                          ? "border-slate-200 bg-slate-50"
+                          : "border-[#141414]"
+                      }`}
+                    >
+                      <p
+                        className={`text-[9.5px] font-mono font-bold tracking-[0.2em] uppercase mb-3.5 ${
+                          isLight ? "text-slate-500" : "text-[#333]"
+                        }`}
+                      >
                         Scan Progress
                       </p>
                       {SCAN_STEPS.map((step, i) => {
@@ -937,20 +1065,30 @@ export default function Scanner() {
                         return (
                           <div key={i} className="flex items-center gap-3">
                             <div
-                              className={`w-1 h-1 rounded-full flex-shrink-0 transition-colors ${done
+                              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${
+                                done
                                   ? "bg-[#1D9E75]"
                                   : active
-                                    ? "bg-[#7F77DD] animate-pulse"
-                                    : "bg-[#222]"
-                                }`}
+                                  ? "bg-[#7F77DD] animate-pulse"
+                                  : isLight
+                                  ? "bg-slate-300"
+                                  : "bg-[#222]"
+                              }`}
                             />
                             <span
-                              className={`text-[11px] font-mono transition-colors ${done
-                                  ? "text-[#3a6b4f]"
+                              className={`text-[11px] font-mono transition-colors ${
+                                done
+                                  ? isLight
+                                    ? "text-emerald-700 font-medium"
+                                    : "text-[#3a6b4f]"
                                   : active
-                                    ? "text-[#9f99e8]"
-                                    : "text-[#2a2a2a]"
-                                }`}
+                                  ? isLight
+                                    ? "text-indigo-600 font-semibold"
+                                    : "text-[#9f99e8]"
+                                  : isLight
+                                  ? "text-slate-400"
+                                  : "text-[#2a2a2a]"
+                              }`}
                             >
                               {step}
                             </span>
@@ -979,16 +1117,39 @@ export default function Scanner() {
             )}
 
             {view === "history" && (
-              <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
+              <div
+                className={`rounded-2xl overflow-hidden backdrop-blur-sm ${
+                  isLight
+                    ? "border border-slate-200/90 bg-white/90 shadow-sm"
+                    : "border border-silver bg-gray"
+                }`}
+              >
                 {/* History header */}
-                <div className="border-b border-[#141414] flex items-center justify-between scanner-card-header">
+                <div
+                  className={`flex items-center justify-between scanner-card-header border-b ${
+                    isLight ? "border-slate-200 bg-slate-50/60" : "border-[#141414]"
+                  }`}
+                >
                   <div className="flex items-center gap-3">
-                    <IconScan size={14} className="text-[#555]" />
-                    <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
+                    <IconScan
+                      size={14}
+                      className={isLight ? "text-indigo-600" : "text-[#555]"}
+                    />
+                    <span
+                      className={`text-[10px] font-mono tracking-[0.18em] uppercase ${
+                        isLight ? "text-slate-500 font-semibold" : "text-[#444]"
+                      }`}
+                    >
                       Scan History
                     </span>
                     {scanHistory.length > 0 && (
-                      <span className="text-[10px] font-mono text-[#333] bg-[#111] rounded-full px-2 py-0.5">
+                      <span
+                        className={`text-[10px] font-mono rounded-full px-2 py-0.5 ${
+                          isLight
+                            ? "text-slate-600 bg-slate-200"
+                            : "text-[#333] bg-[#111]"
+                        }`}
+                      >
                         {scanHistory.length}
                       </span>
                     )}
@@ -1004,7 +1165,7 @@ export default function Scanner() {
                           console.error("Failed to clear scan history:", err);
                         }
                       }}
-                      className="text-[10px] font-mono uppercase text-[#E24B4A]/70 hover:text-[#E24B4A] bg-transparent border-none cursor-pointer transition-colors tracking-wider"
+                      className="text-[10px] font-mono uppercase text-[#E24B4A]/80 hover:text-[#E24B4A] bg-transparent border-none cursor-pointer transition-colors tracking-wider font-semibold"
                     >
                       Clear all
                     </button>
@@ -1014,21 +1175,25 @@ export default function Scanner() {
                 <div className="scanner-card-body">
                   {loading ? (
                     <div className="flex items-center justify-center py-10">
-                      <IconLoader size={16} className="text-[#444]" />
-                      <span className="text-[12px] text-[#444] ml-2 font-mono">Loading...</span>
+                      <IconLoader size={16} className={isLight ? "text-slate-400" : "text-[#444]"} />
+                      <span className={`text-[12px] ml-2 font-mono ${isLight ? "text-slate-500" : "text-[#444]"}`}>Loading...</span>
                     </div>
                   ) : scanHistory.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[#0d0d0d] border border-[#1a1a1a] flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center border ${
+                          isLight ? "bg-slate-100 border-slate-200" : "bg-[#0d0d0d] border-[#1a1a1a]"
+                        }`}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isLight ? "#94a3b8" : "#333"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="11" cy="11" r="8"/>
                           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
                       </div>
-                      <p className="text-[12px] font-mono text-[#2a2a2a]">No scans yet</p>
+                      <p className={`text-[12px] font-mono ${isLight ? "text-slate-400" : "text-[#2a2a2a]"}`}>No scans yet</p>
                       <button
                         onClick={() => setView("scanner")}
-                        className="text-[11px] font-mono text-[#7F77DD]/60 hover:text-[#7F77DD] bg-transparent border-none cursor-pointer transition-colors"
+                        className="text-[11px] font-mono text-[#7F77DD] hover:text-[#9f99e8] bg-transparent border-none cursor-pointer transition-colors"
                       >
                         Run your first scan →
                       </button>
@@ -1039,7 +1204,7 @@ export default function Scanner() {
                         let domain = scan.targetUrl;
                         try { domain = new URL(scan.targetUrl).hostname; } catch {}
                         const scoreColor =
-                          !scan.securityScore ? "#333"
+                          !scan.securityScore ? (isLight ? "#94a3b8" : "#333")
                           : scan.securityScore >= 70 ? "#1D9E75"
                           : scan.securityScore >= 40 ? "#BA7517"
                           : "#E24B4A";
@@ -1050,19 +1215,29 @@ export default function Scanner() {
                               setSelectedScan(scan);
                               setView("result");
                             }}
-                            className="group relative flex items-center gap-4 border border-[#161616] hover:border-[#2a2a2a] rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/[0.015] scanner-history-item"
+                            className={`group relative flex items-center gap-4 border rounded-xl cursor-pointer transition-all duration-200 scanner-history-item ${
+                              isLight
+                                ? "border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/80 shadow-sm"
+                                : "border-[#161616] hover:border-[#2a2a2a] hover:bg-white/[0.015]"
+                            }`}
                           >
                             {/* Score ring */}
-                            <div className="flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-[#0d0d0d] border border-[#1a1a1a]">
+                            <div
+                              className={`flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-lg border ${
+                                isLight
+                                  ? "bg-slate-50 border-slate-200"
+                                  : "bg-[#0d0d0d] border-[#1a1a1a]"
+                              }`}
+                            >
                               {scan.securityScore ? (
                                 <>
                                   <span className="text-[13px] font-bold leading-none" style={{ color: scoreColor }}>
                                     {scan.securityScore}
                                   </span>
-                                  <span className="text-[8px] font-mono text-[#333] mt-0.5">score</span>
+                                  <span className={`text-[8px] font-mono mt-0.5 ${isLight ? "text-slate-400" : "text-[#333]"}`}>score</span>
                                 </>
                               ) : (
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isLight ? "#94a3b8" : "#333"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                   <circle cx="12" cy="12" r="10"/>
                                   <line x1="12" y1="8" x2="12" y2="12"/>
                                   <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -1072,10 +1247,10 @@ export default function Scanner() {
 
                             {/* Main info */}
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold text-white truncate leading-tight">
+                              <p className={`text-[13px] font-semibold truncate leading-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                                 {domain}
                               </p>
-                              <p className="text-[10px] text-[#444] truncate mt-0.5 font-mono">
+                              <p className={`text-[10px] truncate mt-0.5 font-mono ${isLight ? "text-slate-400" : "text-[#444]"}`}>
                                 {scan.targetUrl}
                               </p>
                             </div>
@@ -1093,14 +1268,18 @@ export default function Scanner() {
                               >
                                 {scan.status}
                               </span>
-                              <span className="text-[10px] font-mono text-[#383838]">
+                              <span className={`text-[10px] font-mono ${isLight ? "text-slate-400" : "text-[#383838]"}`}>
                                 {timeAgo(scan.createdAt)}
                               </span>
                             </div>
 
                             {/* Arrow */}
                             <svg
-                              className="flex-shrink-0 text-[#222] group-hover:text-[#444] transition-colors"
+                              className={`flex-shrink-0 transition-colors ${
+                                isLight
+                                  ? "text-slate-300 group-hover:text-slate-600"
+                                  : "text-[#222] group-hover:text-[#444]"
+                              }`}
                               width="14" height="14" viewBox="0 0 24 24" fill="none"
                               stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
                             >
@@ -1116,10 +1295,27 @@ export default function Scanner() {
             )}
 
             {view === "result" && (
-              <div className="border border-silver rounded-2xl overflow-hidden bg-gray backdrop-blur-sm">
-                <div className="border-b border-[#141414] flex items-center gap-3 scanner-card-header">
-                  <IconScan size={14} className="text-[#555]" />
-                  <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#444]">
+              <div
+                className={`rounded-2xl overflow-hidden backdrop-blur-sm ${
+                  isLight
+                    ? "border border-slate-200/90 bg-white/90 shadow-sm"
+                    : "border border-silver bg-gray"
+                }`}
+              >
+                <div
+                  className={`flex items-center gap-3 scanner-card-header border-b ${
+                    isLight ? "border-slate-200 bg-slate-50/60" : "border-[#141414]"
+                  }`}
+                >
+                  <IconScan
+                    size={14}
+                    className={isLight ? "text-indigo-600" : "text-[#555]"}
+                  />
+                  <span
+                    className={`text-[10px] font-mono tracking-[0.18em] uppercase ${
+                      isLight ? "text-slate-500 font-semibold" : "text-[#444]"
+                    }`}
+                  >
                     Scan Results
                   </span>
                 </div>
@@ -1127,7 +1323,7 @@ export default function Scanner() {
                 <div className="scanner-card-body">
                   {!selectedScan ? (
                     <div className="flex flex-col items-center justify-center py-12">
-                      <p className="text-[12px] font-mono text-[#2a2a2a]">
+                      <p className={`text-[12px] font-mono ${isLight ? "text-slate-400" : "text-[#2a2a2a]"}`}>
                         Select a scan from history to view results
                       </p>
                       <button
@@ -1147,10 +1343,15 @@ export default function Scanner() {
 
           {/* Footer status line */}
           <footer className="mt-1 flex items-center justify-center gap-2.5">
-            {scanning && <IconLoader size={10} className="text-[#444]" />}
+            {scanning && <IconLoader size={10} className={isLight ? "text-slate-400" : "text-[#444]"} />}
             <span
-              className={`text-[10px] font-mono tracking-[0.18em] uppercase transition-colors ${isDone ? "text-[#1D9E75]" : "text-[#444]"
-                }`}
+              className={`text-[10px] font-mono tracking-[0.18em] uppercase transition-colors ${
+                isDone
+                  ? "text-[#1D9E75] font-semibold"
+                  : isLight
+                  ? "text-slate-500"
+                  : "text-[#444]"
+              }`}
             >
               {statusText}
             </span>
