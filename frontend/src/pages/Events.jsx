@@ -1016,7 +1016,7 @@ function CalendarView({ events, onToggleCalendar }) {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <p className="text-[12px] font-mono text-gray-400">
+              <p className={`text-[12px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                 Tap a day with dots to see what you've added.
               </p>
             </div>
@@ -1024,7 +1024,7 @@ function CalendarView({ events, onToggleCalendar }) {
 
           {selectedDay && dayEventsForSelected.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <p className="text-[12px] font-mono text-gray-400">
+              <p className={`text-[12px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                 No events added for this day.
               </p>
             </div>
@@ -1315,7 +1315,7 @@ export default function Events() {
             {view === "events" && (
               <button
                 onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
+                className={`flex items-center gap-2 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 ${isLight ? "bg-slate-900 text-white border-none" : "text-white border border-[#2a2a2a] bg-transparent"}`}
                 style={{ padding: "8px 16px" }}
               >
                 <svg
@@ -1405,9 +1405,9 @@ export default function Events() {
                 className="flex flex-col sm:flex-row gap-2.5 mb-6"
                 style={{ padding: "10px 12px" }}
               >
-                <div className="relative flex-1">
+                <div className={`relative flex-1 rounded-xl border ${isLight ? "bg-white border-slate-200" : "bg-transparent border-[#1e1e1e]"}`}>
                   <svg
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white pointer-events-none"
+                    className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? "text-slate-400" : "text-white"}`}
                     width="13"
                     height="13"
                     viewBox="0 0 24 24"
@@ -1425,11 +1425,13 @@ export default function Events() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search by title or day…"
-                    className="w-full bg-transparent rounded-xl text-[12.5px] font-mono text-white outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-white"
+                    className={`w-full bg-transparent rounded-xl text-[12.5px] font-mono outline-none transition-colors ${
+                      isLight ? "text-slate-900 placeholder:text-slate-400" : "text-white placeholder:text-white"
+                    }`}
                     style={{ padding: "10px 16px 10px 36px" }}
                   />
                 </div>
-                <div className="flex w-fit rounded-xl overflow-hidden">
+                <div className={`flex w-fit rounded-xl p-1 ${isLight ? "bg-slate-100" : "bg-transparent"}`}>
                   {[
                     { k: "all", l: "All" },
                     { k: "added", l: "Added" },
@@ -1437,12 +1439,12 @@ export default function Events() {
                     <button
                       key={f.k}
                       onClick={() => setFilter(f.k)}
-                      className={`text-[11.5px] font-mono transition-colors cursor-pointer border-none ${
+                      className={`text-[11.5px] font-mono transition-colors cursor-pointer border-none rounded-lg ${
                         filter === f.k
-                          ? "bg-white text-black"
-                          : "bg-transparent text-white hover:text-[#777]"
+                          ? isLight ? "bg-white text-slate-900 shadow-sm" : "bg-white text-black"
+                          : isLight ? "bg-transparent text-slate-500 hover:text-slate-700" : "bg-transparent text-white hover:text-[#777]"
                       }`}
-                      style={{ padding: "10px 16px" }}
+                      style={{ padding: "8px 16px" }}
                     >
                       {f.l}
                     </button>
