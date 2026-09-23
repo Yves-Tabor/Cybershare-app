@@ -41,7 +41,7 @@ const updateDisplayName = async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE users SET display_name = $1 WHERE id = $2 RETURNING id, username, email, display_name, avatar_color, avatar, bio',
+      'UPDATE users SET display_name = $1 WHERE id = $2 RETURNING id, username, email, display_name, color, avatar, bio',
       [displayName, userId]
     );
 
@@ -73,7 +73,7 @@ const updateAvatarColor = async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE users SET avatar_color = $1 WHERE id = $2 RETURNING id, username, email, display_name, avatar_color, avatar, bio',
+      'UPDATE users SET color = $1 WHERE id = $2 RETURNING id, username, email, display_name, color, avatar, bio',
       [avatarColor, userId]
     );
 
