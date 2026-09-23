@@ -55,7 +55,7 @@ const register = async (req, res) => {
 
     // Insert user with normalized username (no password initially)
     const result = await pool.query(
-      "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, color, role, created_at",
+      "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, email, bio, avatar, avatar_color, display_name, role, created_at",
       [normalizedUsername, email, null, bio || null],
     );
 
@@ -83,7 +83,8 @@ const register = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
-        color: user.color,
+        avatar_color: user.avatar_color,
+        display_name: user.display_name,
         role: user.role,
         createdAt: user.created_at,
       },
@@ -101,7 +102,7 @@ const login = async (req, res) => {
 
     // Find user
     const result = await pool.query(
-      "SELECT id, username, email, password_hash, bio, avatar, color, role, created_at FROM users WHERE email = $1",
+      "SELECT id, username, email, password_hash, bio, avatar, avatar_color, display_name, role, created_at FROM users WHERE email = $1",
       [email],
     );
 
@@ -143,7 +144,8 @@ const login = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
-        color: user.color,
+        avatar_color: user.avatar_color,
+        display_name: user.display_name,
         role: user.role,
         createdAt: user.created_at,
       },
@@ -160,7 +162,7 @@ const me = async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      "SELECT id, username, email, bio, avatar, color, role, created_at, password_hash FROM users WHERE id = $1",
+      "SELECT id, username, email, bio, avatar, avatar_color, display_name, role, created_at, password_hash FROM users WHERE id = $1",
       [userId],
     );
 
@@ -177,7 +179,8 @@ const me = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
-        color: user.color,
+        avatar_color: user.avatar_color,
+        display_name: user.display_name,
         role: user.role,
         createdAt: user.created_at,
         hasPassword: !!user.password_hash,
@@ -290,13 +293,13 @@ const completeProfile = async (req, res) => {
 
       // Update user with new username
       result = await pool.query(
-        "UPDATE users SET username = $1, password_hash = COALESCE($2, password_hash), bio = COALESCE($3, bio) WHERE id = $4 RETURNING id, username, email, bio, avatar, color, role, created_at",
+        "UPDATE users SET username = $1, password_hash = COALESCE($2, password_hash), bio = COALESCE($3, bio) WHERE id = $4 RETURNING id, username, email, bio, avatar, avatar_color, display_name, role, created_at",
         [normalizedUsername, passwordHash, bio !== undefined ? (bio || null) : null, userId],
       );
     } else {
       // Update user without changing username
       result = await pool.query(
-        "UPDATE users SET password_hash = COALESCE($1, password_hash), bio = COALESCE($2, bio) WHERE id = $3 RETURNING id, username, email, bio, avatar, color, role, created_at",
+        "UPDATE users SET password_hash = COALESCE($1, password_hash), bio = COALESCE($2, bio) WHERE id = $3 RETURNING id, username, email, bio, avatar, avatar_color, display_name, role, created_at",
         [passwordHash, bio !== undefined ? (bio || null) : null, userId],
       );
     }
@@ -311,7 +314,8 @@ const completeProfile = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
-        color: user.color,
+        avatar_color: user.avatar_color,
+        display_name: user.display_name,
         role: user.role,
         createdAt: user.created_at,
       },
@@ -357,7 +361,7 @@ const updateProfile = async (req, res) => {
       values.push(bio || null);
     }
     if (color) {
-      updates.push(`color = $${paramIndex++}`);
+      updates.push(`avatar_color = $${paramIndex++}`);
       values.push(color);
     }
 
@@ -368,7 +372,7 @@ const updateProfile = async (req, res) => {
     values.push(userId);
 
     const result = await pool.query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING id, username, email, bio, avatar, color, role, created_at`,
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING id, username, email, bio, avatar, avatar_color, display_name, role, created_at`,
       values,
     );
 
@@ -382,7 +386,8 @@ const updateProfile = async (req, res) => {
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
-        color: user.color,
+        avatar_color: user.avatar_color,
+        display_name: user.display_name,
         role: user.role,
         createdAt: user.created_at,
       },
