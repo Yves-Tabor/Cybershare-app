@@ -87,9 +87,10 @@ const TODAY = todayISO();
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
 function Toast({ message, visible }) {
+  const { isLight } = useTheme();
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111] border border-[#2a2a2a] rounded-lg text-[12px] font-mono text-[#ccc] pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg text-[12px] font-mono pointer-events-none whitespace-nowrap z-[200] transition-all duration-200 ${isLight ? "bg-white border border-slate-200 text-slate-700 shadow-lg" : "bg-[#111] border border-[#2a2a2a] text-[#ccc]"} ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
       style={{ padding: "10px 20px" }}
     >
       {message}
@@ -100,6 +101,7 @@ function Toast({ message, visible }) {
 // ─── Save-a-link modal ─────────────────────────────────────────────────────────
 
 function SaveResourceModal({ onClose, onSave }) {
+  const { isLight } = useTheme();
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
@@ -145,20 +147,23 @@ function SaveResourceModal({ onClose, onSave }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[480px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[480px] rounded-2xl overflow-hidden shadow-2xl border ${
+        isLight ? "bg-white border-slate-200" : "bg-[#0d0d0d] border-[#222]"
+      }`}>
         {/* Modal header */}
         <div
-          className="flex items-center justify-between border-b border-white"
+          className={`flex items-center justify-between border-b ${
+            isLight ? "border-slate-200" : "border-[#1c1c1c]"
+          }`}
           style={{ padding: "16px 24px" }}
         >
-          <div
-            className="flex items-center bg-white gap-2.5 rounded-md"
-            style={{ padding: "10px" }}
-          >
-            <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+              isLight ? "bg-amber-50 border-amber-200" : "bg-[#2e2a1a] border-[#BA7517]/30"
+            }`}>
               <svg
-                width="12"
-                height="12"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#BA7517"
@@ -170,13 +175,17 @@ function SaveResourceModal({ onClose, onSave }) {
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
             </div>
-            <span className="text-[13px] font-semibold text-[#080808]">
+            <span className={`text-[13px] font-semibold ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
               Save a link
             </span>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`transition-colors bg-transparent border-none cursor-pointer ${
+              isLight ? "text-slate-400 hover:text-slate-700" : "text-[#666] hover:text-white"
+            }`}
             style={{ padding: "4px" }}
           >
             <svg
@@ -198,7 +207,9 @@ function SaveResourceModal({ onClose, onSave }) {
         {/* Modal body */}
         <div className="space-y-5" style={{ padding: "24px" }}>
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-[#aaa]"
+            }`}>
               URL
             </label>
             <input
@@ -211,22 +222,32 @@ function SaveResourceModal({ onClose, onSave }) {
               }}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
               placeholder="hacktricks.xyz/some-page"
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className={`w-full rounded-xl text-[13px] outline-none transition-colors ${
+                isLight
+                  ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                  : "bg-[#141414] border border-[#252525] text-white focus:border-[#7F77DD] placeholder:text-[#444]"
+              }`}
               style={{ padding: "12px 16px" }}
             />
             {domainPreview && (
-              <p className="text-[10.5px] font-mono text-silver mt-1.5">
+              <p className={`text-[10.5px] font-mono mt-1.5 ${
+                isLight ? "text-slate-500" : "text-[#666]"
+              }`}>
                 Will save from{" "}
-                <span className="text-white">{domainPreview}</span>
+                <span className={isLight ? "text-slate-800" : "text-white"}>{domainPreview}</span>
               </p>
             )}
           </div>
           <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-[#aaa]"
+            }`}>
               Title{" "}
-              <span className="text-silver normal-case tracking-normal font-normal">
+              <span className={`normal-case tracking-normal font-normal ${
+                isLight ? "text-slate-400" : "text-[#555]"
+              }`}>
                 — optional
               </span>
             </label>
@@ -235,16 +256,24 @@ function SaveResourceModal({ onClose, onSave }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Defaults to the domain name"
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className={`w-full rounded-xl text-[13px] outline-none transition-colors ${
+                isLight
+                  ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                  : "bg-[#141414] border border-[#252525] text-white focus:border-[#7F77DD] placeholder:text-[#444]"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
           <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-[#aaa]"
+            }`}>
               Note{" "}
-              <span className="text-silver normal-case tracking-normal font-normal">
+              <span className={`normal-case tracking-normal font-normal ${
+                isLight ? "text-slate-400" : "text-[#555]"
+              }`}>
                 — optional
               </span>
             </label>
@@ -253,29 +282,43 @@ function SaveResourceModal({ onClose, onSave }) {
               onChange={(e) => setNote(e.target.value)}
               placeholder="Why you're saving this"
               rows={2}
-              className="w-full border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
+              className={`w-full rounded-xl text-[13px] outline-none transition-colors resize-none ${
+                isLight
+                  ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                  : "bg-[#141414] border border-[#252525] text-white focus:border-[#7F77DD] placeholder:text-[#444]"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
 
-          {error && <p className="text-[11px] text-white font-mono">{error}</p>}
+          {error && <p className={`text-[11px] font-mono ${
+            isLight ? "text-red-600" : "text-[#E24B4A]"
+          }`}>{error}</p>}
         </div>
 
         {/* Modal footer */}
         <div
-          className="flex justify-end gap-2.5 border-t border-white bg-white/10"
+          className={`flex justify-end gap-2.5 border-t ${
+            isLight ? "border-slate-200 bg-slate-50" : "border-[#1c1c1c] bg-[#090909]"
+          }`}
           style={{ padding: "16px 24px" }}
         >
           <button
             onClick={onClose}
-            className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
+            className={`bg-transparent rounded-lg text-[12px] transition-colors cursor-pointer border ${
+              isLight
+                ? "border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300"
+                : "border-[#222] text-[#777] hover:text-white hover:border-[#333]"
+            }`}
             style={{ padding: "8px 16px" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className={`flex items-center gap-1.5 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${
+              isLight ? "bg-slate-900 text-white" : "bg-[#7F77DD] text-white"
+            }`}
             style={{ padding: "8px 16px" }}
           >
             <svg
@@ -420,15 +463,21 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
     }
   }
 
+  const { isLight } = useTheme();
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[500px] bg-[#0d0d0d] border border-[#222] rounded-2xl overflow-hidden shadow-2xl">
+      <div className={`w-full max-w-[500px] rounded-2xl overflow-hidden shadow-2xl border ${
+        isLight ? "bg-white border-slate-200" : "bg-[#0d0d0d] border-[#222]"
+      }`}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#1c1c1c] px-6 py-4">
+        <div className={`flex items-center justify-between border-b px-6 py-4 ${
+          isLight ? "border-slate-200" : "border-[#1c1c1c]"
+        }`}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#7F77DD]/15 border border-[#7F77DD]/35 flex items-center justify-center text-[#7F77DD]">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -439,13 +488,19 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
               </svg>
             </div>
             <div>
-              <h3 className="text-[14px] font-semibold text-white">Reshare Post</h3>
-              <p className="text-[11px] font-mono text-[#666]">Share to Global Feed or a Group</p>
+              <h3 className={`text-[14px] font-semibold ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}>Reshare Post</h3>
+              <p className={`text-[11px] font-mono ${
+                isLight ? "text-slate-500" : "text-[#666]"
+              }`}>Share to Global Feed or a Group</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-[#666] hover:text-white bg-transparent border-none cursor-pointer transition-colors p-1"
+            className={`bg-transparent border-none cursor-pointer transition-colors p-1 ${
+              isLight ? "text-slate-400 hover:text-slate-700" : "text-[#666] hover:text-white"
+            }`}
           >
             ✕
           </button>
@@ -455,17 +510,21 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
         <div className="p-6 space-y-4">
           {/* Destination Selector */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-600" : "text-[#888]"
+            }`}>
               Destination
             </label>
-            <div className="grid grid-cols-2 gap-2 bg-[#141414] p-1 rounded-xl border border-[#222]">
+            <div className={`grid grid-cols-2 gap-2 p-1 rounded-xl border ${
+              isLight ? "bg-slate-100 border-slate-200" : "bg-[#141414] border-[#222]"
+            }`}>
               <button
                 type="button"
                 onClick={() => setDestination("feed")}
                 className={`py-2 px-3 rounded-lg text-[12px] font-mono transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
                   destination === "feed"
-                    ? "bg-[#222] text-white font-semibold shadow-sm"
-                    : "bg-transparent text-[#666] hover:text-[#ccc]"
+                    ? isLight ? "bg-white text-slate-900 font-semibold shadow-sm" : "bg-[#222] text-white font-semibold shadow-sm"
+                    : isLight ? "bg-transparent text-slate-500 hover:text-slate-700" : "bg-transparent text-[#666] hover:text-[#ccc]"
                 }`}
               >
                 <span>🌐</span> Global Feed
@@ -475,8 +534,8 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
                 onClick={() => setDestination("group")}
                 className={`py-2 px-3 rounded-lg text-[12px] font-mono transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
                   destination === "group"
-                    ? "bg-[#222] text-white font-semibold shadow-sm"
-                    : "bg-transparent text-[#666] hover:text-[#ccc]"
+                    ? isLight ? "bg-white text-slate-900 font-semibold shadow-sm" : "bg-[#222] text-white font-semibold shadow-sm"
+                    : isLight ? "bg-transparent text-slate-500 hover:text-slate-700" : "bg-transparent text-[#666] hover:text-[#ccc]"
                 }`}
               >
                 <span>👥</span> Group
@@ -487,21 +546,29 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
           {/* Group Picker */}
           {destination === "group" && (
             <div>
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+              <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-600" : "text-[#888]"
+              }`}>
                 Select Group
               </label>
               {loadingGroups ? (
-                <div className="text-[11px] font-mono text-[#555] py-2">Loading groups…</div>
+                <div className={`text-[11px] font-mono py-2 ${
+                  isLight ? "text-slate-400" : "text-[#555]"
+                }`}>Loading groups…</div>
               ) : groups.length === 0 ? (
                 <div className="text-[12px] font-mono text-[#E24B4A] py-1">No groups available. Please join or create a group first.</div>
               ) : (
                 <select
                   value={selectedGroupId}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
-                  className="w-full bg-[#141414] border border-[#252525] rounded-xl text-[12.5px] text-white outline-none focus:border-[#7F77DD] transition-colors px-3.5 py-2.5 cursor-pointer"
+                  className={`w-full rounded-xl text-[12.5px] outline-none focus:border-[#7F77DD] transition-colors px-3.5 py-2.5 cursor-pointer border ${
+                    isLight
+                      ? "bg-slate-50 border-slate-200 text-slate-900"
+                      : "bg-[#141414] border-[#252525] text-white"
+                  }`}
                 >
                   {groups.map((g) => (
-                    <option key={g.id} value={g.id} className="bg-[#141414] text-white">
+                    <option key={g.id} value={g.id} className={isLight ? "bg-white text-slate-800" : "bg-[#141414] text-white"}>
                       {g.name} {g.joined ? "✓ (Member)" : ""}
                     </option>
                   ))}
@@ -512,7 +579,9 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
 
           {/* Thoughts Textarea */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-600" : "text-[#888]"
+            }`}>
               Add your thoughts (optional)
             </label>
             <textarea
@@ -520,16 +589,24 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
               onChange={(e) => setCommentary(e.target.value)}
               placeholder="What do you think about this post?"
               rows={3}
-              className="w-full bg-[#141414] border border-[#252525] rounded-xl text-[13px] text-white outline-none focus:border-[#7F77DD] transition-colors p-3.5 placeholder:text-[#444] resize-none"
+              className={`w-full rounded-xl text-[13px] outline-none focus:border-[#7F77DD] transition-colors p-3.5 resize-none border ${
+                isLight
+                  ? "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+                  : "bg-[#141414] border-[#252525] text-white placeholder:text-[#444]"
+              }`}
             />
           </div>
 
           {/* Quoted Post Card Preview */}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#666] mb-1.5">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-1.5 ${
+              isLight ? "text-slate-500" : "text-[#666]"
+            }`}>
               Quoting
             </label>
-            <div className="border border-[#222] bg-[#111] rounded-xl p-3.5 flex flex-col gap-2">
+            <div className={`border rounded-xl p-3.5 flex flex-col gap-2 ${
+              isLight ? "border-slate-200 bg-slate-50" : "border-[#222] bg-[#111]"
+            }`}>
               <div className="flex items-center gap-2">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
@@ -537,28 +614,42 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
                 >
                   {(post.author || "U").slice(0, 1).toUpperCase()}
                 </div>
-                <span className="text-[12px] font-semibold text-[#ddd]">@{post.author || "author"}</span>
-                <span className="text-[10px] font-mono text-[#555] ml-auto">Original Post</span>
+                <span className={`text-[12px] font-semibold ${
+                  isLight ? "text-slate-800" : "text-[#ddd]"
+                }`}>@{post.author || "author"}</span>
+                <span className={`text-[10px] font-mono ml-auto ${
+                  isLight ? "text-slate-400" : "text-[#555]"
+                }`}>Original Post</span>
               </div>
-              <p className="text-[12.5px] text-[#999] leading-relaxed line-clamp-3 italic">
+              <p className={`text-[12.5px] leading-relaxed line-clamp-3 italic ${
+                isLight ? "text-slate-600" : "text-[#999]"
+              }`}>
                 "{post.snippet || post.title}"
               </p>
             </div>
           </div>
 
           {error && (
-            <p className="text-[11px] font-mono text-[#E24B4A] bg-[#2e1a1a] p-2.5 rounded-lg border border-[#E24B4A]/30">
+            <p className={`text-[11px] font-mono p-2.5 rounded-lg border border-[#E24B4A]/30 ${
+              isLight ? "text-red-600 bg-red-50" : "text-[#E24B4A] bg-[#2e1a1a]"
+            }`}>
               {error}
             </p>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2.5 border-t border-[#1c1c1c] px-6 py-4 bg-[#090909]">
+        <div className={`flex items-center justify-end gap-2.5 border-t px-6 py-4 ${
+          isLight ? "border-slate-200 bg-slate-50" : "border-[#1c1c1c] bg-[#090909]"
+        }`}>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-[12px] font-mono text-[#777] hover:text-white bg-transparent border border-[#222] hover:border-[#333] transition-colors cursor-pointer"
+            className={`px-4 py-2 rounded-lg text-[12px] font-mono bg-transparent border transition-colors cursor-pointer ${
+              isLight
+                ? "border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300"
+                : "border-[#222] text-[#777] hover:text-white hover:border-[#333]"
+            }`}
           >
             Cancel
           </button>
@@ -596,11 +687,17 @@ function ReshareModal({ post, onClose, onReshareSuccess }) {
 // ─── Saved item card ────────────────────────────────────────────────────────────
 
 function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
+  const { isLight } = useTheme();
   const meta = TYPE_META[item.type] || { label: "Item", color: "#888", bg: "#1a1a1a" };
+  const lightBg = item.type === "post" ? "#ede9ff" : item.type === "resource" ? "#fef3c7" : item.type === "event" ? "#d1fae5" : "#dbeafe";
 
   return (
     <div
-      className="relative bg-[#080808] border border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
+      className={`relative rounded-2xl transition-colors border ${
+        isLight
+          ? "bg-white border-slate-200 hover:border-slate-300"
+          : "bg-[#080808] border-[#1c1c1c] hover:border-[#242424]"
+      }`}
       style={{ padding: "20px" }}
     >
       {/* Unsave toggle */}
@@ -624,20 +721,25 @@ function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
       <div className="flex items-start gap-4 pr-7">
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border"
-          style={{ background: meta.bg, borderColor: meta.color + "22" }}
+          style={{
+            background: isLight ? lightBg : meta.bg,
+            borderColor: meta.color + (isLight ? "33" : "22")
+          }}
         >
           <TypeIcon type={item.type} color={meta.color} />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="app-title-text text-[14px] font-semibold text-white truncate min-w-0">
+            <span className={`app-title-text text-[14px] font-semibold truncate min-w-0 ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
               {item.title}
             </span>
             <span
               className="text-[10px] font-mono rounded-md flex-shrink-0"
               style={{
-                background: meta.bg,
+                background: isLight ? lightBg : meta.bg,
                 color: meta.color,
                 padding: "2px 8px",
               }}
@@ -647,25 +749,33 @@ function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
           </div>
 
           {/* Context line */}
-          <div className="flex items-center gap-2 text-[11px] text-[#555] font-mono mb-2.5 flex-wrap">
+          <div className={`flex items-center gap-2 text-[11px] font-mono mb-2.5 flex-wrap ${
+            isLight ? "text-slate-500" : "text-[#555]"
+          }`}>
             {item.type === "post" && (
               <>
                 <span className="truncate">{item.context || "Global feed"}</span>
-                <span className="text-[#222] flex-shrink-0">·</span>
+                <span className={`flex-shrink-0 ${
+                  isLight ? "text-slate-300" : "text-[#222]"
+                }`}>·</span>
                 <span className="truncate">by {item.author || "User"}</span>
               </>
             )}
             {item.type === "event" && (
               <>
                 <span className="truncate">{item.context}</span>
-                <span className="text-[#222] flex-shrink-0">·</span>
+                <span className={`flex-shrink-0 ${
+                  isLight ? "text-slate-300" : "text-[#222]"
+                }`}>·</span>
                 <span className="flex-shrink-0">
                   {formatShort(item.date)} · {formatTime(item.time)}
                 </span>
               </>
             )}
             {item.type === "resource" && (
-              <span className="flex items-center gap-1.5 text-[#666] truncate">
+              <span className={`flex items-center gap-1.5 truncate ${
+                isLight ? "text-slate-500" : "text-[#666]"
+              }`}>
                 <svg
                   width="10"
                   height="10"
@@ -686,18 +796,24 @@ function SavedItemCard({ item, onRemove, onOpen, onScan, onReshare }) {
             )}
           </div>
 
-          <p className="text-[12.5px] text-[#555] leading-relaxed mb-3.5 line-clamp-2">
+          <p className={`text-[12.5px] leading-relaxed mb-3.5 line-clamp-2 ${
+            isLight ? "text-slate-600" : "text-[#555]"
+          }`}>
             {item.snippet}
           </p>
 
           {/* Footer */}
           <div className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="text-[10.5px] text-[#383838] font-mono flex-shrink-0">
+              <span className={`text-[10.5px] font-mono flex-shrink-0 ${
+                isLight ? "text-slate-400" : "text-[#383838]"
+              }`}>
                 Saved {timeAgo(item.savedAt)}
               </span>
               {item.type === "post" && (
-                <span className="flex items-center gap-2.5 text-[10.5px] text-[#383838] font-mono flex-shrink-0">
+                <span className={`flex items-center gap-2.5 text-[10.5px] font-mono flex-shrink-0 ${
+                  isLight ? "text-slate-400" : "text-[#383838]"
+                }`}>
                   <span className="flex items-center gap-1">
                     <svg
                       width="10"
@@ -981,7 +1097,9 @@ export default function SavedItems() {
             </div>
             <button
               onClick={() => setShowSave(true)}
-              className="flex items-center gap-2 text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0"
+              className={`flex items-center gap-2 rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex-shrink-0 ${
+                isLight ? "bg-slate-900 text-white" : "bg-white text-black"
+              }`}
               style={{ padding: "8px 16px" }}
             >
               <svg
@@ -1003,12 +1121,16 @@ export default function SavedItems() {
 
           {/* Search + filter */}
           <div
-            className="flex flex-col sm:flex-row gap-2.5 mb-6"
+            className={`flex flex-col sm:flex-row gap-2.5 mb-6 rounded-xl border ${
+              isLight ? "bg-white border-slate-200" : "bg-[#080808]/50 border-[#1c1c1c]"
+            }`}
             style={{ padding: "10px 12px" }}
           >
             <div className="relative flex-1">
               <svg
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white pointer-events-none"
+                className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${
+                  isLight ? "text-slate-400" : "text-[#555]"
+                }`}
                 width="13"
                 height="13"
                 viewBox="0 0 24 24"
@@ -1026,7 +1148,11 @@ export default function SavedItems() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search saved items…"
-                className="w-full bg-transparent rounded-xl text-[12.5px] font-mono text-white outline-none transition-colors placeholder:text-white"
+                className={`w-full bg-transparent rounded-xl text-[12.5px] font-mono outline-none transition-colors ${
+                  isLight
+                    ? "text-slate-800 placeholder:text-slate-400"
+                    : "text-white placeholder:text-[#444]"
+                }`}
                 style={{ padding: "10px 16px 10px 36px" }}
               />
             </div>
@@ -1124,7 +1250,7 @@ export default function SavedItems() {
                 height="22"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#222"
+                stroke={isLight ? "#94a3b8" : "#222"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -1132,13 +1258,17 @@ export default function SavedItems() {
                 <circle cx="11" cy="11" r="7" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <p className="text-[12px] font-mono text-[#2a2a2a]">
+              <p className={`text-[12px] font-mono ${
+                isLight ? "text-slate-500" : "text-[#2a2a2a]"
+              }`}>
                 No saved items match.
               </p>
               {filter !== "all" && (
                 <button
                   onClick={() => setFilter("all")}
-                  className="text-[11px] font-mono text-[#444] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                  className={`text-[11px] font-mono transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2 ${
+                    isLight ? "text-slate-500 hover:text-slate-700" : "text-[#444] hover:text-[#888]"
+                  }`}
                 >
                   Clear filter
                 </button>

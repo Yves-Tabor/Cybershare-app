@@ -115,6 +115,7 @@ function Toast({ message, visible }) {
 // ─── Create event modal ───────────────────────────────────────────────────────
 
 function CreateEventModal({ onClose, onCreate }) {
+  const { isLight } = useTheme();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Workshop");
@@ -177,18 +178,24 @@ function CreateEventModal({ onClose, onCreate }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[540px] bg-white/10 md:bg-white/1 backdrop-blur-md rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[540px] rounded-2xl overflow-hidden shadow-2xl ${
+        isLight ? "bg-white border border-slate-200" : "bg-[#0a0a0a] border border-[#222]"
+      }`}>
         {/* Modal header */}
         <div
-          className="flex items-center justify-between border-b border-white"
+          className={`flex items-center justify-between border-b ${
+            isLight ? "border-slate-200" : "border-[#1e1e1e]"
+          }`}
           style={{ padding: "16px 24px" }}
         >
           <div
-            className="flex items-center bg-white gap-2.5 rounded-md"
+            className={`flex items-center gap-2.5 rounded-md ${
+              isLight ? "bg-slate-100" : "bg-white"
+            }`}
             style={{ padding: "10px" }}
           >
             <div className="w-6 h-6 rounded-md bg-gray border border-gray flex items-center justify-center">
@@ -208,13 +215,17 @@ function CreateEventModal({ onClose, onCreate }) {
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
-            <span className="app-title-text text-[13px] font-semibold text-[#080808]">
+            <span className={`app-title-text text-[13px] font-semibold ${
+              isLight ? "text-slate-900" : "text-[#080808]"
+            }`}>
               Post an event
             </span>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`transition-colors bg-transparent border-none cursor-pointer ${
+              isLight ? "text-slate-400 hover:text-slate-700" : "text-white hover:text-white"
+            }`}
             style={{ padding: "4px" }}
           >
             <svg
@@ -239,7 +250,9 @@ function CreateEventModal({ onClose, onCreate }) {
           style={{ padding: "24px" }}
         >
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-gray-100"
+            }`}>
               Event Title
             </label>
             <input
@@ -252,14 +265,20 @@ function CreateEventModal({ onClose, onCreate }) {
               }}
               placeholder="e.g. Sigma Rule Writing Workshop"
               maxLength={80}
-              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className={`w-full text-[13px] outline-none transition-colors ${
+                isLight
+                  ? "bg-slate-50 border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                  : "bg-transparent border-b border-silver text-white focus:border-gray placeholder:text-silver"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
           <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-gray-100"
+            }`}>
               Description
             </label>
             <textarea
@@ -267,14 +286,20 @@ function CreateEventModal({ onClose, onCreate }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What should people expect?"
               rows={3}
-              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors resize-none placeholder:text-silver"
+              className={`w-full text-[13px] outline-none transition-colors resize-none ${
+                isLight
+                  ? "bg-slate-50 border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                  : "bg-transparent border-b border-silver text-white focus:border-gray placeholder:text-silver"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
           <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2.5 ${
+              isLight ? "text-slate-700" : "text-gray-100"
+            }`}>
               Category
             </label>
             <div className="flex flex-wrap gap-2">
@@ -285,7 +310,9 @@ function CreateEventModal({ onClose, onCreate }) {
                   className={`rounded-lg text-[11px] font-mono border transition-all cursor-pointer ${
                     category === cat.label
                       ? "border-current font-semibold"
-                      : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
+                      : isLight
+                        ? "border-slate-300 text-slate-600 bg-slate-50 hover:border-slate-400 hover:text-slate-800"
+                        : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
                   }`}
                   style={{
                     paddingLeft: "12px",
@@ -309,7 +336,9 @@ function CreateEventModal({ onClose, onCreate }) {
           <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2.5">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2.5 ${
+              isLight ? "text-slate-700" : "text-gray-100"
+            }`}>
               Format
             </label>
             <div className="flex gap-2">
@@ -326,7 +355,9 @@ function CreateEventModal({ onClose, onCreate }) {
                   className={`flex-1 rounded-lg text-[11.5px] font-mono border transition-all cursor-pointer ${
                     isOnline === opt.k
                       ? "border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/10"
-                      : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
+                      : isLight
+                        ? "border-slate-300 text-slate-600 bg-slate-50 hover:border-slate-400 hover:text-slate-800"
+                        : "border-silver text-silver bg-transparent hover:border-white hover:text-white"
                   }`}
                   style={{ padding: "8px 12px" }}
                 >
@@ -338,7 +369,9 @@ function CreateEventModal({ onClose, onCreate }) {
           <br />
 
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-gray-100"
+            }`}>
               {isOnline ? "Link or platform" : "Venue or address"}
             </label>
             <input
@@ -353,7 +386,11 @@ function CreateEventModal({ onClose, onCreate }) {
                   ? "Discord, Zoom, Twitch…"
                   : "Street address or venue name"
               }
-              className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors placeholder:text-silver"
+              className={`w-full text-[13px] outline-none transition-colors ${
+                isLight
+                  ? "bg-slate-50 border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                  : "bg-transparent border-b border-silver text-white focus:border-gray placeholder:text-silver"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -361,7 +398,9 @@ function CreateEventModal({ onClose, onCreate }) {
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}>
                 Date
               </label>
               <input
@@ -372,12 +411,18 @@ function CreateEventModal({ onClose, onCreate }) {
                   setDate(e.target.value);
                   setFormError("");
                 }}
-                className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
-                style={{ padding: "12px 16px", colorScheme: "dark" }}
+                className={`w-full text-[13px] outline-none transition-colors ${
+                  isLight
+                    ? "bg-slate-50 border-b border-slate-300 text-slate-900 focus:border-slate-500"
+                    : "bg-transparent border-b border-silver text-white focus:border-gray"
+                }`}
+                style={{ padding: "12px 16px", colorScheme: isLight ? "light" : "dark" }}
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-gray-100 mb-2">
+              <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-gray-100"
+              }`}>
                 Time
               </label>
               <input
@@ -387,18 +432,26 @@ function CreateEventModal({ onClose, onCreate }) {
                   setTime(e.target.value);
                   setFormError("");
                 }}
-                className="w-full bg-transparent border-b border-silver text-[13px] text-white outline-none focus:border-gray transition-colors"
-                style={{ padding: "12px 16px", colorScheme: "dark" }}
+                className={`w-full text-[13px] outline-none transition-colors ${
+                  isLight
+                    ? "bg-slate-50 border-b border-slate-300 text-slate-900 focus:border-slate-500"
+                    : "bg-transparent border-b border-silver text-white focus:border-gray"
+                }`}
+                style={{ padding: "12px 16px", colorScheme: isLight ? "light" : "dark" }}
               />
             </div>
           </div>
 
           {/* Preview */}
           <div
-            className="border border-gray rounded-xl bg-gray"
+            className={`border rounded-xl ${
+              isLight ? "border-slate-200 bg-slate-50" : "border-gray bg-gray"
+            }`}
             style={{ padding: "16px" }}
           >
-            <p className="text-[9.5px] font-mono text-silver tracking-[0.15em] uppercase mb-3">
+            <p className={`text-[9.5px] font-mono tracking-[0.15em] uppercase mb-3 ${
+              isLight ? "text-slate-500" : "text-silver"
+            }`}>
               Preview
             </p>
             <div className="flex items-start gap-3">
@@ -415,13 +468,17 @@ function CreateEventModal({ onClose, onCreate }) {
                 >
                   {previewMonth}
                 </span>
-                <span className="text-[14px] font-bold text-white leading-none mt-0.5">
+                <span className={`text-[14px] font-bold leading-none mt-0.5 ${
+                  isLight ? "text-slate-900" : "text-white"
+                }`}>
                   {previewDay}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="app-title-text text-[13px] font-semibold text-white truncate">
+                  <p className={`app-title-text text-[13px] font-semibold truncate ${
+                    isLight ? "text-slate-900" : "text-white"
+                  }`}>
                     {title || "Event title"}
                   </p>
                   <span
@@ -435,7 +492,9 @@ function CreateEventModal({ onClose, onCreate }) {
                     {category}
                   </span>
                 </div>
-                <p className="text-[12px] text-silver leading-relaxed line-clamp-2">
+                <p className={`text-[12px] leading-relaxed line-clamp-2 ${
+                  isLight ? "text-slate-600" : "text-silver"
+                }`}>
                   {description || "Your description will appear here."}
                 </p>
               </div>
@@ -443,25 +502,31 @@ function CreateEventModal({ onClose, onCreate }) {
           </div>
 
           {formError && (
-            <p className="text-[11px] text-white font-mono">{formError}</p>
+            <p className="text-[11px] text-[#E24B4A] font-mono">{formError}</p>
           )}
         </div>
 
         {/* Modal footer */}
         <div
-          className="flex justify-end gap-2.5 border-t border-white bg-white/10"
+          className={`flex justify-end gap-2.5 border-t ${
+            isLight ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/10"
+          }`}
           style={{ padding: "16px 24px" }}
         >
           <button
             onClick={onClose}
-            className="bg-transparent border border-white rounded-lg text-[12px] text-white hover:text-silver transition-colors cursor-pointer"
+            className={`border rounded-lg text-[12px] transition-colors cursor-pointer ${
+              isLight ? "border-slate-300 text-slate-700 hover:bg-slate-200" : "bg-transparent border-white text-white hover:text-silver"
+            }`}
             style={{ padding: "8px 16px" }}
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+            className={`flex items-center gap-1.5 rounded-lg text-[12px] font-semibold cursor-pointer transition-opacity border-none ${
+              isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-[#080808] text-white hover:opacity-90"
+            }`}
             style={{ padding: "8px 16px" }}
           >
             <svg
@@ -487,6 +552,7 @@ function CreateEventModal({ onClose, onCreate }) {
 // ─── Event card (events list) ─────────────────────────────────────────────────
 
 function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
+  const { isLight } = useTheme();
   const canDelete =
     (currentUser?.id && event.hostId && Number(currentUser.id) === Number(event.hostId)) ||
     (currentUser?.username && event.host && currentUser.username.toLowerCase() === event.host.toLowerCase()) ||
@@ -494,7 +560,11 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
     currentUser?.role === "moderator";
   return (
     <div
-      className="border-2 border-[#1c1c1c] rounded-2xl hover:border-[#242424] transition-colors"
+      className={`border rounded-2xl transition-colors ${
+        isLight
+          ? "border-slate-200 bg-white hover:border-slate-300 shadow-sm"
+          : "border-2 border-[#1c1c1c] hover:border-[#242424]"
+      }`}
       style={{ padding: "20px" }}
     >
       <div className="flex items-start gap-4">
@@ -511,14 +581,18 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
           >
             {shortMonth(event.date)}
           </span>
-          <span className="text-[16px] font-bold text-white leading-none mt-0.5">
+          <span className={`text-[16px] font-bold leading-none mt-0.5 ${
+            isLight ? "text-slate-900" : "text-white"
+          }`}>
             {dayNum(event.date)}
           </span>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="app-title-text text-[14px] font-semibold text-white">
+            <span className={`app-title-text text-[14px] font-semibold ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
               {event.title}
             </span>
             <span
@@ -533,11 +607,13 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] text-[#555] font-mono mb-2.5 flex-wrap">
+          <div className={`flex items-center gap-2 text-[11px] font-mono mb-2.5 flex-wrap ${
+            isLight ? "text-slate-500" : "text-[#555]"
+          }`}>
             <span>
               {formatShort(event.date)} · {formatTime(event.time)}
             </span>
-            <span className="text-[#222]">·</span>
+            <span className={isLight ? "text-slate-300" : "text-[#222]"}>·</span>
             <span className="flex items-center gap-1.5">
               {event.isOnline ? (
                 <svg
@@ -573,7 +649,9 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
             </span>
           </div>
 
-          <p className="text-[12.5px] text-[#555] leading-relaxed mb-3.5 line-clamp-2">
+          <p className={`text-[12.5px] leading-relaxed mb-3.5 line-clamp-2 ${
+            isLight ? "text-slate-600" : "text-[#555]"
+          }`}>
             {event.description}
           </p>
 
@@ -584,7 +662,9 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
                 color={avatarColor(event.host)}
                 className="w-5 h-5 text-[8px]"
               />
-              <span className="text-[11px] text-[#444] font-mono truncate">
+              <span className={`text-[11px] font-mono truncate ${
+                isLight ? "text-slate-500" : "text-[#444]"
+              }`}>
                 Hosted by {event.host} · {event.attendees} going
               </span>
             </div>
@@ -593,7 +673,7 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
               {canDelete && (
                 <button
                   onClick={() => onDelete(event.id)}
-                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-red-500/10 border-red-500/40 text-red-400 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-300"
+                  className="flex items-center gap-1.5 text-[11px] font-mono rounded-lg border transition-all cursor-pointer flex-shrink-0 bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20 hover:border-red-500/60"
                   style={{ padding: "6px 12px" }}
                   title="Delete your event"
                 >
@@ -658,9 +738,12 @@ function EventCard({ event, onToggleCalendar, onDelete, currentUser }) {
 // ─── Mini row inside the calendar day panel ───────────────────────────────────
 
 function MiniEventRow({ event, onToggleCalendar }) {
+  const { isLight } = useTheme();
   return (
     <div
-      className="flex items-center gap-3 bg-[#0a0a0a] border border-[#161616] rounded-xl"
+      className={`flex items-center gap-3 border rounded-xl ${
+        isLight ? "bg-slate-50 border-slate-200" : "bg-[#0a0a0a] border-[#161616]"
+      }`}
       style={{ padding: "12px 14px" }}
     >
       <div
@@ -668,16 +751,22 @@ function MiniEventRow({ event, onToggleCalendar }) {
         style={{ background: event.categoryColor }}
       />
       <div className="flex-1 min-w-0">
-        <p className="app-title-text text-[12.5px] font-semibold text-white truncate">
+        <p className={`app-title-text text-[12.5px] font-semibold truncate ${
+          isLight ? "text-slate-900" : "text-white"
+        }`}>
           {event.title}
         </p>
-        <p className="text-[10.5px] text-[#444] font-mono mt-0.5 truncate">
+        <p className={`text-[10.5px] font-mono mt-0.5 truncate ${
+          isLight ? "text-slate-500" : "text-[#444]"
+        }`}>
           {formatTime(event.time)} · {event.location}
         </p>
       </div>
       <button
         onClick={() => onToggleCalendar(event.id)}
-        className="text-[10px] font-mono text-[#333] hover:text-[#E24B4A] transition-colors flex-shrink-0 bg-transparent border-none cursor-pointer"
+        className={`text-[10px] font-mono transition-colors flex-shrink-0 bg-transparent border-none cursor-pointer ${
+          isLight ? "text-slate-400 hover:text-red-500" : "text-[#333] hover:text-[#E24B4A]"
+        }`}
       >
         Remove
       </button>
@@ -717,6 +806,7 @@ function getDots(dayEvents) {
 }
 
 function CalendarView({ events, onToggleCalendar }) {
+  const { isLight } = useTheme();
   const now = new Date();
   const [cursor, setCursor] = useState({
     year: now.getFullYear(),
@@ -757,13 +847,17 @@ function CalendarView({ events, onToggleCalendar }) {
       style={{ paddingTop: "30px" }}
     >
       <div
-        className="border-2 border-[#1c1c1c] rounded-2xl flex-shrink-0 w-full md:w-[380px]"
+        className={`border rounded-2xl flex-shrink-0 w-full md:w-[380px] ${
+          isLight ? "border-slate-200 bg-white shadow-sm" : "border-2 border-[#1c1c1c]"
+        }`}
         style={{ padding: "20px" }}
       >
         <div className="flex items-center justify-between mb-5">
           <button
             onClick={prevMonth}
-            className="text-white hover:text-white transition-colors bg-transparent border-none cursor-pointer hover:bg-[#141414] rounded-lg"
+            className={`transition-colors bg-transparent border-none cursor-pointer rounded-lg ${
+              isLight ? "text-slate-600 hover:bg-slate-100" : "text-white hover:bg-[#141414]"
+            }`}
             style={{ padding: "6px" }}
           >
             <svg
@@ -780,13 +874,17 @@ function CalendarView({ events, onToggleCalendar }) {
             </svg>
           </button>
           <div className="flex items-center gap-3">
-            <h2 className="text-[14px] font-semibold text-white tracking-tight">
+            <h2 className={`text-[14px] font-semibold tracking-tight ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
               {monthLabel(cursor.year, cursor.month)}
             </h2>
             {!isCurrentMonth && (
               <button
                 onClick={goToday}
-                className="text-[10px] font-mono text-silver hover:text-white transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2"
+                className={`text-[10px] font-mono transition-colors bg-transparent border-none cursor-pointer underline underline-offset-2 ${
+                  isLight ? "text-slate-500 hover:text-slate-900" : "text-silver hover:text-white"
+                }`}
                 style={{ padding: 0 }}
               >
                 Today
@@ -795,7 +893,9 @@ function CalendarView({ events, onToggleCalendar }) {
           </div>
           <button
             onClick={nextMonth}
-            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer hover:bg-[#141414] rounded-lg"
+            className={`transition-colors bg-transparent border-none cursor-pointer rounded-lg ${
+              isLight ? "text-slate-600 hover:bg-slate-100" : "text-[#444] hover:bg-[#141414]"
+            }`}
             style={{ padding: "6px" }}
           >
             <svg
@@ -817,7 +917,9 @@ function CalendarView({ events, onToggleCalendar }) {
           {WEEKDAYS.map((d) => (
             <div
               key={d}
-              className="text-center text-[9px] font-mono text-silver tracking-wider"
+              className={`text-center text-[9px] font-mono tracking-wider ${
+                isLight ? "text-slate-400" : "text-silver"
+              }`}
             >
               {d}
             </div>
@@ -836,21 +938,23 @@ function CalendarView({ events, onToggleCalendar }) {
                 onClick={() => handleCellClick(cell)}
                 className={`relative aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border transition-all cursor-pointer ${
                   isSelected
-                    ? "border-[#7F77DD]/60 bg-[#7F77DD]/10"
+                    ? isLight ? "border-indigo-500/60 bg-indigo-50" : "border-[#7F77DD]/60 bg-[#7F77DD]/10"
                     : isToday
-                      ? "border-[#333] bg-[#0d0d0d]"
-                      : "border-[#141414] hover:border-[#222] hover:bg-[#0a0a0a]"
+                      ? isLight ? "border-slate-400 bg-slate-100" : "border-[#333] bg-[#0d0d0d]"
+                      : isLight
+                        ? "border-slate-100 hover:border-slate-300 hover:bg-slate-50 bg-white"
+                        : "border-[#141414] hover:border-[#222] hover:bg-[#0a0a0a]"
                 }`}
               >
                 <span
                   className={`text-[11.5px] font-mono ${
                     !cell.inMonth
-                      ? "text-[#222]"
+                      ? isLight ? "text-slate-300" : "text-[#222]"
                       : isToday
-                        ? "text-white font-bold"
+                        ? isLight ? "text-slate-900 font-bold" : "text-white font-bold"
                         : isSelected
-                          ? "text-[#bbb]"
-                          : "text-[#888]"
+                          ? isLight ? "text-indigo-900" : "text-[#bbb]"
+                          : isLight ? "text-slate-600" : "text-[#888]"
                   }`}
                 >
                   {cell.day}
@@ -874,19 +978,25 @@ function CalendarView({ events, onToggleCalendar }) {
       </div>
 
       <div className="flex-1 flex flex-col">
-        <p className="text-[10.5px] font-mono text-silver text-center mb-5 md:text-left">
+        <p className={`text-[10.5px] font-mono text-center mb-5 md:text-left ${
+          isLight ? "text-slate-500" : "text-silver"
+        }`}>
           Showing events you've added · switch to Events to add more
         </p>
 
         <div
-          className="bg-[#080808] border border-[#1c1c1c] rounded-2xl flex-1"
+          className={`border rounded-2xl flex-1 ${
+            isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#080808] border-[#1c1c1c]"
+          }`}
           style={{ padding: "20px" }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <p className="text-[9.5px] font-mono font-bold text-silver tracking-[0.18em] uppercase whitespace-nowrap">
+            <p className={`text-[9.5px] font-mono font-bold tracking-[0.18em] uppercase whitespace-nowrap ${
+              isLight ? "text-slate-500" : "text-silver"
+            }`}>
               {selectedDay ? formatLong(selectedDay) : "Select a day"}
             </p>
-            <div className="flex-1 h-px bg-white" />
+            <div className={`flex-1 h-px ${isLight ? "bg-slate-200" : "bg-white"}`} />
           </div>
 
           {!selectedDay && (

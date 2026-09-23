@@ -247,6 +247,7 @@ function Toast({ message, visible, isLight = false }) {
 // ─── Small UI atoms ───────────────────────────────────────────────────────────
 
 function Toggle({ checked, onChange, disabled = false }) {
+  const { isLight } = useTheme();
   return (
     <button
       type="button"
@@ -254,7 +255,9 @@ function Toggle({ checked, onChange, disabled = false }) {
       aria-checked={checked}
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
-      className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors cursor-pointer border-none flex-shrink-0 ${checked ? "bg-[#7F77DD]" : "bg-[#1e1e1e]"} ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+      className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors cursor-pointer border-none flex-shrink-0 ${
+        checked ? "bg-[#7F77DD]" : isLight ? "bg-slate-300" : "bg-[#1e1e1e]"
+      } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
     >
       <span
         className={`inline-block w-3.5 h-3.5 bg-white rounded-full transition-transform ${checked ? "translate-x-[18px]" : "translate-x-[3px]"}`}
@@ -264,6 +267,7 @@ function Toggle({ checked, onChange, disabled = false }) {
 }
 
 function PillSelect({ options, value, onChange }) {
+  const { isLight } = useTheme();
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((opt) => (
@@ -273,7 +277,9 @@ function PillSelect({ options, value, onChange }) {
           className={`rounded-lg text-[11.5px] font-mono border transition-all cursor-pointer ${
             value === opt.value
               ? "bg-[#7F77DD]/10 border-[#7F77DD]/40 text-[#7F77DD] font-semibold"
-              : "border-[#1e1e1e] text-[#555] bg-transparent hover:border-[#2a2a2a] hover:text-[#888]"
+              : isLight
+                ? "border-slate-300 text-slate-600 bg-slate-50 hover:border-slate-400 hover:text-slate-800"
+                : "border-[#1e1e1e] text-[#555] bg-transparent hover:border-[#2a2a2a] hover:text-[#888]"
           }`}
           style={{
             paddingLeft: "14px",
@@ -290,12 +296,17 @@ function PillSelect({ options, value, onChange }) {
 }
 
 function SettingRow({ label, description, control }) {
+  const { isLight } = useTheme();
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-white/10 last:border-b-0">
+    <div className={`flex items-center justify-between gap-4 py-3 border-b last:border-b-0 ${
+      isLight ? "border-slate-200" : "border-white/10"
+    }`}>
       <div className="min-w-0">
-        <p className="text-[13px] text-inherit">{label}</p>
+        <p className={`text-[13px] ${isLight ? "text-slate-900" : "text-inherit"}`}>{label}</p>
         {description && (
-          <p className="text-[11.5px] text-[#888] mt-0.5 leading-relaxed">
+          <p className={`text-[11.5px] mt-0.5 leading-relaxed ${
+            isLight ? "text-slate-500" : "text-[#888]"
+          }`}>
             {description}
           </p>
         )}
@@ -306,11 +317,14 @@ function SettingRow({ label, description, control }) {
 }
 
 function SaveButton({ onClick, children = "Save changes", loading = false }) {
+  const { isLight } = useTheme();
   return (
     <button
       onClick={onClick}
       disabled={loading}
-      className="flex items-center gap-1.5 bg-[#080808] text-white rounded-lg text-[11.5px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-50 disabled:cursor-not-allowed"
+      className={`flex items-center gap-1.5 rounded-lg text-[11.5px] font-semibold cursor-pointer transition-opacity border-none disabled:opacity-50 disabled:cursor-not-allowed ${
+        isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-[#080808] text-white hover:opacity-90"
+      }`}
       style={{
         paddingLeft: "14px",
         paddingRight: "14px",
@@ -324,6 +338,7 @@ function SaveButton({ onClick, children = "Save changes", loading = false }) {
 }
 
 function CopyButton({ value, label = "Copy" }) {
+  const { isLight } = useTheme();
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -337,7 +352,9 @@ function CopyButton({ value, label = "Copy" }) {
   return (
     <button
       onClick={copy}
-      className="flex items-center gap-1.5 text-[11px] font-mono text-[#555] hover:text-[#999] transition-colors bg-transparent border-none cursor-pointer flex-shrink-0"
+      className={`flex items-center gap-1.5 text-[11px] font-mono transition-colors bg-transparent border-none cursor-pointer flex-shrink-0 ${
+        isLight ? "text-slate-500 hover:text-slate-800" : "text-[#555] hover:text-[#999]"
+      }`}
     >
       {copied ? (
         <>
@@ -364,18 +381,31 @@ function SectionCard({
   tone = "default",
   children,
 }) {
+  const { isLight } = useTheme();
   const isDanger = tone === "danger";
   const pillBgClass = isDanger
     ? "bg-[#E24B4A] text-white"
-    : "bg-white text-[#080808]";
+    : isLight
+      ? "bg-slate-100 text-slate-900"
+      : "bg-white text-[#080808]";
   const iconBoxClass = isDanger
     ? "bg-[#2e1a1a] border border-[#E24B4A]/30 text-[#E24B4A]"
-    : "bg-gray-100 border border-gray-200 text-[#080808]";
+    : isLight
+      ? "bg-white border border-slate-200 text-slate-800"
+      : "bg-gray-100 border border-gray-200 text-[#080808]";
 
   return (
-    <div className="bg-white/10 md:bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden mb-5">
+    <div className={`rounded-2xl overflow-hidden mb-5 ${
+      isLight
+        ? isDanger ? "bg-red-50/50 border border-red-200" : "bg-white border border-slate-200 shadow-sm"
+        : "bg-white/10 md:bg-white/5 backdrop-blur-md border border-white/10"
+    }`}>
       <div
-        className={`flex items-center justify-between ${isDanger ? "border-b border-[#E24B4A]/30" : "border-b border-white/10"}`}
+        className={`flex items-center justify-between ${
+          isDanger
+            ? "border-b border-[#E24B4A]/30"
+            : isLight ? "border-b border-slate-200" : "border-b border-white/10"
+        }`}
         style={{ padding: "16px 24px" }}
       >
         <div
@@ -387,7 +417,9 @@ function SectionCard({
           >
             {icon}
           </div>
-          <span className="app-title-text text-[13px] font-semibold pr-2 tracking-tight">
+          <span className={`app-title-text text-[13px] font-semibold pr-2 tracking-tight ${
+            isLight ? "text-slate-900" : "text-white"
+          }`}>
             {title}
           </span>
         </div>
@@ -395,7 +427,9 @@ function SectionCard({
       </div>
       <div style={{ padding: "24px" }}>
         {description && (
-          <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-4">
+          <p className={`text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-4 ${
+            isLight ? "text-slate-500" : "text-[#888]"
+          }`}>
             {description}
           </p>
         )}
@@ -406,13 +440,20 @@ function SectionCard({
 }
 
 function NavItem({ section, active, onClick }) {
+  const { isLight } = useTheme();
   const dangerActive = "bg-[#2e1a1a] border-[#E24B4A]/40 text-[#E24B4A]";
   const dangerInactive =
-    "bg-transparent border-transparent text-[#7a3a3a] hover:text-[#E24B4A]";
+    isLight
+      ? "bg-transparent border-transparent text-red-600 hover:text-red-700 hover:bg-red-50"
+      : "bg-transparent border-transparent text-[#7a3a3a] hover:text-[#E24B4A]";
   const normalActive =
-    "bg-white/10 border border-white/20 text-white";
+    isLight
+      ? "bg-slate-900 text-white font-semibold border-slate-900 shadow-sm"
+      : "bg-white/10 border border-white/20 text-white";
   const normalInactive =
-    "bg-transparent border-transparent text-[#888] hover:text-[#ccc]";
+    isLight
+      ? "bg-transparent border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+      : "bg-transparent border-transparent text-[#888] hover:text-[#ccc]";
   const cls = section.danger
     ? active
       ? dangerActive
@@ -432,6 +473,7 @@ function NavItem({ section, active, onClick }) {
 }
 
 function SessionRow({ session, onRevoke, revoking }) {
+  const { isLight } = useTheme();
   const ua = session.device || "";
   const isMobile =
     /iphone|android|ipad/i.test(ua);
@@ -443,20 +485,24 @@ function SessionRow({ session, onRevoke, revoking }) {
   const browserLabel = parts[1] || "";
 
   return (
-    <div className={`flex items-center justify-between gap-3 py-3.5 border-b border-white/10 last:border-b-0 ${
+    <div className={`flex items-center justify-between gap-3 py-3.5 border-b last:border-b-0 ${
+      isLight ? "border-slate-200" : "border-white/10"
+    } ${
       session.current ? "opacity-100" : ""
     }`}>
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
           session.current
             ? "bg-[#7F77DD]/10 border border-[#7F77DD]/30 text-[#7F77DD]"
-            : "bg-white/5 border border-white/10 text-white"
+            : isLight
+              ? "bg-slate-100 border border-slate-200 text-slate-700"
+              : "bg-white/5 border border-white/10 text-white"
         }`}>
           <Icon />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[12.5px] text-[#ccc] font-medium">
+            <p className={`text-[12.5px] font-medium ${isLight ? "text-slate-800" : "text-[#ccc]"}`}>
               {osLabel}{browserLabel ? ` · ${browserLabel}` : ""}
             </p>
             {session.current && (
@@ -468,7 +514,7 @@ function SessionRow({ session, onRevoke, revoking }) {
               </span>
             )}
           </div>
-          <p className="text-[11px] text-[#444] font-mono mt-0.5">
+          <p className={`text-[11px] font-mono mt-0.5 ${isLight ? "text-slate-400" : "text-[#444]"}`}>
             {session.ip} · Last active {timeAgo(session.ts)}
           </p>
         </div>
@@ -477,7 +523,11 @@ function SessionRow({ session, onRevoke, revoking }) {
         <button
           onClick={() => onRevoke(session)}
           disabled={revoking}
-          className="text-[11px] font-mono rounded-lg border border-[#222] text-[#666] hover:border-[#E24B4A]/50 hover:text-[#E24B4A] transition-all cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`text-[11px] font-mono rounded-lg border transition-all cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${
+            isLight
+              ? "border-slate-300 text-slate-500 hover:border-red-400 hover:text-red-500"
+              : "border-[#222] text-[#666] hover:border-[#E24B4A]/50 hover:text-[#E24B4A]"
+          }`}
           style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "6px" }}
         >
           Revoke
@@ -499,6 +549,7 @@ function ConfirmModal({
   onClose,
   children,
 }) {
+  const { isLight } = useTheme();
   const [input, setInput] = useState("");
   const inputRef = useRef(null);
   const ready = !requireText || input === requireText;
@@ -514,13 +565,15 @@ function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[420px] rounded-2xl overflow-hidden shadow-2xl ${
+        isLight ? "bg-white border border-slate-200" : "bg-[#0c0c0c] border border-[#1e1e1e]"
+      }`}>
         <div
-          className="border-b border-[#141414]"
+          className={`border-b ${isLight ? "border-slate-200" : "border-[#141414]"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -528,7 +581,7 @@ function ConfirmModal({
             paddingBottom: "16px",
           }}
         >
-          <p className="text-[13px] font-semibold text-white">{title}</p>
+          <p className={`text-[13px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{title}</p>
         </div>
         <div
           style={{
@@ -538,10 +591,12 @@ function ConfirmModal({
             paddingBottom: "20px",
           }}
         >
-          <p className="text-[12.5px] text-[#888] leading-relaxed">{message}</p>
+          <p className={`text-[12.5px] leading-relaxed ${isLight ? "text-slate-600" : "text-[#888]"}`}>{message}</p>
           {requireText && (
             <div className="mt-4">
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+              <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-[#555]"
+              }`}>
                 Type <span className="text-[#E24B4A]">{requireText}</span> to
                 confirm
               </label>
@@ -550,7 +605,11 @@ function ConfirmModal({
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors font-mono"
+                className={`w-full rounded-xl text-[13px] outline-none transition-colors font-mono ${
+                  isLight
+                    ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                    : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#ddd] focus:border-[#2a2a2a]"
+                }`}
                 style={{
                   paddingLeft: "16px",
                   paddingRight: "16px",
@@ -563,7 +622,7 @@ function ConfirmModal({
           {children}
         </div>
         <div
-          className="flex justify-end gap-2.5 border-t border-[#141414]"
+          className={`flex justify-end gap-2.5 border-t ${isLight ? "border-slate-200" : "border-[#141414]"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -573,7 +632,9 @@ function ConfirmModal({
         >
           <button
             onClick={onClose}
-            className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+            className={`border rounded-lg text-[12px] transition-colors cursor-pointer ${
+              isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "bg-transparent border border-[#222] text-[#666] hover:text-white hover:border-[#333]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -586,7 +647,13 @@ function ConfirmModal({
           <button
             onClick={onConfirm}
             disabled={!ready}
-            className={`rounded-lg text-[12px] font-semibold cursor-pointer border-none transition-opacity disabled:opacity-30 disabled:cursor-not-allowed ${danger ? "bg-[#E24B4A] text-white hover:opacity-90" : "bg-white text-[#080808] hover:opacity-90"}`}
+            className={`rounded-lg text-[12px] font-semibold cursor-pointer border-none transition-opacity disabled:opacity-30 disabled:cursor-not-allowed ${
+              danger
+                ? "bg-[#E24B4A] text-white hover:opacity-90"
+                : isLight
+                  ? "bg-slate-900 text-white hover:bg-slate-800"
+                  : "bg-white text-[#080808] hover:opacity-90"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -603,6 +670,7 @@ function ConfirmModal({
 }
 
 function CreateKeyModal({ onClose, onCreate }) {
+  const { isLight } = useTheme();
   const [name, setName] = useState("");
   const [scope, setScope] = useState("read");
   const [step, setStep] = useState("form"); // "form" | "reveal"
@@ -632,15 +700,17 @@ function CreateKeyModal({ onClose, onCreate }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={(e) =>
         e.target === e.currentTarget && step === "form" && onClose()
       }
       style={{ padding: "16px" }}
     >
-      <div className="w-full max-w-[460px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+      <div className={`w-full max-w-[460px] rounded-2xl overflow-hidden shadow-2xl ${
+        isLight ? "bg-white border border-slate-200" : "bg-[#0c0c0c] border border-[#1e1e1e]"
+      }`}>
         <div
-          className="flex items-center justify-between border-b border-[#141414]"
+          className={`flex items-center justify-between border-b ${isLight ? "border-slate-200" : "border-[#141414]"}`}
           style={{
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -648,12 +718,14 @@ function CreateKeyModal({ onClose, onCreate }) {
             paddingBottom: "16px",
           }}
         >
-          <p className="text-[13px] font-semibold text-white">
+          <p className={`text-[13px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
             {step === "form" ? "New API key" : "Key created"}
           </p>
           <button
             onClick={onClose}
-            className="text-[#444] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`transition-colors bg-transparent border-none cursor-pointer ${
+              isLight ? "text-slate-400 hover:text-slate-700" : "text-[#444] hover:text-white"
+            }`}
             style={{ padding: "4px" }}
           >
             <IconClose />
@@ -672,7 +744,9 @@ function CreateKeyModal({ onClose, onCreate }) {
               }}
             >
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                  isLight ? "text-slate-700" : "text-[#555]"
+                }`}>
                   Key name
                 </label>
                 <input
@@ -685,7 +759,11 @@ function CreateKeyModal({ onClose, onCreate }) {
                   }}
                   onKeyDown={(e) => e.key === "Enter" && create()}
                   placeholder="e.g. burp-extension"
-                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2e2e2e]"
+                  className={`w-full rounded-xl text-[13px] outline-none transition-colors ${
+                    isLight
+                      ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                      : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#ddd] focus:border-[#2a2a2a] placeholder:text-[#2e2e2e]"
+                  }`}
                   style={{
                     paddingLeft: "16px",
                     paddingRight: "16px",
@@ -700,7 +778,9 @@ function CreateKeyModal({ onClose, onCreate }) {
                 )}
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                  isLight ? "text-slate-700" : "text-[#555]"
+                }`}>
                   Scope
                 </label>
                 <PillSelect
@@ -714,7 +794,7 @@ function CreateKeyModal({ onClose, onCreate }) {
               </div>
             </div>
             <div
-              className="flex justify-end gap-2.5 border-t border-[#141414]"
+              className={`flex justify-end gap-2.5 border-t ${isLight ? "border-slate-200" : "border-[#141414]"}`}
               style={{
                 paddingLeft: "24px",
                 paddingRight: "24px",
@@ -724,7 +804,9 @@ function CreateKeyModal({ onClose, onCreate }) {
             >
               <button
                 onClick={onClose}
-                className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+                className={`border rounded-lg text-[12px] transition-colors cursor-pointer ${
+                  isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "bg-transparent border border-[#222] text-[#666] hover:text-white hover:border-[#333]"
+                }`}
                 style={{
                   paddingLeft: "16px",
                   paddingRight: "16px",
@@ -736,7 +818,9 @@ function CreateKeyModal({ onClose, onCreate }) {
               </button>
               <button
                 onClick={create}
-                className="bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
+                className={`rounded-lg text-[12px] font-semibold cursor-pointer border-none transition-opacity ${
+                  isLight ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-[#080808] hover:opacity-90"
+                }`}
                 style={{
                   paddingLeft: "16px",
                   paddingRight: "16px",
@@ -758,11 +842,13 @@ function CreateKeyModal({ onClose, onCreate }) {
                 paddingBottom: "20px",
               }}
             >
-              <p className="text-[12px] text-[#888] leading-relaxed mb-4">
+              <p className={`text-[12px] leading-relaxed mb-4 ${isLight ? "text-slate-600" : "text-[#888]"}`}>
                 Copy your key now — you won't be able to see it again.
               </p>
               <div
-                className="flex items-center justify-between gap-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl font-mono text-[12.5px] text-[#ddd]"
+                className={`flex items-center justify-between gap-2 border rounded-xl font-mono text-[12.5px] ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#ddd]"
+                }`}
                 style={{
                   paddingLeft: "14px",
                   paddingRight: "10px",
@@ -775,35 +861,9 @@ function CreateKeyModal({ onClose, onCreate }) {
               </div>
             </div>
             <div
-              className="flex justify-end border-t border-[#141414]"
-              style={{
-                paddingLeft: "24px",
-                paddingRight: "24px",
-                paddingTop: "16px",
-                paddingBottom: "16px",
-              }}
-            >
-              <button
-                onClick={onClose}
-                className="bg-white text-[#080808] rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none"
-                style={{
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                  paddingTop: "8px",
-                  paddingBottom: "8px",
-                }}
-              >
-                Done
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ProfileSection({ profile, setProfile, showToast }) {
+              className={`flex justify-end border-t ${isLight ? "border-slate-200" : "border-[#141414]"}`}
+              style={function ProfileSection({ profile, setProfile, showToast }) {
+  const { isLight } = useTheme();
   const [local, setLocal] = useState(profile);
   const [loading, setLoading] = useState(false);
 
@@ -842,7 +902,9 @@ function ProfileSection({ profile, setProfile, showToast }) {
           {local.initials}
         </div>
         <div className="flex-1">
-          <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+          <p className={`text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+            isLight ? "text-slate-500" : "text-[#555]"
+          }`}>
             Avatar color
           </p>
           <div className="flex gap-1.5 flex-wrap">
@@ -853,7 +915,7 @@ function ProfileSection({ profile, setProfile, showToast }) {
                 className="w-6 h-6 rounded-full border-2 cursor-pointer transition-transform hover:scale-110"
                 style={{
                   background: c,
-                  borderColor: local.color === c ? "#fff" : "transparent",
+                  borderColor: local.color === c ? (isLight ? "#000" : "#fff") : "transparent",
                 }}
               />
             ))}
@@ -863,7 +925,9 @@ function ProfileSection({ profile, setProfile, showToast }) {
 
       <div className="grid sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+            isLight ? "text-slate-700" : "text-[#888]"
+          }`}>
             Display name
           </label>
           <input
@@ -873,16 +937,26 @@ function ProfileSection({ profile, setProfile, showToast }) {
               setLocal((p) => ({ ...p, displayName: e.target.value }))
             }
             maxLength={40}
-            className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors placeholder:text-white/40 bg-transparent"
+            className={`w-full text-[13px] outline-none transition-colors bg-transparent ${
+              isLight
+                ? "border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                : "border-b border-white/20 text-white focus:border-white placeholder:text-white/40"
+            }`}
             style={{ padding: "12px 16px" }}
           />
         </div>
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+            isLight ? "text-slate-700" : "text-[#888]"
+          }`}>
             Handle
           </label>
           <div
-            className="flex items-center bg-white/5 border border-white/10 rounded-xl text-[13px] text-[#ccc]"
+            className={`flex items-center rounded-xl text-[13px] ${
+              isLight
+                ? "bg-slate-100 border border-slate-200 text-slate-800"
+                : "bg-white/5 border border-white/10 text-[#ccc]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -896,7 +970,9 @@ function ProfileSection({ profile, setProfile, showToast }) {
       </div>
 
       <div className="mb-5">
-        <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+        <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+          isLight ? "text-slate-700" : "text-[#888]"
+        }`}>
           Bio
         </label>
         <textarea
@@ -906,16 +982,24 @@ function ProfileSection({ profile, setProfile, showToast }) {
           }
           rows={3}
           placeholder="Offensive security, occasional CTF player."
-          className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors resize-none placeholder:text-white/40 bg-transparent"
+          className={`w-full text-[13px] outline-none transition-colors resize-none bg-transparent ${
+            isLight
+              ? "border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+              : "border-b border-white/20 text-white focus:border-white placeholder:text-white/40"
+          }`}
           style={{ padding: "12px 16px" }}
         />
-        <p className="text-[10.5px] font-mono text-[#888] mt-1.5 text-right">
+        <p className={`text-[10.5px] font-mono mt-1.5 text-right ${
+          isLight ? "text-slate-400" : "text-[#888]"
+        }`}>
           {local.bio.length}/160
         </p>
       </div>
 
       <div
-        className="flex justify-end pt-3 border-t border-white/20"
+        className={`flex justify-end pt-3 border-t ${
+          isLight ? "border-slate-200" : "border-white/20"
+        }`}
         style={{ paddingBlock: "10px" }}
       >
         <SaveButton onClick={save} loading={loading} />
@@ -932,6 +1016,7 @@ function SecuritySection({
   profile,
   setProfile,
 }) {
+  const { isLight } = useTheme();
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
@@ -992,7 +1077,9 @@ function SecuritySection({
         <div className="grid sm:grid-cols-3 gap-4 mb-4">
           {profile?.hasPassword !== false && (
             <div>
-              <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+              <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                isLight ? "text-slate-700" : "text-[#888]"
+              }`}>
                 Current
               </label>
               <input
@@ -1002,13 +1089,19 @@ function SecuritySection({
                   setPw((p) => ({ ...p, current: e.target.value }));
                   setPwError("");
                 }}
-                className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors placeholder:text-white/40 bg-transparent"
+                className={`w-full text-[13px] outline-none transition-colors bg-transparent ${
+                  isLight
+                    ? "border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                    : "border-b border-white/20 text-white focus:border-white placeholder:text-white/40"
+                }`}
                 style={{ padding: "12px 16px" }}
               />
             </div>
           )}
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-[#888]"
+            }`}>
               New
             </label>
             <input
@@ -1018,12 +1111,18 @@ function SecuritySection({
                 setPw((p) => ({ ...p, next: e.target.value }));
                 setPwError("");
               }}
-              className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors placeholder:text-white/40 bg-transparent"
+              className={`w-full text-[13px] outline-none transition-colors bg-transparent ${
+                isLight
+                  ? "border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                  : "border-b border-white/20 text-white focus:border-white placeholder:text-white/40"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
           <div>
-            <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#888] mb-2">
+            <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+              isLight ? "text-slate-700" : "text-[#888]"
+            }`}>
               Confirm
             </label>
             <input
@@ -1033,7 +1132,11 @@ function SecuritySection({
                 setPw((p) => ({ ...p, confirm: e.target.value }));
                 setPwError("");
               }}
-              className="w-full border-b border-white/20 text-[13px] text-white outline-none focus:border-white transition-colors placeholder:text-white/40 bg-transparent"
+              className={`w-full text-[13px] outline-none transition-colors bg-transparent ${
+                isLight
+                  ? "border-b border-slate-300 text-slate-900 focus:border-slate-500 placeholder:text-slate-400"
+                  : "border-b border-white/20 text-white focus:border-white placeholder:text-white/40"
+              }`}
               style={{ padding: "12px 16px" }}
             />
           </div>
@@ -1041,7 +1144,9 @@ function SecuritySection({
         {pwError && (
           <p className="text-[11px] text-[#E24B4A] font-mono mb-3">{pwError}</p>
         )}
-        <div className="flex justify-end pt-3 border-t border-[#111]">
+        <div className={`flex justify-end pt-3 border-t ${
+          isLight ? "border-slate-200" : "border-[#111]"
+        }`}>
           <SaveButton onClick={updatePassword} loading={pwLoading}>
             {profile?.hasPassword === false ? "Create password" : "Update password"}
           </SaveButton>
@@ -1065,7 +1170,7 @@ function SecuritySection({
                   showToast("Failed to revoke sessions.");
                 }
               }}
-              className="text-[10px] font-mono uppercase text-[#E24B4A]/70 hover:text-[#E24B4A] bg-transparent border-none cursor-pointer transition-colors tracking-wider"
+              className="text-[10px] font-mono uppercase text-[#E24B4A] hover:text-[#E24B4A]/80 bg-transparent border-none cursor-pointer transition-colors tracking-wider"
             >
               Revoke all others
             </button>
@@ -1074,13 +1179,13 @@ function SecuritySection({
       >
         {sessionsLoading ? (
           <div className="flex items-center gap-2 py-6 justify-center">
-            <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isLight ? "#94a3b8" : "#444"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
-            <span className="text-[12px] text-[#444] font-mono">Loading sessions...</span>
+            <span className={`text-[12px] font-mono ${isLight ? "text-slate-400" : "text-[#444]"}`}>Loading sessions...</span>
           </div>
         ) : sessions.length === 0 ? (
-          <p className="text-[12px] text-[#333] font-mono py-4 text-center">No active sessions found.</p>
+          <p className={`text-[12px] font-mono py-4 text-center ${isLight ? "text-slate-400" : "text-[#333]"}`}>No active sessions found.</p>
         ) : (
           <div>
             {sessions.map((s) => (
@@ -1113,6 +1218,7 @@ function SecuritySection({
 
 
 function DangerZoneSection({ profile, showToast }) {
+  const { isLight } = useTheme();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -1155,12 +1261,14 @@ function DangerZoneSection({ profile, showToast }) {
         tone="danger"
       >
         <div
-          className="flex items-center justify-between gap-4 border border-white/10 rounded-xl bg-white/5"
+          className={`flex items-center justify-between gap-4 border rounded-xl ${
+            isLight ? "bg-red-50/40 border-red-200" : "bg-white/5 border-white/10"
+          }`}
           style={{ padding: "16px" }}
         >
           <div>
-            <p className="text-[13px] text-white">Delete account</p>
-            <p className="text-[11.5px] text-[#888] mt-0.5">
+            <p className={`text-[13px] ${isLight ? "text-slate-900 font-semibold" : "text-white"}`}>Delete account</p>
+            <p className={`text-[11.5px] mt-0.5 ${isLight ? "text-slate-500" : "text-[#888]"}`}>
               Permanently erase your profile and all associated data.
             </p>
           </div>
@@ -1180,13 +1288,15 @@ function DangerZoneSection({ profile, showToast }) {
       </SectionCard>
       {confirmDelete && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
           style={{ padding: "16px" }}
         >
-          <div className="w-full max-w-[420px] bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl overflow-hidden">
+          <div className={`w-full max-w-[420px] rounded-2xl overflow-hidden shadow-2xl ${
+            isLight ? "bg-white border border-slate-200" : "bg-[#0c0c0c] border border-[#1e1e1e]"
+          }`}>
             <div
-              className="border-b border-[#141414]"
+              className={`border-b ${isLight ? "border-slate-200" : "border-[#141414]"}`}
               style={{
                 paddingLeft: "24px",
                 paddingRight: "24px",
@@ -1194,7 +1304,7 @@ function DangerZoneSection({ profile, showToast }) {
                 paddingBottom: "16px",
               }}
             >
-              <p className="text-[13px] font-semibold text-white">Delete account</p>
+              <p className={`text-[13px] font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>Delete account</p>
             </div>
             <div
               style={{
@@ -1204,18 +1314,24 @@ function DangerZoneSection({ profile, showToast }) {
                 paddingBottom: "20px",
               }}
             >
-              <p className="text-[12.5px] text-[#888] leading-relaxed">
+              <p className={`text-[12.5px] leading-relaxed ${isLight ? "text-slate-600" : "text-[#888]"}`}>
                 This permanently deletes your profile, posts, comments, and group memberships. This cannot be undone.
               </p>
               <div className="mt-4">
-                <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                  isLight ? "text-slate-700" : "text-[#555]"
+                }`}>
                   Type <span className="text-[#E24B4A]">{profile.handle}</span> to confirm
                 </label>
                 <input
                   type="text"
                   value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors font-mono"
+                  className={`w-full rounded-xl text-[13px] outline-none transition-colors font-mono ${
+                    isLight
+                      ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400"
+                      : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#ddd] focus:border-[#2a2a2a]"
+                  }`}
                   style={{
                     paddingLeft: "16px",
                     paddingRight: "16px",
@@ -1226,14 +1342,20 @@ function DangerZoneSection({ profile, showToast }) {
               </div>
               {profile?.hasPassword !== false && (
                 <div className="mt-4">
-                  <label className="block text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-[#555] mb-2">
+                  <label className={`block text-[10px] font-mono font-bold tracking-[0.18em] uppercase mb-2 ${
+                    isLight ? "text-slate-700" : "text-[#555]"
+                  }`}>
                     Confirm password
                   </label>
                   <input
                     type="password"
                     value={deletePassword}
                     onChange={(e) => setDeletePassword(e.target.value)}
-                    className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl text-[13px] text-[#ddd] outline-none focus:border-[#2a2a2a] transition-colors"
+                    className={`w-full rounded-xl text-[13px] outline-none transition-colors ${
+                      isLight
+                        ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400"
+                        : "bg-[#0a0a0a] border border-[#1e1e1e] text-[#ddd] focus:border-[#2a2a2a]"
+                    }`}
                     style={{
                       paddingLeft: "16px",
                       paddingRight: "16px",
@@ -1245,7 +1367,7 @@ function DangerZoneSection({ profile, showToast }) {
               )}
             </div>
             <div
-              className="flex justify-end gap-2.5 border-t border-[#141414]"
+              className={`flex justify-end gap-2.5 border-t ${isLight ? "border-slate-200" : "border-[#141414]"}`}
               style={{
                 paddingLeft: "24px",
                 paddingRight: "24px",
@@ -1255,11 +1377,38 @@ function DangerZoneSection({ profile, showToast }) {
             >
               <button
                 onClick={handleClose}
-                className="bg-transparent border border-[#222] rounded-lg text-[12px] text-[#666] hover:text-white hover:border-[#333] transition-colors cursor-pointer"
+                className={`border rounded-lg text-[12px] transition-colors cursor-pointer ${
+                  isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "bg-transparent border border-[#222] text-[#666] hover:text-white hover:border-[#333]"
+                }`}
                 style={{
                   paddingLeft: "16px",
                   paddingRight: "16px",
                   paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={!canDelete || deleteLoading}
+                className="bg-[#E24B4A] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                {deleteLoading ? "Deleting..." : "Delete permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}gTop: "8px",
                   paddingBottom: "8px",
                 }}
               >

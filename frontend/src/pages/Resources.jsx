@@ -17,6 +17,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const CATEGORIES = ["Guides", "Tools", "Cheat Sheets", "Writeups", "Other"];
 
 function UploadForm({ onPublish, onClose }) {
+  const { isLight } = useTheme();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
@@ -83,10 +84,10 @@ function UploadForm({ onPublish, onClose }) {
   }
 
   return (
-    <div className="border border-[#1c1c1c] rounded-2xl overflow-hidden bg-[#0a0a0a]">
+    <div className={`border rounded-2xl overflow-hidden ${isLight ? "border-slate-200 bg-white" : "border-[#1c1c1c] bg-[#0a0a0a]"}`}>
       {/* Form header */}
       <div
-        className="border-b border-[#222] flex items-center justify-between"
+        className={`border-b flex items-center justify-between ${isLight ? "border-slate-200" : "border-[#222]"}`}
         style={{
           paddingLeft: "28px",
           paddingRight: "28px",
@@ -94,13 +95,13 @@ function UploadForm({ onPublish, onClose }) {
           paddingBottom: "16px",
         }}
       >
-        <span className="text-[10px] font-mono font-bold tracking-[0.22em] uppercase text-silver">
+        <span className={`text-[10px] font-mono font-bold tracking-[0.22em] uppercase ${isLight ? "text-slate-500" : "text-silver"}`}>
           Publish Platform Resource
         </span>
         {onClose && (
           <button
             onClick={onClose}
-            className="text-[#666] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            className={`transition-colors bg-transparent border-none cursor-pointer ${isLight ? "text-slate-400 hover:text-slate-700" : "text-[#666] hover:text-white"}`}
             style={{ padding: "4px" }}
             aria-label="Close"
           >
@@ -132,8 +133,8 @@ function UploadForm({ onPublish, onClose }) {
       >
         {/* Title */}
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            Resource Title <span className="text-[#333]">[Entry Required]</span>
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 ${isLight ? "text-slate-800" : "text-white"}`}>
+            Resource Title <span className={isLight ? "text-slate-400" : "text-[#333]"}>[Entry Required]</span>
           </label>
           <input
             type="text"
@@ -143,7 +144,11 @@ function UploadForm({ onPublish, onClose }) {
               setError("");
             }}
             placeholder="enter resource title..."
-            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+            className={`w-full rounded-xl text-[13px] font-mono outline-none transition-colors ${
+              isLight
+                ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                : "bg-[#0a0a0a] border border-silver text-[#ccc] focus:border-[#2a2a2a] placeholder:text-[#2a2a2a]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -155,15 +160,19 @@ function UploadForm({ onPublish, onClose }) {
 
         {/* Description */}
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            Description <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 ${isLight ? "text-slate-800" : "text-white"}`}>
+            Description <span className={`${isLight ? "text-slate-500" : "text-silver"} normal-case tracking-normal font-normal`}>— optional</span>
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="brief description or details..."
             rows={3}
-            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a] resize-none"
+            className={`w-full rounded-xl text-[13px] font-mono outline-none transition-colors resize-none ${
+              isLight
+                ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                : "bg-[#0a0a0a] border border-silver text-[#ccc] focus:border-[#2a2a2a] placeholder:text-[#2a2a2a]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -175,15 +184,19 @@ function UploadForm({ onPublish, onClose }) {
 
         {/* Resource URL / Link */}
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            Resource Link / URL <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 ${isLight ? "text-slate-800" : "text-white"}`}>
+            Resource Link / URL <span className={`${isLight ? "text-slate-500" : "text-silver"} normal-case tracking-normal font-normal`}>— optional</span>
           </label>
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/resource"
-            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors placeholder:text-[#2a2a2a]"
+            className={`w-full rounded-xl text-[13px] font-mono outline-none transition-colors ${
+              isLight
+                ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400 placeholder:text-slate-400"
+                : "bg-[#0a0a0a] border border-silver text-[#ccc] focus:border-[#2a2a2a] placeholder:text-[#2a2a2a]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -195,13 +208,17 @@ function UploadForm({ onPublish, onClose }) {
 
         {/* Category */}
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 ${isLight ? "text-slate-800" : "text-white"}`}>
             Category
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-silver rounded-xl text-[13px] font-mono text-[#ccc] outline-none focus:border-[#2a2a2a] transition-colors"
+            className={`w-full rounded-xl text-[13px] font-mono outline-none transition-colors ${
+              isLight
+                ? "bg-slate-50 border border-slate-200 text-slate-900 focus:border-slate-400"
+                : "bg-[#0a0a0a] border border-silver text-[#ccc] focus:border-[#2a2a2a]"
+            }`}
             style={{
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -210,7 +227,7 @@ function UploadForm({ onPublish, onClose }) {
             }}
           >
             {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat} className="bg-[#0a0a0a] text-[#ccc]">
+              <option key={cat} value={cat} className={isLight ? "bg-white text-slate-800" : "bg-[#0a0a0a] text-[#ccc]"}>
                 {cat}
               </option>
             ))}
@@ -220,8 +237,8 @@ function UploadForm({ onPublish, onClose }) {
 
         {/* File attachments */}
         <div>
-          <label className="block text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-white mb-2">
-            File Attachments <span className="text-silver normal-case tracking-normal font-normal">— optional</span>
+          <label className={`block text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 ${isLight ? "text-slate-800" : "text-white"}`}>
+            File Attachments <span className={`${isLight ? "text-slate-500" : "text-silver"} normal-case tracking-normal font-normal`}>— optional</span>
           </label>
 
           {/* Drop zone */}
@@ -232,8 +249,10 @@ function UploadForm({ onPublish, onClose }) {
             onClick={() => fileInputRef.current?.click()}
             className={`border rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
               dragging
-                ? "border-white/50 bg-white/5"
-                : "border-dashed border-[#1e1e1e] hover:border-[#2e2e2e] bg-[#0a0a0a]"
+                ? isLight ? "border-indigo-500 bg-indigo-50/50" : "border-white/50 bg-white/5"
+                : isLight
+                  ? "border-dashed border-slate-300 hover:border-slate-400 bg-slate-50"
+                  : "border-dashed border-[#1e1e1e] hover:border-[#2e2e2e] bg-[#0a0a0a]"
             }`}
             style={{
               paddingLeft: "20px",
@@ -247,7 +266,7 @@ function UploadForm({ onPublish, onClose }) {
               height="18"
               viewBox="0 0 24 24"
               fill="none"
-              stroke={dragging ? "#7F77DD" : "#333"}
+              stroke={dragging ? "#7F77DD" : isLight ? "#94a3b8" : "#333"}
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -256,10 +275,10 @@ function UploadForm({ onPublish, onClose }) {
               <line x1="12" y1="12" x2="12" y2="21" />
               <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
             </svg>
-            <span className="text-[12px] font-mono text-silver">
+            <span className={`text-[12px] font-mono ${isLight ? "text-slate-600" : "text-silver"}`}>
               drag &amp; drop files here
             </span>
-            <span className="text-[11px] font-mono text-gray">
+            <span className={`text-[11px] font-mono ${isLight ? "text-slate-400" : "text-gray"}`}>
               or click to browse
             </span>
           </div>
@@ -277,7 +296,9 @@ function UploadForm({ onPublish, onClose }) {
               {files.map((f) => (
                 <div
                   key={f.name}
-                  className="flex items-center gap-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg"
+                  className={`flex items-center gap-3 rounded-lg border ${
+                    isLight ? "bg-slate-50 border-slate-200" : "bg-[#0a0a0a] border-[#1a1a1a]"
+                  }`}
                   style={{
                     paddingLeft: "14px",
                     paddingRight: "14px",
@@ -285,22 +306,26 @@ function UploadForm({ onPublish, onClose }) {
                     paddingBottom: "10px",
                   }}
                 >
-                  <div className="w-7 h-7 rounded-md bg-[#141414] border border-[#222] flex items-center justify-center flex-shrink-0">
-                    <span className="text-[8px] font-mono font-bold text-[#555]">
+                  <div className={`w-7 h-7 rounded-md border flex items-center justify-center flex-shrink-0 ${
+                    isLight ? "bg-white border-slate-200" : "bg-[#141414] border-[#222]"
+                  }`}>
+                    <span className={`text-[8px] font-mono font-bold ${isLight ? "text-slate-500" : "text-[#555]"}`}>
                       FILE
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-mono text-[#ccc] truncate">
+                    <p className={`text-[12px] font-mono truncate ${isLight ? "text-slate-800" : "text-[#ccc]"}`}>
                       {f.name}
                     </p>
-                    <p className="text-[10px] font-mono text-[#444] mt-0.5">
+                    <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-400" : "text-[#444]"}`}>
                       {formatBytes(f.size)} · {f.type || "unknown"}
                     </p>
                   </div>
                   <button
                     onClick={() => removeFile(f.name)}
-                    className="text-[#333] hover:text-[#888] transition-colors bg-transparent border-none cursor-pointer flex-shrink-0"
+                    className={`transition-colors bg-transparent border-none cursor-pointer flex-shrink-0 ${
+                      isLight ? "text-slate-400 hover:text-slate-700" : "text-[#333] hover:text-[#888]"
+                    }`}
                     style={{ padding: "4px" }}
                     aria-label="Remove file"
                   >
@@ -332,7 +357,11 @@ function UploadForm({ onPublish, onClose }) {
         <br />
         <button
           onClick={handlePublish}
-          className="w-full bg-[#0e0e0e] border border-white rounded-xl text-[12px] font-mono font-bold tracking-[0.18em] uppercase text-[#ccc] cursor-pointer hover:border-[#3a3a3a] hover:text-white hover:bg-[#111] transition-all active:scale-[0.99]"
+          className={`w-full rounded-xl text-[12px] font-mono font-bold tracking-[0.18em] uppercase cursor-pointer transition-all active:scale-[0.99] ${
+            isLight
+              ? "bg-slate-900 border border-slate-900 text-white hover:bg-slate-800"
+              : "bg-[#0e0e0e] border border-white text-[#ccc] hover:border-[#3a3a3a] hover:text-white hover:bg-[#111]"
+          }`}
           style={{ paddingTop: "14px", paddingBottom: "14px" }}
         >
           Publish Resource
@@ -345,6 +374,7 @@ function UploadForm({ onPublish, onClose }) {
 // ─── Resource detail modal ──────────────────────────────────────────────────────
 
 function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile, onClose }) {
+  const { isLight } = useTheme();
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
   const isOwner = Boolean(
     currentUser &&
@@ -362,24 +392,30 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       <div
-        className="w-full max-w-[520px] max-h-[88vh] overflow-y-auto bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl shadow-2xl flex flex-col"
+        className={`w-full max-w-[520px] max-h-[88vh] overflow-y-auto rounded-2xl shadow-2xl flex flex-col ${
+          isLight ? "bg-white border border-slate-200" : "bg-[#0a0a0a] border border-[#1e1e1e]"
+        }`}
         style={{ animation: 'modalPop 0.18s cubic-bezier(0.34,1.56,0.64,1) both' }}
       >
         {/* Modal header */}
         <div
-          className="flex items-center justify-between border-b border-[#161616] flex-shrink-0"
+          className={`flex items-center justify-between border-b flex-shrink-0 ${
+            isLight ? "border-slate-200" : "border-[#161616]"
+          }`}
           style={{ padding: '18px 24px' }}
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#222]"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0 border ${
+                isLight ? "text-slate-600 border-slate-300" : "text-[#888] border-[#222]"
+              }`}
               style={{ background: avatarColor }}
             >
               {resource.initials}
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-white leading-tight">{resource.author}</p>
-              <p className="text-[10px] text-[#444] font-mono mt-0.5">{resource.handle} · {resource.date}</p>
+              <p className={`text-[13px] font-semibold leading-tight ${isLight ? "text-slate-900" : "text-white"}`}>{resource.author}</p>
+              <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-500" : "text-[#444]"}`}>{resource.handle} · {resource.date}</p>
             </div>
           </div>
 
@@ -402,14 +438,16 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
                 aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark resource'}
                 style={{ padding: '6px' }}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill={isBookmarked ? '#7F77DD' : 'none'} stroke={isBookmarked ? '#7F77DD' : '#555'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.15s ease' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={isBookmarked ? '#7F77DD' : 'none'} stroke={isBookmarked ? '#7F77DD' : isLight ? '#94a3b8' : '#555'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.15s ease' }}>
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
               </button>
             )}
             <button
               onClick={onClose}
-              className="bg-transparent border-none cursor-pointer text-[#555] hover:text-white transition-colors rounded-lg"
+              className={`bg-transparent border-none cursor-pointer transition-colors rounded-lg ${
+                isLight ? "text-slate-400 hover:text-slate-700" : "text-[#555] hover:text-white"
+              }`}
               aria-label="Close"
               style={{ padding: '6px' }}
             >
@@ -433,7 +471,7 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
                       ? 'border-[#7F77DD]/50 text-[#7F77DD] bg-[#7F77DD]/5'
                       : tag === '#Resource'
                         ? 'border-[#1D9E75]/50 text-[#1D9E75] bg-[#1D9E75]/5'
-                        : 'border-[#333] text-[#666]'
+                        : isLight ? 'border-slate-300 text-slate-600' : 'border-[#333] text-[#666]'
                   }`}
                   style={{ padding: '3px 10px' }}
                 >
@@ -444,11 +482,11 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
           )}
 
           {/* Title */}
-          <h2 className="text-[17px] font-bold text-white leading-snug">{resource.title}</h2>
+          <h2 className={`text-[17px] font-bold leading-snug ${isLight ? "text-slate-900" : "text-white"}`}>{resource.title}</h2>
 
           {/* Description */}
           {resource.content && (
-            <p className="text-[13px] text-[#777] leading-relaxed">{resource.content}</p>
+            <p className={`text-[13px] leading-relaxed ${isLight ? "text-slate-600" : "text-[#777]"}`}>{resource.content}</p>
           )}
 
           {/* URL link */}
@@ -469,25 +507,29 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
           {/* File attachments */}
           {resource.files && resource.files.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[10px] font-mono font-bold text-[#444] uppercase tracking-[0.15em]">Attachments</p>
+              <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] ${isLight ? "text-slate-500" : "text-[#444]"}`}>Attachments</p>
               {resource.files.map((file) => (
                 <div
                   key={file.name}
-                  className="border border-[#1a1a1a] rounded-xl bg-[#060606]"
+                  className={`border rounded-xl ${isLight ? "border-slate-200 bg-slate-50" : "border-[#1a1a1a] bg-[#060606]"}`}
                   style={{ padding: '14px 16px' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222] flex items-center justify-center flex-shrink-0">
-                      <span className="text-[7px] font-mono font-bold text-[#555]">FILE</span>
+                    <div className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 ${
+                      isLight ? "bg-white border-slate-200" : "bg-[#141414] border-[#222]"
+                    }`}>
+                      <span className={`text-[7px] font-mono font-bold ${isLight ? "text-slate-500" : "text-[#555]"}`}>FILE</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-mono text-[#ccc] truncate">{file.name}</p>
-                      <p className="text-[10px] font-mono text-[#444] mt-0.5">{file.size} · {file.type}</p>
+                      <p className={`text-[12px] font-mono truncate ${isLight ? "text-slate-800" : "text-[#ccc]"}`}>{file.name}</p>
+                      <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-500" : "text-[#444]"}`}>{file.size} · {file.type}</p>
                     </div>
                     {!isOwner && (
                       <button
                         onClick={() => onDownloadFile(file.id, file.name)}
-                        className="bg-white text-[#080808] rounded-lg text-[11px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5 flex-shrink-0"
+                        className={`rounded-lg text-[11px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none flex items-center gap-1.5 flex-shrink-0 ${
+                          isLight ? "bg-slate-900 text-white" : "bg-white text-[#080808]"
+                        }`}
                         style={{ padding: '6px 14px' }}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -509,7 +551,11 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
               target="_blank"
               rel="noopener noreferrer"
               download
-              className="flex items-center gap-2 self-start text-[11px] font-mono text-[#888] hover:text-white transition-colors border border-[#1e1e1e] hover:border-[#333] rounded-lg no-underline"
+              className={`flex items-center gap-2 self-start text-[11px] font-mono border rounded-lg no-underline transition-colors ${
+                isLight
+                  ? "text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-400"
+                  : "text-[#888] border-[#1e1e1e] hover:text-white hover:border-[#333]"
+              }`}
               style={{ padding: '7px 14px' }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -527,6 +573,7 @@ function ResourceDetailModal({ resource, isBookmarked, onBookmarkToggle, current
 // ─── Compact resource row (click to open detail modal) ────────────────────────────
 
 function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, onDelete, onDownloadFile }) {
+  const { isLight } = useTheme();
   const [open, setOpen] = useState(false);
   const avatarColor = AVATAR_COLORS[resource.initials] || AVATAR_COLORS.default;
   const isOwner = Boolean(
@@ -547,12 +594,18 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
         tabIndex={0}
         onClick={() => setOpen(true)}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpen(true)}
-        className="group flex items-center gap-3 border border-[#161616] hover:border-[#2a2a2a] rounded-xl bg-[#080808] hover:bg-[#0d0d0d] transition-all cursor-pointer select-none"
+        className={`group flex items-center gap-3 border rounded-xl transition-all cursor-pointer select-none ${
+          isLight
+            ? "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300"
+            : "border-[#161616] bg-[#080808] hover:bg-[#0d0d0d] hover:border-[#2a2a2a]"
+        }`}
         style={{ padding: '14px 16px' }}
       >
         {/* Publisher avatar */}
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold text-[#888] flex-shrink-0 border border-[#1e1e1e]"
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0 border ${
+            isLight ? "text-slate-600 border-slate-300" : "text-[#888] border-[#1e1e1e]"
+          }`}
           style={{ background: avatarColor }}
         >
           {resource.initials}
@@ -560,10 +613,12 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
 
         {/* Title + meta */}
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-[#ddd] group-hover:text-white transition-colors truncate leading-tight">
+          <p className={`text-[13px] font-semibold transition-colors truncate leading-tight ${
+            isLight ? "text-slate-900 group-hover:text-black" : "text-[#ddd] group-hover:text-white"
+          }`}>
             {resource.title}
           </p>
-          <p className="text-[10px] font-mono text-[#3a3a3a] mt-0.5 truncate">
+          <p className={`text-[10px] font-mono mt-0.5 truncate ${isLight ? "text-slate-500" : "text-[#3a3a3a]"}`}>
             {resource.author} · {resource.date}
           </p>
         </div>
@@ -576,7 +631,9 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
               className={`hidden sm:inline-block text-[9.5px] font-mono rounded-full border ${
                 primaryTag.startsWith('#') && primaryTag !== '#Resource'
                   ? 'border-[#7F77DD]/40 text-[#7F77DD]/80 bg-[#7F77DD]/5'
-                  : 'border-[#252525] text-[#555]'
+                  : isLight
+                    ? 'border-slate-200 text-slate-500'
+                    : 'border-[#252525] text-[#555]'
               }`}
               style={{ padding: '2px 9px' }}
             >
@@ -586,14 +643,14 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
 
           {/* File attachment indicator */}
           {resource.files && resource.files.length > 0 && (
-            <span className="text-[#2e2e2e] group-hover:text-[#444] transition-colors" title="Has file attachments">
+            <span className={`transition-colors ${isLight ? "text-slate-400 group-hover:text-slate-600" : "text-[#2e2e2e] group-hover:text-[#444]"}`} title="Has file attachments">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48" />
               </svg>
             </span>
           )}
           {resource.url && (!resource.files || resource.files.length === 0) && (
-            <span className="text-[#2e2e2e] group-hover:text-[#444] transition-colors" title="Has link">
+            <span className={`transition-colors ${isLight ? "text-slate-400 group-hover:text-slate-600" : "text-[#2e2e2e] group-hover:text-[#444]"}`} title="Has link">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
@@ -606,7 +663,7 @@ function ResourceCard({ resource, isBookmarked, onBookmarkToggle, currentUser, o
           )}
 
           {/* Open chevron */}
-          <svg className="text-[#252525] group-hover:text-[#3a3a3a] transition-colors" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className={`transition-colors ${isLight ? "text-slate-400 group-hover:text-slate-600" : "text-[#252525] group-hover:text-[#3a3a3a]"}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </div>
