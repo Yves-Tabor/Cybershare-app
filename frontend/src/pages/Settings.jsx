@@ -1739,7 +1739,7 @@ export default function Settings() {
 
           <div className="flex flex-col sm:flex-row gap-8">
             {/* Nav: horizontal pills on mobile, vertical sidebar on sm+ */}
-            <nav className="flex sm:flex-col gap-1.5 overflow-x-auto sm:overflow-visible sm:w-[176px] sm:flex-shrink-0 sm:sticky sm:top-12 sm:self-start pb-1 settings-nav">
+            <nav className="flex sm:flex-col gap-1.5 overflow-x-auto sm:overflow-visible sm:w-auto sm:min-w-[176px] sm:flex-shrink-0 sm:sticky sm:top-12 sm:self-start pb-1 settings-nav">
               {SECTIONS.map((s) => (
                 <NavItem
                   key={s.id}
