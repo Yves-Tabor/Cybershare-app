@@ -30,6 +30,12 @@ const updateNotificationPreferencesSchema = z.object({
   email_activity: z.boolean().optional(),
   push_messages: z.boolean().optional(),
   push_mentions: z.boolean().optional(),
+  notif_scanner: z.boolean().optional(),
+  notif_group_invite: z.boolean().optional(),
+  notif_group_messages: z.boolean().optional(),
+  notif_group_created: z.boolean().optional(),
+  notif_post_activity: z.boolean().optional(),
+  notif_events: z.boolean().optional(),
 }).refine(data => {
   // At least one field must be provided
   return Object.keys(data).length > 0;

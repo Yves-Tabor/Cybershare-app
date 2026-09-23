@@ -896,6 +896,11 @@ function ProfileSection({ profile, setProfile, showToast }) {
   const [local, setLocal] = useState(profile);
   const [loading, setLoading] = useState(false);
 
+  // Sync local state when the parent profile updates (e.g. after initial DB fetch)
+  useEffect(() => {
+    setLocal(profile);
+  }, [profile]);
+
   async function save() {
     setLoading(true);
     try {
