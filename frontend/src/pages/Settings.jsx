@@ -1650,7 +1650,7 @@ export default function Settings() {
           handle: user.username,
           displayName: user.display_name || user.username,
           initials: user.username.slice(0, 2).toUpperCase(),
-          color: user.avatar_color || ME.color,
+          color: user.color || ME.color,
           bio: user.bio || "",
           email: user.email,
           avatar: user.avatar,
