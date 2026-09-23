@@ -25,6 +25,9 @@ const getAllEvents = async (req, res) => {
     const { category, status } = req.query;
     const userId = req.userId || null;
 
+    // Delete events that have passed (using start_date < CURRENT_DATE)
+    await pool.query('DELETE FROM events WHERE start_date < CURRENT_DATE');
+
     let query = `
       SELECT e.id, e.title, e.description, e.location, e.start_date, e.end_date,
              e.image_url, e.category, e.status, e.created_at, e.updated_at,
