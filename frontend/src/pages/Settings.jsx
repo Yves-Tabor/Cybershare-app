@@ -862,7 +862,36 @@ function CreateKeyModal({ onClose, onCreate }) {
             </div>
             <div
               className={`flex justify-end border-t ${isLight ? "border-slate-200" : "border-[#141414]"}`}
-              style={function ProfileSection({ profile, setProfile, showToast }) {
+              style={{
+                paddingLeft: "24px",
+                paddingRight: "24px",
+                paddingTop: "16px",
+                paddingBottom: "16px",
+              }}
+            >
+              <button
+                onClick={onClose}
+                className={`rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none ${
+                  isLight ? "bg-slate-900 text-white" : "bg-white text-[#080808]"
+                }`}
+                style={{
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  paddingTop: "8px",
+                  paddingBottom: "8px",
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProfileSection({ profile, setProfile, showToast }) {
   const { isLight } = useTheme();
   const [local, setLocal] = useState(profile);
   const [loading, setLoading] = useState(false);
@@ -1408,33 +1437,7 @@ function DangerZoneSection({ profile, showToast }) {
       )}
     </>
   );
-}gTop: "8px",
-                  paddingBottom: "8px",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={!canDelete || deleteLoading}
-                className="bg-[#E24B4A] text-white rounded-lg text-[12px] font-semibold cursor-pointer hover:opacity-90 transition-opacity border-none disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                  paddingTop: "8px",
-                  paddingBottom: "8px",
-                }}
-              >
-                {deleteLoading ? "Deleting..." : "Delete account"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
 }
-
 // ─── Notifications Section ───────────────────────────────────────────────────
 
 function NotificationsSection({ showToast }) {
